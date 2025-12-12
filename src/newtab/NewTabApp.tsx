@@ -47,7 +47,7 @@ const NewTabApp: React.FC = () => {
     onSubmit: onSubmitLink,
   } = useLinkAction();
   const [searchQuery, setSearchQuery] = useState("");
- 
+
   const [showSettings, setShowSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -109,6 +109,11 @@ const NewTabApp: React.FC = () => {
   // 触发文件选择
   const onTriggerFileSelect = () => {
     fileInputRef.current?.click();
+  };
+
+  /* 跳转链接 */
+  const handleSkipClick = (url: string) => {
+    window.open(url, "_blank");
   };
 
   return (
@@ -238,6 +243,7 @@ const NewTabApp: React.FC = () => {
                 await refreshCategoryLinks(currentCategoryId);
                 toast.success("删除链接成功");
               }}
+              handleSkipClick={handleSkipClick}
             />
           ))}
 
@@ -249,7 +255,6 @@ const NewTabApp: React.FC = () => {
             <Plus size={32} />
           </div>
         </div>
-
       </section>
       {/* 添加分类 */}
       <AddCategory

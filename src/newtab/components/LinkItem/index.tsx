@@ -18,12 +18,14 @@ interface LinkItemProps {
   };
   handleEditClick?: (linkId: string) => void;
   handleDeleteClick?: (linkId: string) => void;
+  handleSkipClick?: (url: string) => void;
 }
 
 export default function Index({
   link,
   handleEditClick,
   handleDeleteClick,
+  handleSkipClick,
 }: LinkItemProps) {
   const onEditClick = useCallback(
     (e: React.MouseEvent) => {
@@ -47,8 +49,18 @@ export default function Index({
     [link.id, handleDeleteClick]
   );
 
+  /* 跳转链接 */
+  const onSkipClick = useCallback(() => {
+    if (link.url && handleSkipClick) {
+      handleSkipClick(link.url);
+    }
+  }, [link.url, handleSkipClick]);
+
   return (
-    <div className="glass-style-border rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2">
+    <div
+      className="glass-style-border rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer"
+      onClick={onSkipClick}
+    >
       {link.id && (handleEditClick || handleDeleteClick) && (
         <div className="absolute top-4 right-3">
           <Tooltip>
@@ -86,7 +98,11 @@ export default function Index({
         </div>
       )}
       <div className="mb-2 flex items-center justify-center">
-        <Icon name={link.icon} size={32} />
+        {link.icon && link.icon.startsWith("http") ? (
+          <img src={link.icon} alt={link.title} className="w-8 h-8 rounded" />
+        ) : (
+          <Icon name={link.icon || "link"} size={32} />
+        )}
       </div>
       <div className="text-lg font-semibold mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
         {link.title}
