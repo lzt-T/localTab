@@ -31,17 +31,24 @@ export class LinkService {
     if (link.url) {
       this.validateUrl(link.url)
     }
+    
+    let existingLink: link | undefined;
+    if (link.id) {
+      existingLink = await this.getLink(link.id);
+    }
+    
     const links = await this.getLinkCountByParentId(link.parentId || '')
     const length = links.length
+    
     const result: link = {
-      id: getUniqueId(),
-      title: link.title || '新链接',
-      url: link.url || 'https://www.google.com',
-      icon: link.icon || '',
-      description: link.description || '搜索引擎',
-      parentId: link.parentId || '',
-      type: link.type || LinkType.LINK,
-      sort: link.sort || length,
+      id: link.id || existingLink?.id || getUniqueId(),
+      title: link.title || existingLink?.title || '新链接',
+      url: link.url || existingLink?.url || 'https://www.google.com',
+      icon: link.icon || existingLink?.icon || '',
+      description: link.description || existingLink?.description || '搜索引擎',
+      parentId: link.parentId || existingLink?.parentId || '',
+      type: link.type || existingLink?.type || LinkType.LINK,
+      sort: link.sort !== undefined ? link.sort : (existingLink?.sort !== undefined ? existingLink.sort : length),
     }
 
     await db.put(STORE_NAMES.LINK, result)

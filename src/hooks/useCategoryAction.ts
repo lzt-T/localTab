@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { categoryService } from "../services/categoryService";
-import { getUniqueId } from "../utils/base";
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 interface CategoryActionState {
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
   categoryId?: string;
   initialData?: {
     title: string;
@@ -15,13 +14,13 @@ interface CategoryActionState {
 export function useCategoryAction() {
   const [isOpen, setIsOpen] = useState(false);
   const [actionState, setActionState] = useState<CategoryActionState>({
-    mode: 'add',
+    mode: "add",
   });
 
   // 打开新增模式
   const onOpenAdd = () => {
     setActionState({
-      mode: 'add',
+      mode: "add",
     });
     setIsOpen(true);
   };
@@ -31,7 +30,7 @@ export function useCategoryAction() {
     const category = await categoryService.getCategory(categoryId);
     if (!category) return;
     setActionState({
-      mode: 'edit',
+      mode: "edit",
       categoryId: categoryId,
       initialData: {
         title: category.name,
@@ -43,10 +42,9 @@ export function useCategoryAction() {
 
   // 删除分类
   const onDeleteCategory = async (categoryId: string) => {
-
     const length = await categoryService.getCategoryCount();
     if (length === 1) {
-      toast.warning('至少保留一个分类');
+      toast.warning("至少保留一个分类");
       return;
     }
 
@@ -60,28 +58,15 @@ export function useCategoryAction() {
 
   // 提交表单
   const onSubmit = async (values: { title: string; icon: string }) => {
-    if (actionState.mode === 'add') {
-
-      //获取当前分类数量
-      const categoryCount = await categoryService.getCategoryCount();
-
+    if (actionState.mode === "add") {
       // 新增分类
       await categoryService.createCategory({
-        id: getUniqueId(),
         name: values.title,
         icon: values.icon,
-        description: '',
-        sort: categoryCount,
+        description: "",
       });
     } else {
-      // 编辑分类
-      if (!actionState.categoryId) return;
-
-      const category = await categoryService.getCategory(actionState.categoryId);
-      if (!category) return;
-
-      await categoryService.updateCategory({
-        ...category,
+      await categoryService.updateCategory(actionState.categoryId || "", {
         name: values.title,
         icon: values.icon,
       });
