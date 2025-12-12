@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "LocalTab - 新标签页管理器",
+  "version": "1.0.0",
+  "description": "一个类似WeTab的新标签页管理器，提供美观的新标签页体验",
+  "permissions": [
+    "storage",
+    "tabs",
+    "bookmarks",
+    "topSites"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LocalTab"
+  },
+  "icons": {
+    "16": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
