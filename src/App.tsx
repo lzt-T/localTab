@@ -1,5 +1,5 @@
 
-import NewTabApp from './newtab/NewTabApp';
+import NewTabApp from './newtab';
 import './App.css';
 
 function App() {

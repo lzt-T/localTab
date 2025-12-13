@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import PopupApp from './PopupApp'
+import PopupApp from './index.tsx'
 import '../index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

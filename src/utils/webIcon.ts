@@ -75,16 +75,15 @@ export async function fetchFavicon(urlString: string): Promise<string> {
     const faviconUrls = getFaviconUrls(urlString.trim());
     
     // 依次尝试每个 favicon URL
-    for (const faviconUrl of faviconUrls) {
+    for (const faviconUrl of faviconUrls) { 
       const exists = await checkImageExists(faviconUrl);
       if (exists) {
         return faviconUrl;
       }
     }
     
-    // 如果所有路径都失败，使用默认的 favicon.ico
-    const defaultUrl = getFaviconUrl(urlString.trim());
-    return defaultUrl;
+    // 如果所有路径都失败，返回空字符串
+    return '';
   } catch (error) {
     console.error('获取 favicon 失败:', error);
     return '';

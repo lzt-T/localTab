@@ -1,12 +1,6 @@
 import React, { useCallback } from "react";
-import { EllipsisVertical } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import Icon from "../Icon";
-import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 
 interface LinkItemProps {
   link: {
@@ -58,43 +52,29 @@ export default function Index({
 
   return (
     <div
-      className="glass-style-border rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer"
+      className="glass-style-border group/item relative rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-full flex flex-col justify-center"
       onClick={onSkipClick}
     >
       {link.id && (handleEditClick || handleDeleteClick) && (
-        <div className="absolute top-4 right-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <EllipsisVertical size={18} />
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="px-6 py-4 bg-[#2E2E2E] flex items-center gap-2"
-              arrowClassName="fill-[#2E2E2E] bg-[#2E2E2E]"
-              onPointerDownOutside={(e) => e.preventDefault()}
+        <div className="absolute top-2 right-2 opacity-0 group-hover/item:opacity-100">
+          <div
+            className="flex flex-col items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="text-white/70 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/20 transition-colors cursor-pointer"
+              onClick={onEditClick}
             >
-              <div className="flex flex-col gap-2">
-                {handleEditClick && (
-                  <Button
-                    variant="link"
-                    className="text-white  hover:no-underline focus:no-underline cursor-pointer"
-                    onClick={onEditClick}
-                  >
-                    编辑
-                  </Button>
-                )}
-                {handleDeleteClick && (
-                  <Button
-                    variant="link"
-                    className="text-white  hover:no-underline focus:no-underline cursor-pointer"
-                    onClick={onDeleteClick}
-                  >
-                    删除
-                  </Button>
-                )}
-              </div>
-            </TooltipContent>
-          </Tooltip>
+              <Edit size={16} />
+            </button>
+
+            <button
+              className="text-white/70 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/20 transition-colors cursor-pointer"
+              onClick={onDeleteClick}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       )}
       <div className="mb-2 flex items-center justify-center">
@@ -104,12 +84,14 @@ export default function Index({
           <Icon name={link.icon || "link"} size={32} />
         )}
       </div>
-      <div className="text-lg font-semibold mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
+      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap">
         {link.title}
       </div>
-      <div className="text-sm opacity-80 overflow-hidden text-ellipsis whitespace-nowrap">
-        {link.description}
-      </div>
+      {link.description && (
+        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1">
+          {link.description}
+        </div>
+      )}
     </div>
   );
 }

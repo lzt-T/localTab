@@ -3,8 +3,10 @@ import { categoryService } from "../services/categoryService";
 import type { category, link } from "../type/db";
 import useSystemStore from "../store/systemStore";
 import { linkService } from "../services/linkService";
+import { useWebActive } from "../hooks/useWebActive";
 
 export function useData() {
+  const { isWebActive, onChangeWebActive } = useWebActive();
   const changeIsInitializedDB = useSystemStore(
     (state) => state.changeIsInitializedDB
   );
@@ -30,8 +32,20 @@ export function useData() {
   /* 刷新分类列表 */
   const refreshCategories = useCallback(async () => {
     const categories = await categoryService.getAllCategories();
+
+    /* 如果当前分类不存在，则设置为第一个分类 */
+    const findCategory = categories.find(
+      (category) => category.id === currentCategoryId
+    );
+
+    if (!findCategory) {
+      setCurrentCategoryId(categories[0].id);
+      await refreshCategoryLinks(categories[0].id);
+    }
+
+    /* 设置分类列表 */
     setCategories(categories);
-  }, []);
+  }, [currentCategoryId, refreshCategoryLinks]);
 
   useEffect(() => {
     const init = async () => {
@@ -47,6 +61,18 @@ export function useData() {
     };
     init();
   }, []);
+
+  // 监听标签页激活状态后刷新分类列表
+  useEffect(() => {
+    const refresh = async () => {
+      if (isWebActive) {
+        await refreshCategories();
+        onChangeWebActive(false);
+      }
+    };
+
+    refresh();
+  }, [isWebActive]);
 
   return {
     currentCategoryId,

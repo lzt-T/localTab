@@ -13,7 +13,6 @@ const DEFAULT_HOME_CATEGORY: category = {
   id: "home",
   name: "主页",
   icon: "house",
-  description: "默认主页分类",
   sort: 0,
 };
 
@@ -45,7 +44,6 @@ export class CategoryService {
       id: getUniqueId(),
       name: data.name || "",
       icon: data.icon || "",
-      description: data.description || "",
       sort: sort,
     };
     await db.put(STORE_NAMES.CATEGORY, result);
@@ -86,8 +84,20 @@ export class CategoryService {
    * 删除类别
    */
   async deleteCategory(id: string): Promise<void> {
+    const allCategories = await this.getAllCategories();
+    const deleteCategory = allCategories.find((category) => category.id === id);
+    const delSort = deleteCategory!.sort;
+
+    for (const category of allCategories) {
+      if (category.sort > delSort) {
+        category.sort = category.sort - 1;
+        await this.updateCategory(category.id, category);
+      }
+    }
+
     /* 删除类别 */
     await db.delete(STORE_NAMES.CATEGORY, id);
+
     /* 删除类别下的所有链接  ( 异步就 可以)*/
     linkService.deleteLinkByParentId(id);
   }

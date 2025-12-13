@@ -44,8 +44,8 @@ export function useLinkAction() {
   }, []);
 
   /* 删除链接 */
-  const onDeleteLink = useCallback(async (linkId: string) => {
-    await linkService.deleteLink(linkId);
+  const onDeleteLink = useCallback(async (parentId: string, linkId: string) => {
+    await linkService.deleteLink(parentId, linkId);
   }, []);
 
   /* 打开关闭抽屉 */

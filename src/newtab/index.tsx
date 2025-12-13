@@ -239,7 +239,7 @@ const NewTabApp: React.FC = () => {
               link={link}
               handleEditClick={onOpenEditLink}
               handleDeleteClick={async (linkId) => {
-                await onDeleteLink(linkId);
+                await onDeleteLink(currentCategoryId, linkId);
                 await refreshCategoryLinks(currentCategoryId);
                 toast.success("删除链接成功");
               }}

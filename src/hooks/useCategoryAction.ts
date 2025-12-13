@@ -63,7 +63,6 @@ export function useCategoryAction() {
       await categoryService.createCategory({
         name: values.title,
         icon: values.icon,
-        description: "",
       });
     } else {
       await categoryService.updateCategory(actionState.categoryId || "", {

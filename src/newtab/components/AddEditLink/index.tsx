@@ -21,8 +21,9 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import _ from "lodash";
-import { Loader2, Download } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { fetchFavicon } from "@/utils/webIcon";
+import { toast } from "sonner";
 
 interface AddEditLinkProps {
   open: boolean;
@@ -66,6 +67,30 @@ export default function AddEditLink(props: AddEditLinkProps) {
     return mode === "add" ? "创建一个新的链接" : "修改链接信息";
   }, [mode]);
 
+  /* 获取并设置 favicon */
+  const onFetchFavicon = useCallback(async () => {
+    if (!url.trim()) {
+      return;
+    }
+
+    setIsLoadingFavicon(true);
+
+    try {
+      const faviconUrl = await fetchFavicon(url.trim());
+      if (faviconUrl) {
+        setIcon(faviconUrl);
+      } else {
+        setIcon("");
+        toast.warning("获取网站图标失败");
+      }
+    } catch {
+      setIcon("");
+      toast.warning("获取网站图标失败");
+    } finally {
+      setIsLoadingFavicon(false);
+    }
+  }, [url]);
+
   /* 监听标题变化 */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onTitleChange = useCallback(
@@ -107,31 +132,13 @@ export default function AddEditLink(props: AddEditLinkProps) {
         }
         return prev;
       });
-    }, 500),
-    []
-  );
 
-  /* 获取并设置 favicon */
-  const onFetchFavicon = useCallback(async () => {
-    if (!url.trim()) {
-      return;
-    }
-
-    setIsLoadingFavicon(true);
-    // 切换到 favicon 模式
-    setIconType("favicon");
-
-    try {
-      const faviconUrl = await fetchFavicon(url.trim());
-      if (faviconUrl) {
-        setIcon(faviconUrl);
+      if (iconType === "favicon" && e.target.value.startsWith("http")) {
+        onFetchFavicon();
       }
-    } catch (error) {
-      console.error("获取 favicon 失败:", error);
-    } finally {
-      setIsLoadingFavicon(false);
-    }
-  }, [url]);
+    }, 500),
+    [iconType, onFetchFavicon]
+  );
 
   /* 验证表单 */
   const onValidate = useCallback(() => {
@@ -183,6 +190,21 @@ export default function AddEditLink(props: AddEditLinkProps) {
       }
     },
     [handleClose]
+  );
+
+  /* 切换图标类型 */
+  const onTabChange = useCallback(
+    (value: string) => {
+      setIconType(value as "favicon" | "lucide");
+      if (value === "favicon" && !icon.startsWith("http")) {
+        onFetchFavicon();
+      }
+
+      if (value === "lucide" && (icon.startsWith("http") || !icon)) {
+        setIcon("link");
+      }
+    },
+    [icon, onFetchFavicon]
   );
 
   // 当抽屉状态改变时，重置或初始化表单数据
@@ -264,42 +286,13 @@ export default function AddEditLink(props: AddEditLinkProps) {
                 onChange={onUrlChange}
                 className={errors.url ? "border-red-500" : ""}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={onFetchFavicon}
-                disabled={!url.trim() || isLoadingFavicon}
-                title="获取网站图标"
-              >
-                {isLoadingFavicon ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-              </Button>
             </div>
             {errors.url && <p className="text-sm text-red-500">{errors.url}</p>}
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="icon">图标</Label>
-            <Tabs
-              value={iconType}
-              onValueChange={(value) => {
-                const newType = value as "favicon" | "lucide";
-                setIconType(newType);
-                if (newType === "favicon") {
-                  if (!icon || !icon.startsWith("http")) {
-                    setIcon("");
-                  }
-                } else {
-                  if (icon && icon.startsWith("http")) {
-                    setIcon("link");
-                  }
-                }
-              }}
-            >
+            <Tabs value={iconType} onValueChange={onTabChange}>
               <TabsList className="w-full">
                 <TabsTrigger value="favicon" className="flex-1">
                   网站图标
@@ -311,30 +304,24 @@ export default function AddEditLink(props: AddEditLinkProps) {
               <TabsContent value="favicon" className="mt-2">
                 <div className="flex items-center gap-2 w-full">
                   {icon && icon.startsWith("http") ? (
-                    <>
+                    <div className="rounded-md border-2 border-border w-11 h-11 bg-white/10 backdrop-blur-xl flex items-center justify-center">
                       <img
                         src={icon}
                         alt="网站图标"
-                        className="w-6 h-6 rounded"
+                        className="w-8 h-8 rounded"
                         onError={() => setIcon("")}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIcon("")}
-                      >
-                        清除
-                      </Button>
-                    </>
+                    </div>
                   ) : (
-                    <div className="flex-1 text-sm text-muted-foreground">
-                      点击上方"获取网站图标"按钮获取网站图标
+                    <div className="w-full flex items-center justify-center pt-2">
+                      {isLoadingFavicon && (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      )}
                     </div>
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="lucide" className="mt-2">
+              <TabsContent value="lucide" className="mt-2 cursor-pointer">
                 <Select value={icon} onValueChange={setIcon}>
                   <SelectTrigger
                     id="icon"

@@ -1,16 +1,9 @@
-import Icon from '../Icon';
-import { Plus } from 'lucide-react';
-import type { category } from '../../../type/db';
-import { cn } from '../../../utils/base';
-import { EllipsisVertical } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuGroup,
-} from '@/components/ui/dropdown-menu';
-import { useCallback } from 'react';
+import Icon from "../Icon";
+import { Plus } from "lucide-react";
+import type { category } from "../../../type/db";
+import { cn } from "../../../utils/base";
+import { Edit, Trash2 } from "lucide-react";
+import { useCallback } from "react";
 
 interface NavigationBarProps {
   activeCategoryId: string;
@@ -21,8 +14,14 @@ interface NavigationBarProps {
   handleDeleteClick: (categoryId: string) => void;
 }
 export default function Index(props: NavigationBarProps) {
-  const { activeCategoryId, categories, changeCurrentCategory, addCategory, handleEditClick, handleDeleteClick } =
-    props;
+  const {
+    activeCategoryId,
+    categories,
+    changeCurrentCategory,
+    addCategory,
+    handleEditClick,
+    handleDeleteClick,
+  } = props;
 
   /* 编辑分类 */
   const onEditClick = useCallback(
@@ -44,19 +43,19 @@ export default function Index(props: NavigationBarProps) {
     <div className="relative w-full">
       <div
         className="flex flex-col items-center gap-3 w-full h-fit max-h-[70vh] overflow-y-auto overflow-x-visible"
-        style={{ scrollbarWidth: 'none' }}
+        style={{ scrollbarWidth: "none" }}
       >
         {categories.map((category, index) => (
           <div
-            key={category.id + '_' + index}
+            key={category.id + "_" + index}
             className="group/item relative w-full flex items-center justify-between cursor-pointer"
             onClick={() => changeCurrentCategory(category.id)}
           >
             <div className="flex h-12 items-center gap-1 flex-1 min-w-0 overflow-x-hidden pl-3">
               <button
                 className={cn(
-                  'flex shrink-0 items-center justify-center w-10 h-10 rounded-full group-hover/item:bg-white/20 group-hover/item:scale-110 text-white/70 hover:text-white transition-all duration-300 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50',
-                  activeCategoryId === category.id ? 'glass-style' : ''
+                  "flex shrink-0 items-center justify-center w-10 h-10 rounded-full group-hover/item:bg-white/20 group-hover/item:scale-110 text-white/70 hover:text-white transition-all duration-300 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                  activeCategoryId === category.id ? "glass-style" : ""
                 )}
                 aria-label={category.name}
               >
@@ -67,21 +66,24 @@ export default function Index(props: NavigationBarProps) {
               </div>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <EllipsisVertical size={18} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-24" align="start">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => onEditClick(category.id)}>
-                    编辑
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => onDeleteClick(category.id)}>
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div
+              className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="text-white/70 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/20 transition-colors cursor-pointer"
+                onClick={() => onEditClick(category.id)}
+              >
+                <Edit size={16} />
+              </button>
+
+              <button
+                className="text-white/70 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/20 transition-colors cursor-pointer"
+                onClick={() => onDeleteClick(category.id)}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
