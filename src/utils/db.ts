@@ -9,7 +9,7 @@ const DB_VERSION = 2
 
 // 对象存储名称常量
 export const STORE_NAMES = {
-  SETTINGS: 'settings',
+  SYSTEM: 'system',
   CATEGORY: 'category',
   LINK: 'link',
   LINK_GROUP: 'linkGroup'
@@ -42,8 +42,8 @@ class LocalTabDB {
         const db = (event.target as IDBOpenDBRequest).result
 
         // 创建 settings 表（键值对存储）
-        if (!db.objectStoreNames.contains(STORE_NAMES.SETTINGS)) {
-          db.createObjectStore(STORE_NAMES.SETTINGS)
+        if (!db.objectStoreNames.contains(STORE_NAMES.SYSTEM)) {
+          db.createObjectStore(STORE_NAMES.SYSTEM)
         }
 
         // 创建 category 表（使用 id 作为主键）
@@ -219,7 +219,7 @@ class LocalTabDB {
    */
   async clearAll(): Promise<void> {
     await Promise.all([
-      this.clear(STORE_NAMES.SETTINGS),
+      this.clear(STORE_NAMES.SYSTEM),
       this.clear(STORE_NAMES.CATEGORY),
       this.clear(STORE_NAMES.LINK),
       this.clear(STORE_NAMES.LINK_GROUP)

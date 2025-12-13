@@ -2,6 +2,18 @@ export type settings = {
   backgroundImage?: string
 }
 
+/* 搜索引擎类型 */
+export const SearchEngineType = {
+  /* 谷歌 */
+  GOOGLE: 'GOOGLE',
+  /* 必应 */
+  BING: 'BING',
+  /* 鸭子搜索 */
+  DUCKDUCKGO: 'DUCKDUCKGO',
+  /* 百度 */
+  BAIDU: 'BAIDU'
+} as const
+
 /* 链接类型，链接或链接组 */
 export const LinkType = {
   LINK: 'LINK',

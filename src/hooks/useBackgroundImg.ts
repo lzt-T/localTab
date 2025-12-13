@@ -1,6 +1,6 @@
 import useSystemStore from "../store/systemStore";
 import { useEffect } from "react";
-import { backgroundService } from "../services/backgroundService";
+import { systemService } from "../services/systemService";
 
 export function useBackgroundImg() {
   const changeBackgroundImage = useSystemStore(
@@ -17,7 +17,7 @@ export function useBackgroundImg() {
   /* 加载背景图片 */
   const onLoadBackground = async () => {
     try {
-      const url = await backgroundService.getBackgroundImageUrl();
+      const url = await systemService.getBackgroundImageUrl();
 
       if (backgroundImageId === url?.id) {
         return;
@@ -40,7 +40,7 @@ export function useBackgroundImg() {
     try {
       // 保存背景图片，存入blob 到数据库
       const blob = new Blob([file], { type: file.type });
-      const id = await backgroundService.saveBackgroundImage(blob);
+      const id = await systemService.saveBackgroundImage(blob);
       const imageUrl = URL.createObjectURL(file);
       changeBackgroundImageId(id);
       changeBackgroundImage(imageUrl);
@@ -54,14 +54,14 @@ export function useBackgroundImg() {
 
   /* 删除背景图片 */
   const onDeleteBackground = async () => {
-    await backgroundService.deleteBackgroundImage();
+    await systemService.deleteBackgroundImage();
     changeBackgroundImage("");
     changeBackgroundImageId("");
   };
 
   useEffect(() => {
     const init = async () => {
-      const hasBackgroundImage = await backgroundService.hasBackgroundImage();
+      const hasBackgroundImage = await systemService.hasBackgroundImage();
       if (hasBackgroundImage) {
         await onLoadBackground();
       }

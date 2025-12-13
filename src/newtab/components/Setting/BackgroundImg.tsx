@@ -2,9 +2,11 @@ import React, { useRef } from "react";
 import { useBackgroundImg } from "../../../hooks/useBackgroundImg";
 import { Upload, Trash2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "../../../components/ui/button";
 
 export default function BackgroundImg() {
-  const { backgroundImage, onUploadBackground, onDeleteBackground } = useBackgroundImg();
+  const { backgroundImage, onUploadBackground, onDeleteBackground } =
+    useBackgroundImg();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 触发文件选择
@@ -67,22 +69,22 @@ export default function BackgroundImg() {
 
       {/* 上传按钮 */}
       <div className="flex items-center gap-4">
-        <button
+        <Button
           onClick={handleSelectImage}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-white/20"
+          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-white/20 cursor-pointer"
         >
           <Upload size={18} />
           选择图片
-        </button>
+        </Button>
 
         {backgroundImage && (
-          <button
+          <Button
             onClick={handleDeleteBackground}
-            className="px-6 py-3 bg-red-500/30 hover:bg-red-500/40 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-red-500/30"
+            className="px-6 py-3 bg-red-500/30 hover:bg-red-500/40 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-red-500/30 cursor-pointer"
           >
             <Trash2 size={18} />
             删除背景
-          </button>
+          </Button>
         )}
       </div>
 

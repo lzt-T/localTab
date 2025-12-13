@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { categoryService } from "../services/categoryService";
 import type { category, link } from "../type/db";
 import useSystemStore from "../store/systemStore";
-import { linkService } from "../services/linkService";
+import { linkService, systemService } from "../services/index";
 import { useWebActive } from "../hooks/useWebActive";
 import { toast } from "sonner";
 import { useBackgroundImg } from "../hooks/useBackgroundImg";
@@ -62,6 +62,7 @@ export function useData() {
 
   useEffect(() => {
     const init = async () => {
+      await systemService.init();
       await categoryService.init();
       changeIsInitializedDB(true);
 
