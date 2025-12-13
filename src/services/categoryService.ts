@@ -107,6 +107,32 @@ export class CategoryService {
     const categories = await db.getAll<category>(STORE_NAMES.CATEGORY);
     return categories.length;
   }
+
+  /**
+   * 更新分类排序
+   * @param dragIndex 拖拽的源索引
+   * @param hoverIndex 放置的目标索引
+   */
+  async updateCategoryOrder(dragIndex: number, hoverIndex: number): Promise<void> {
+    const categories = await this.getAllCategories();
+    
+    if (dragIndex === hoverIndex) {
+      return;
+    }
+
+    // 重新计算排序
+    const draggedCategory = categories[dragIndex];
+    const newCategories = [...categories];
+    newCategories.splice(dragIndex, 1);
+    newCategories.splice(hoverIndex, 0, draggedCategory);
+
+    // 更新所有分类的排序
+    for (let i = 0; i < newCategories.length; i++) {
+      if (newCategories[i].sort !== i) {
+        await this.updateCategory(newCategories[i].id, { sort: i });
+      }
+    }
+  }
 }
 
 // 导出单例

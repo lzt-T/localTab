@@ -4,9 +4,12 @@ import type { category, link } from "../type/db";
 import useSystemStore from "../store/systemStore";
 import { linkService } from "../services/linkService";
 import { useWebActive } from "../hooks/useWebActive";
+import { toast } from "sonner";
+import { useBackgroundImg } from "../hooks/useBackgroundImg";
 
 export function useData() {
   const { isWebActive, onChangeWebActive } = useWebActive();
+  const { onLoadBackground } = useBackgroundImg();
   const changeIsInitializedDB = useSystemStore(
     (state) => state.changeIsInitializedDB
   );
@@ -47,6 +50,16 @@ export function useData() {
     setCategories(categories);
   }, [currentCategoryId, refreshCategoryLinks]);
 
+  /* 更新分类排序 */
+  const updateCategoryOrder = useCallback(
+    async (dragIndex: number, hoverIndex: number) => {
+      await categoryService.updateCategoryOrder(dragIndex, hoverIndex);
+      await refreshCategories();
+      toast.success("分类排序更新成功");
+    },
+    [refreshCategories]
+  );
+
   useEffect(() => {
     const init = async () => {
       await categoryService.init();
@@ -67,6 +80,7 @@ export function useData() {
     const refresh = async () => {
       if (isWebActive) {
         await refreshCategories();
+        await onLoadBackground();
         onChangeWebActive(false);
       }
     };
@@ -81,5 +95,6 @@ export function useData() {
     changeCurrentCategory,
     refreshCategories,
     refreshCategoryLinks,
+    updateCategoryOrder,
   };
 }
