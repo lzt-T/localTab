@@ -52,7 +52,7 @@ export default function Index({
 
   return (
     <div
-      className="glass-style-border group/item relative rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-full flex flex-col justify-center"
+      className="glass-style-border group/item relative rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32 flex flex-col justify-center"
       onClick={onSkipClick}
     >
       {link.id && (handleEditClick || handleDeleteClick) && (
@@ -81,14 +81,18 @@ export default function Index({
         {link.icon && link.icon.startsWith("http") ? (
           <img src={link.icon} alt={link.title} className="w-8 h-8 rounded" />
         ) : (
-          <Icon name={link.icon || "link"} size={32} />
+          <Icon
+            name={link.icon || "link"}
+            size={32}
+            className="text-blue-200/90"
+          />
         )}
       </div>
-      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap">
+      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap text-blue-200/90">
         {link.title}
       </div>
       {link.description && (
-        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1">
+        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1 text-blue-200/60">
           {link.description}
         </div>
       )}

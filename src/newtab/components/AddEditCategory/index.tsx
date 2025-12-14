@@ -48,7 +48,7 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
       if (errors.title) {
         setErrors({ ...errors, title: undefined });
       }
-    }, 500),
+    }, 200),
     []
   );
 

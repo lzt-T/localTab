@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { categoryService } from "../services/categoryService";
 import type { category, link } from "../type/db";
 import useSystemStore from "../store/systemStore";
@@ -6,16 +6,37 @@ import { linkService, systemService } from "../services/index";
 import { useWebActive } from "../hooks/useWebActive";
 import { toast } from "sonner";
 import { useBackgroundImg } from "../hooks/useBackgroundImg";
+import defaultBackground from "@/assets/defaultBackground.jpg";
+import { useMemo } from "react";
+import { SearchEngineType } from "@/type/db";
 
 export function useData() {
   const { isWebActive, onChangeWebActive } = useWebActive();
-  const { onLoadBackground } = useBackgroundImg();
+  const { onLoadBackground, backgroundImage } = useBackgroundImg();
   const changeIsInitializedDB = useSystemStore(
     (state) => state.changeIsInitializedDB
   );
   const [currentCategoryId, setCurrentCategoryId] = useState<string>("");
   const [categories, setCategories] = useState<category[]>([]);
   const [categoryLinks, setCategoryLinks] = useState<link[]>([]);
+  const linkListRef = useRef<HTMLDivElement>(null);
+  const isInitializedBackgroundImage = useSystemStore(
+    (state) => state.isInitializedBackgroundImage
+  );
+  const changeSearchEngine = useSystemStore(
+    (state) => state.changeSearchEngine
+  );
+
+  /* 背景样式 */
+  const backgroundStyle = useMemo(() => {
+    return {
+      background: isInitializedBackgroundImage
+        ? backgroundImage
+          ? `url(${backgroundImage}) center/cover no-repeat`
+          : `url(${defaultBackground}) center/cover no-repeat`
+        : "rgb(0, 0, 0,0.8)",
+    };
+  }, [isInitializedBackgroundImage, backgroundImage]);
 
   /* 获取当前分类里的链接· */
   const refreshCategoryLinks = useCallback(async (id: string) => {
@@ -28,6 +49,7 @@ export function useData() {
     async (categoryId: string) => {
       await refreshCategoryLinks(categoryId);
       setCurrentCategoryId(categoryId);
+      linkListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     },
     [refreshCategoryLinks]
   );
@@ -49,6 +71,16 @@ export function useData() {
     /* 设置分类列表 */
     setCategories(categories);
   }, [currentCategoryId, refreshCategoryLinks]);
+
+  /* 刷新搜索引擎 */
+  const refreshSearchEngine = useCallback(async () => {
+    const searchEngine = await systemService.getSearchEngine();
+    if (searchEngine) {
+      changeSearchEngine(
+        searchEngine as unknown as keyof typeof SearchEngineType
+      );
+    }
+  }, [changeSearchEngine]);
 
   /* 更新分类排序 */
   const updateCategoryOrder = useCallback(
@@ -82,6 +114,7 @@ export function useData() {
       if (isWebActive) {
         await refreshCategories();
         await onLoadBackground();
+        await refreshSearchEngine();
         onChangeWebActive(false);
       }
     };
@@ -93,6 +126,8 @@ export function useData() {
     currentCategoryId,
     categories,
     categoryLinks,
+    linkListRef,
+    backgroundStyle,
     changeCurrentCategory,
     refreshCategories,
     refreshCategoryLinks,

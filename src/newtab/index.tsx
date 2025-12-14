@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import LinkItem from "./components/LinkItem";
@@ -8,28 +8,25 @@ import { useCategoryAction } from "../hooks/useCategoryAction";
 import AddCategory from "./components/AddEditCategory";
 import { Toaster } from "../components/ui/sonner";
 import { toast } from "sonner";
-import { useBackgroundImg } from "../hooks/useBackgroundImg";
-import useSystemStore from "../store/systemStore";
 import AddEditLink from "./components/AddEditLink";
 import { useLinkAction } from "../hooks/useLinkAction";
 import { Plus } from "lucide-react";
 import Setting from "./components/Setting";
 import SearchInput from "./components/SearchInput";
+import { cn } from "@/lib/utils";
 
 const NewTabApp: React.FC = () => {
-  const isInitializedBackgroundImage = useSystemStore(
-    (state) => state.isInitializedBackgroundImage
-  );
   const {
     currentCategoryId,
     categories,
     categoryLinks,
+    linkListRef,
+    backgroundStyle,
     changeCurrentCategory,
     refreshCategories,
     refreshCategoryLinks,
     updateCategoryOrder,
   } = useData();
-  const { backgroundImage } = useBackgroundImg();
   const {
     isOpen,
     mode,
@@ -50,17 +47,6 @@ const NewTabApp: React.FC = () => {
     onClose: onCloseLink,
     onSubmit: onSubmitLink,
   } = useLinkAction();
-
-  /* 背景样式 */
-  const backgroundStyle = useMemo(() => {
-    return {
-      background: isInitializedBackgroundImage
-        ? backgroundImage
-          ? `url(${backgroundImage}) center/cover no-repeat`
-          : "linear-gradient(to bottom right, rgb(99, 102, 241), rgb(168, 85, 247))"
-        : "rgb(0, 0, 0,0.8)",
-    };
-  }, [isInitializedBackgroundImage, backgroundImage]);
 
   /* 跳转链接 */
   const handleSkipClick = (url: string) => {
@@ -90,12 +76,17 @@ const NewTabApp: React.FC = () => {
         </DndProvider>
       </section>
 
-      <section className="flex-1 p-8  h-screen">
-        <div className=" h-[200px] flex items-center justify-center">
+      <section className="flex-1 p-8  h-screen flex flex-col">
+        <div className="h-[160px] flex items-center justify-center">
           <SearchInput />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6 mb-8 mt-8">
+        <div
+          ref={linkListRef}
+          className={cn(
+            "flex-1 overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6"
+          )}
+        >
           {categoryLinks.map((link) => (
             <LinkItem
               key={link.id}
@@ -112,11 +103,20 @@ const NewTabApp: React.FC = () => {
 
           {/* 添加按钮 */}
           <div
-            className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer"
+            className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32"
             onClick={onOpenAddLink}
           >
             <Plus size={32} />
           </div>
+
+          {Array.from({ length: 100 }).map((_, index) => (
+            <div
+              key={index}
+              className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32"
+            >
+              <Plus size={32} />
+            </div>
+          ))}
         </div>
       </section>
       {/* 设置组件 */}

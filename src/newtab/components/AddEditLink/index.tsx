@@ -102,7 +102,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
         }
         return prev;
       });
-    }, 500),
+    }, 200),
     []
   );
 
@@ -117,7 +117,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
         }
         return prev;
       });
-    }, 500),
+    }, 200),
     []
   );
 
@@ -136,7 +136,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
       if (iconType === "favicon" && e.target.value.startsWith("http")) {
         onFetchFavicon();
       }
-    }, 500),
+    }, 200),
     [iconType, onFetchFavicon]
   );
 

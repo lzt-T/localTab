@@ -7,6 +7,7 @@ import {
 } from "../../../components/ui/popover";
 import { cn } from "../../../utils/base";
 import BackgroundImg from "./BackgroundImg";
+import DataManagement from "./DataManagement";
 
 type SettingNavItem = {
   id: string;
@@ -21,14 +22,14 @@ const Setting: React.FC = () => {
   /* 导航栏 */
   const navItems: SettingNavItem[] = [
     { id: "wallpaper", label: "壁纸", icon: <Palette size={20} /> },
-    { id: "theme", label: "主题", icon: <Palette size={20} /> },
+    { id: "data", label: "数据管理", icon: <Palette size={20} /> },
   ];
 
   /* 渲染内容 */
   const renderContent = () => {
     const config: Record<string, React.ReactNode> = {
       wallpaper: <BackgroundImg />,
-      theme: <div>sad</div>,
+      data: <DataManagement />,
     };
     return (
       <div className="space-y-6">
