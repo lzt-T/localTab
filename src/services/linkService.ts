@@ -18,10 +18,12 @@ export class LinkService {
     await db.put(STORE_NAMES.LINK, link);
   }
 
-  /* 获取parentId下的链接数量 */
+  /* 获取parentId下的链接 */
   async getLinkCountByParentId(parentId: string): Promise<link[]> {
     const links = await this.getAllLinks();
-    return links.filter((link) => link.parentId === parentId);
+    const filteredLinks = links.filter((link) => link.parentId === parentId);
+    // 按 sort 字段排序
+    return filteredLinks.sort((a, b) => a.sort - b.sort);
   }
 
   /**
@@ -119,6 +121,40 @@ export class LinkService {
     for (const link of links) {
       if (link.parentId === parentId) {
         await this.deleteLink(parentId, link.id, false);
+      }
+    }
+  }
+
+  /**
+   * 更新链接排序
+   * @param parentId 分类ID
+   * @param dragIndex 拖拽的源索引
+   * @param hoverIndex 放置的目标索引
+   */
+  async updateLinkOrder(
+    parentId: string,
+    dragIndex: number,
+    hoverIndex: number
+  ): Promise<void> {
+    const links = await this.getLinkCountByParentId(parentId);
+    
+    // 按 sort 字段排序
+    const sortedLinks = links.sort((a, b) => a.sort - b.sort);
+
+    if (dragIndex === hoverIndex) {
+      return;
+    }
+
+    // 重新计算排序
+    const draggedLink = sortedLinks[dragIndex];
+    const newLinks = [...sortedLinks];
+    newLinks.splice(dragIndex, 1);
+    newLinks.splice(hoverIndex, 0, draggedLink);
+
+    // 更新所有链接的排序
+    for (let i = 0; i < newLinks.length; i++) {
+      if (newLinks[i].sort !== i) {
+        await this.updateLink({ ...newLinks[i], sort: i });
       }
     }
   }

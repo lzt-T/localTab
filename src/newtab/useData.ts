@@ -92,6 +92,16 @@ export function useData() {
     [refreshCategories]
   );
 
+  /* 更新链接排序 */
+  const updateLinkOrder = useCallback(
+    async (parentId: string, dragIndex: number, hoverIndex: number) => {
+      await linkService.updateLinkOrder(parentId, dragIndex, hoverIndex);
+      await refreshCategoryLinks(parentId);
+      toast.success("链接排序更新成功");
+    },
+    [refreshCategoryLinks]
+  );
+
   useEffect(() => {
     const init = async () => {
       await systemService.init();
@@ -132,5 +142,6 @@ export function useData() {
     refreshCategories,
     refreshCategoryLinks,
     updateCategoryOrder,
+    updateLinkOrder,
   };
 }

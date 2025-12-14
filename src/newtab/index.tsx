@@ -1,7 +1,7 @@
 import React from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import LinkItem from "./components/LinkItem";
+import LinkList from "./components/LinkList";
 import NavigationBar from "./components/NavigationBar";
 import { useData } from "./useData";
 import { useCategoryAction } from "../hooks/useCategoryAction";
@@ -26,6 +26,7 @@ const NewTabApp: React.FC = () => {
     refreshCategories,
     refreshCategoryLinks,
     updateCategoryOrder,
+    updateLinkOrder,
   } = useData();
   const {
     isOpen,
@@ -54,12 +55,12 @@ const NewTabApp: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen w-screen flex flex-row items-center justify-center text-white relative overflow-hidden"
-      style={{ ...backgroundStyle }}
-    >
-      <section className="w-[220px]">
-        <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={HTML5Backend}>
+      <div
+        className="min-h-screen w-screen flex flex-row items-center justify-center text-white relative overflow-hidden"
+        style={{ ...backgroundStyle }}
+      >
+        <section className="w-[220px]">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}
@@ -73,24 +74,22 @@ const NewTabApp: React.FC = () => {
             }}
             onMoveCategory={updateCategoryOrder}
           />
-        </DndProvider>
-      </section>
+        </section>
 
-      <section className="flex-1 p-8  h-screen flex flex-col">
-        <div className="h-[160px] flex items-center justify-center">
-          <SearchInput />
-        </div>
+        <section className="flex-1 p-8  h-screen flex flex-col">
+          <div className="h-[160px] flex items-center justify-center">
+            <SearchInput />
+          </div>
 
-        <div
-          ref={linkListRef}
-          className={cn(
-            "flex-1 overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6"
-          )}
-        >
-          {categoryLinks.map((link) => (
-            <LinkItem
-              key={link.id}
-              link={link}
+          <div
+            ref={linkListRef}
+            className={cn(
+              "flex-1 overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6 content-start"
+            )}
+          >
+            <LinkList
+              categoryLinks={categoryLinks}
+              currentCategoryId={currentCategoryId}
               handleEditClick={onOpenEditLink}
               handleDeleteClick={async (linkId) => {
                 await onDeleteLink(currentCategoryId, linkId);
@@ -98,27 +97,19 @@ const NewTabApp: React.FC = () => {
                 toast.success("删除链接成功");
               }}
               handleSkipClick={handleSkipClick}
+              onMoveLink={updateLinkOrder}
             />
-          ))}
 
-          {/* 添加按钮 */}
-          <div
-            className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32"
-            onClick={onOpenAddLink}
-          >
-            <Plus size={32} />
-          </div>
-
-          {Array.from({ length: 100 }).map((_, index) => (
+            {/* 添加按钮 */}
             <div
-              key={index}
               className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32"
+              onClick={onOpenAddLink}
             >
               <Plus size={32} />
             </div>
-          ))}
-        </div>
-      </section>
+
+          </div>
+        </section>
       {/* 设置组件 */}
       <Setting />
       {/* 添加分类 */}
@@ -150,8 +141,9 @@ const NewTabApp: React.FC = () => {
           toast.success("操作成功");
         }}
       />
-      <Toaster position="top-right" />
-    </div>
+        <Toaster position="top-right" />
+      </div>
+    </DndProvider>
   );
 };
 

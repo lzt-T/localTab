@@ -1,5 +1,6 @@
 
 import NewTabApp from './newtab';
+import PopupApp from './popup';
 import './App.css';
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
   return (
     <>
       <NewTabApp />
+      {/* <PopupApp /> */}
     </>
   );
 }
