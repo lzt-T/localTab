@@ -47,10 +47,15 @@ export class LinkService {
       title: link.title || existingLink?.title || "",
       url: link.url || existingLink?.url || "",
       icon: link.icon || existingLink?.icon || "",
-      description: link.description || existingLink?.description || "",
+      description: link.description || "",
       parentId: link.parentId || existingLink?.parentId || "",
       type: link.type || existingLink?.type || LinkType.LINK,
-      sort: link.sort !== undefined ? link.sort : length,
+      sort:
+        link.sort !== undefined
+          ? link.sort
+          : existingLink
+          ? existingLink.sort
+          : length,
     };
 
     await db.put(STORE_NAMES.LINK, result);
@@ -83,14 +88,18 @@ export class LinkService {
    * @param id 链接ID
    * @param isResetSort 是否重置排序
    */
-  async deleteLink(parentId: string,id: string ,isResetSort: boolean = true): Promise<void> {    
+  async deleteLink(
+    parentId: string,
+    id: string,
+    isResetSort: boolean = true
+  ): Promise<void> {
     // 更新其他链接的排序
     const links = await this.getLinkCountByParentId(parentId);
 
     const deleteLink = links.find((link) => link.id === id);
     const delSort = deleteLink!.sort;
 
-    if(isResetSort){
+    if (isResetSort) {
       for (const link of links) {
         if (link.sort > delSort) {
           link.sort = link.sort - 1;
@@ -137,7 +146,7 @@ export class LinkService {
     hoverIndex: number
   ): Promise<void> {
     const links = await this.getLinkCountByParentId(parentId);
-    
+
     // 按 sort 字段排序
     const sortedLinks = links.sort((a, b) => a.sort - b.sort);
 
