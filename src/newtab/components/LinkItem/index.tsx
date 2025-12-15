@@ -88,11 +88,11 @@ export default function Index({
           />
         )}
       </div>
-      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap text-blue-200/90">
+      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap text-blue-200/90 text-center">
         {link.title}
       </div>
       {link.description && (
-        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1 text-blue-200/60">
+        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1 text-blue-200/60 text-center">
           {link.description}
         </div>
       )}
