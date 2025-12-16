@@ -73,7 +73,7 @@ const Setting: React.FC = () => {
                 <button
                   key={item.id}
                   className={cn(
-                    "w-full px-4 py-2.5 flex items-center gap-3 text-left transition-all hover:bg-white/5",
+                    "w-full px-4 py-2.5 flex items-center gap-3 text-left transition-all hover:bg-white/5 cursor-pointer",
                     activeNav === item.id ? "bg-white/10 text-white" : ""
                   )}
                   onClick={() => setActiveNav(item.id)}

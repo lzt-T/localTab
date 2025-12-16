@@ -108,7 +108,7 @@ function CategoryItem({
       <div className="flex h-12 items-center gap-1 flex-1 min-w-0 overflow-x-hidden pl-3">
         <button
           className={cn(
-            "flex shrink-0 items-center justify-center w-10 h-10 rounded-full group-hover/item:bg-white/20 group-hover/item:scale-110 transition-all duration-300 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+            "flex shrink-0 items-center cursor-pointer justify-center w-10 h-10 rounded-full group-hover/item:bg-white/20 group-hover/item:scale-110 transition-all duration-300 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
             isActive 
               ? "glass-style text-blue-200/90 group-hover/item:text-blue-100" 
               : "text-blue-200/60 group-hover/item:text-blue-200/80"
