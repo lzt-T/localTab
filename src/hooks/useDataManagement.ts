@@ -4,15 +4,15 @@ import { categoryService } from "../services/categoryService";
 import { linkService } from "../services/linkService";
 import { systemService } from "../services/systemService";
 import { db, STORE_NAMES } from "../utils/db";
-import type { category, link, LinkGroup } from "../type/db";
+import type { Category, Link, LinkGroup } from "../type/db";
 import { SearchEngineType } from "../type/db";
 
 // 导出数据类型定义
 export type ExportData = {
   version: string;
   exportDate: string;
-  categories: category[];
-  links: link[];
+  categories: Category[];
+  links: Link[];
   linkGroups: LinkGroup[];
   system: {
     searchEngine?: string;

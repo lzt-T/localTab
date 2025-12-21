@@ -1,11 +1,11 @@
 import React, { useCallback, useState, useEffect, useMemo } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import type { link } from "@/type/db";
+import type { Link } from "@/type/db";
 import LinkItem from "../LinkItem";
 import { cn } from "@/lib/utils";
 
 interface LinkListProps {
-  categoryLinks: link[];
+  categoryLinks: Link[];
   currentCategoryId: string;
   handleEditClick: (linkId: string) => void;
   handleDeleteClick: (linkId: string) => Promise<void>;
@@ -14,7 +14,7 @@ interface LinkListProps {
 }
 
 interface LinkItemWrapperProps {
-  link: link;
+  link: Link;
   index: number;
   onEditClick: (linkId: string) => void;
   onDeleteClick: (linkId: string) => Promise<void>;
@@ -123,7 +123,7 @@ const LinkList: React.FC<LinkListProps> = ({
   }, [categoryLinks]);
 
   // 本地状态用于拖拽时的 UI 更新
-  const [localLinks, setLocalLinks] = useState<link[]>(() => sortedLinks);
+  const [localLinks, setLocalLinks] = useState<Link[]>(() => sortedLinks);
 
   // 当 categoryLinks 更新时同步本地状态
   useEffect(() => {
@@ -175,18 +175,20 @@ const LinkList: React.FC<LinkListProps> = ({
 
   return (
     <>
-      {localLinks.map((link, index) => (
-        <LinkItemWrapper
-          key={link.id}
-          link={link}
-          index={index}
-          onEditClick={onEditClick}
-          onDeleteClick={onDeleteClick}
-          onSkipClick={onSkipClick}
-          onHover={onHover}
-          onDrop={onDrop}
-        />
-      ))}
+      {localLinks.map((link, index) => {
+        return (
+          <LinkItemWrapper
+            key={link.id}
+            link={link}
+            index={index}
+            onEditClick={onEditClick}
+            onDeleteClick={onDeleteClick}
+            onSkipClick={onSkipClick}
+            onHover={onHover}
+            onDrop={onDrop}
+          />
+        );
+      })}
     </>
   );
 };

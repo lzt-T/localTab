@@ -1,6 +1,6 @@
 import Icon from "../Icon";
 import { Plus } from "lucide-react";
-import type { category } from "../../../type/db";
+import type { Category } from "../../../type/db";
 import { cn } from "../../../utils/base";
 import { Edit, Trash2 } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
@@ -8,7 +8,7 @@ import { useDrag, useDrop } from "react-dnd";
 
 interface NavigationBarProps {
   activeCategoryId: string;
-  categories: category[];
+  categories: Category[];
   changeCurrentCategory: (categoryId: string) => void;
   addCategory: () => void;
   handleEditClick: (categoryId: string) => void;
@@ -17,7 +17,7 @@ interface NavigationBarProps {
 }
 
 interface CategoryItemProps {
-  category: category;
+  category: Category;
   index: number;
   isActive: boolean;
   onEditClick: (categoryId: string) => void;
@@ -158,7 +158,7 @@ export default function Index(props: NavigationBarProps) {
   } = props;
 
   // 本地状态用于拖拽时的 UI 更新
-  const [localCategories, setLocalCategories] = useState<category[]>(categories);
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
 
   // 当 categories 更新时同步本地状态
   useEffect(() => {

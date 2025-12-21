@@ -1,4 +1,4 @@
-export type settings = {
+export type Settings = {
   backgroundImage?: string
 }
 
@@ -23,11 +23,15 @@ export const LinkType = {
 export type LinkTypeValue = typeof LinkType[keyof typeof LinkType]
 
 /* 类别 */
-export type category = {
+export type Category = {
   id: string
   name: string
   icon: string
   sort: number
+}
+
+export type CategoryInfo = Category & {
+  links: Link[]
 }
 
 /* 链接组 */
@@ -41,7 +45,7 @@ export type LinkGroup = {
 }
 
 /* 链接 */
-export type link = {
+export type Link = {
   id: string
   type: typeof LinkType.LINK
   sort: number

@@ -4,12 +4,12 @@
  */
 
 import { db, STORE_NAMES } from "../utils/db";
-import type { category } from "../type/db";
+import type { Category } from "../type/db";
 import { linkService } from "./linkService";
 import { getUniqueId } from "../utils/base";
 
 // 默认主页分类常量
-const DEFAULT_HOME_CATEGORY: category = {
+const DEFAULT_HOME_CATEGORY: Category = {
   id: "home",
   name: "主页",
   icon: "house",
@@ -38,9 +38,9 @@ export class CategoryService {
   /**
    * 创建类别
    */
-  async createCategory(data: Partial<category>): Promise<void> {
+  async createCategory(data: Partial<Category>): Promise<void> {
     const sort = await this.getCategoryCount();
-    const result: category = {
+    const result: Category = {
       id: getUniqueId(),
       name: data.name || "",
       icon: data.icon || "",
@@ -52,7 +52,7 @@ export class CategoryService {
   /**
    * 更新类别
    */
-  async updateCategory(id: string, data: Partial<category>): Promise<void> {
+  async updateCategory(id: string, data: Partial<Category>): Promise<void> {
     const category = await this.getCategory(id);
     if (!category) {
       return;
@@ -66,15 +66,15 @@ export class CategoryService {
   /**
    * 获取单个类别
    */
-  async getCategory(id: string): Promise<category | undefined> {
-    return await db.get<category>(STORE_NAMES.CATEGORY, id);
+  async getCategory(id: string): Promise<Category | undefined> {
+    return await db.get<Category>(STORE_NAMES.CATEGORY, id);
   }
 
   /**
    * 获取所有类别
    */
-  async getAllCategories(): Promise<category[]> {
-    const categories = await db.getAll<category>(STORE_NAMES.CATEGORY);
+  async getAllCategories(): Promise<Category[]> {
+    const categories = await db.getAll<Category>(STORE_NAMES.CATEGORY);
     /* 按排序号排序 */
     categories.sort((a, b) => a.sort - b.sort);
     return categories;
@@ -104,7 +104,7 @@ export class CategoryService {
 
   /* 获取长度 */
   async getCategoryCount(): Promise<number> {
-    const categories = await db.getAll<category>(STORE_NAMES.CATEGORY);
+    const categories = await db.getAll<Category>(STORE_NAMES.CATEGORY);
     return categories.length;
   }
 

@@ -4,7 +4,7 @@
  */
 
 import { db, STORE_NAMES } from "../utils/db";
-import type { link } from "../type/db";
+import type { Link } from "../type/db";
 import { getUniqueId } from "../utils/base";
 import { LinkType } from "@/type/db";
 
@@ -12,14 +12,14 @@ export class LinkService {
   /**
    * 创建链接
    */
-  async createLink(link: link): Promise<void> {
+  async createLink(link: Link): Promise<void> {
     // 可以在这里添加 URL 验证等业务逻辑
     this.validateUrl(link.url);
     await db.put(STORE_NAMES.LINK, link);
   }
 
   /* 获取parentId下的链接 */
-  async getLinkCountByParentId(parentId: string): Promise<link[]> {
+  async getLinkCountByParentId(parentId: string): Promise<Link[]> {
     const links = await this.getAllLinks();
     const filteredLinks = links.filter((link) => link.parentId === parentId);
     // 按 sort 字段排序
@@ -29,12 +29,12 @@ export class LinkService {
   /**
    * 更新链接,如果链接不存在，则创建链接
    */
-  async updateLink(link: Partial<link>): Promise<void> {
+  async updateLink(link: Partial<Link>): Promise<void> {
     if (link.url) {
       this.validateUrl(link.url);
     }
 
-    let existingLink: link | undefined;
+    let existingLink: Link | undefined;
     if (link.id) {
       existingLink = await this.getLink(link.id);
     }
@@ -42,7 +42,7 @@ export class LinkService {
     const links = await this.getLinkCountByParentId(link.parentId || "");
     const length = links.length;
 
-    const result: link = {
+    const result: Link = {
       id: link.id || existingLink?.id || getUniqueId(),
       title: link.title || existingLink?.title || "",
       url: link.url || existingLink?.url || "",
@@ -64,35 +64,34 @@ export class LinkService {
   /**
    * 获取单个链接
    */
-  async getLink(id: string): Promise<link | undefined> {
-    return await db.get<link>(STORE_NAMES.LINK, id);
+  async getLink(id: string): Promise<Link | undefined> {
+    return await db.get<Link>(STORE_NAMES.LINK, id);
   }
 
   /**
    * 获取所有链接
    */
-  async getAllLinks(): Promise<link[]> {
-    return await db.getAll<link>(STORE_NAMES.LINK);
+  async getAllLinks(): Promise<Link[]> {
+    return await db.getAll<Link>(STORE_NAMES.LINK);
   }
 
   /**
    * 批量获取链接
    */
-  async getLinksByIds(ids: string[]): Promise<link[]> {
-    return await db.getMany<link>(STORE_NAMES.LINK, ids);
+  async getLinksByIds(ids: string[]): Promise<Link[]> {
+    return await db.getMany<Link>(STORE_NAMES.LINK, ids);
   }
 
   /**
    * @description 删除链接
-   * @param parentId 父级ID
    * @param id 链接ID
    * @param isResetSort 是否重置排序
    */
-  async deleteLink(
-    parentId: string,
-    id: string,
-    isResetSort: boolean = true
-  ): Promise<void> {
+  async deleteLink(id: string, isResetSort: boolean = true): Promise<void> {
+    const link = await this.getLink(id);
+    if (!link) return;
+    const parentId = link.parentId;
+
     // 更新其他链接的排序
     const links = await this.getLinkCountByParentId(parentId);
 
@@ -125,12 +124,10 @@ export class LinkService {
   /* 删除parentId等于parentId的链接 */
   async deleteLinkByParentId(parentId: string): Promise<void> {
     //查询所有链接
-    const links = await this.getAllLinks();
+    const links = await this.getLinkCountByParentId(parentId);
     //删除所有链接
     for (const link of links) {
-      if (link.parentId === parentId) {
-        await this.deleteLink(parentId, link.id, false);
-      }
+      await this.deleteLink(link.id, false);
     }
   }
 
