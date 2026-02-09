@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import LinkList from "../LinkList";
-import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import type { CategoryInfo } from "@/type/db";
 
@@ -9,8 +8,7 @@ interface CategoryPageProps {
   categoryInfo: CategoryInfo;
   currentCategoryId: string;
   onOpenEditLink: (linkId: string) => void;
-  onDeleteLink: (linkId: string) => void;
-  refreshCategoryLinks: (categoryId: string) => void;
+  onDeleteLinkClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
   updateLinkOrder: (
     parentId: string,
@@ -26,8 +24,7 @@ export default function CategoryPage(props: CategoryPageProps) {
     categoryInfo,
     currentCategoryId,
     onOpenEditLink,
-    onDeleteLink,
-    refreshCategoryLinks,
+    onDeleteLinkClick,
     handleSkipClick,
     updateLinkOrder,
     onOpenAddLink,
@@ -90,11 +87,7 @@ export default function CategoryPage(props: CategoryPageProps) {
             categoryLinks={categoryInfo.links}
             currentCategoryId={currentCategoryId}
             handleEditClick={onOpenEditLink}
-            handleDeleteClick={async (linkId) => {
-              await onDeleteLink(linkId);
-              await refreshCategoryLinks(currentCategoryId);
-              toast.success("删除链接成功");
-            }}
+            handleDeleteClick={onDeleteLinkClick}
             handleSkipClick={handleSkipClick}
             onMoveLink={updateLinkOrder}
           />

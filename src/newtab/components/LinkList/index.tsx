@@ -8,7 +8,7 @@ interface LinkListProps {
   categoryLinks: Link[];
   currentCategoryId: string;
   handleEditClick: (linkId: string) => void;
-  handleDeleteClick: (linkId: string) => Promise<void>;
+  handleDeleteClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
   onMoveLink: (parentId: string, dragIndex: number, hoverIndex: number) => void;
 }
@@ -17,7 +17,7 @@ interface LinkItemWrapperProps {
   link: Link;
   index: number;
   onEditClick: (linkId: string) => void;
-  onDeleteClick: (linkId: string) => Promise<void>;
+  onDeleteClick: (linkId: string) => void;
   onSkipClick: (url: string) => void;
   onHover: (dragIndex: number, hoverIndex: number) => void;
   onDrop: (dragIndex: number, hoverIndex: number) => void;
@@ -140,8 +140,8 @@ const LinkList: React.FC<LinkListProps> = ({
 
   /* 删除链接 */
   const onDeleteClick = useCallback(
-    async (linkId: string) => {
-      await handleDeleteClick(linkId);
+    (linkId: string) => {
+      handleDeleteClick(linkId);
     },
     [handleDeleteClick]
   );

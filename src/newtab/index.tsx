@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import NavigationBar from "./components/NavigationBar";
@@ -12,6 +12,7 @@ import { useLinkAction } from "../hooks/useLinkAction";
 import Setting from "./components/Setting";
 import SearchInput from "./components/SearchInput";
 import CategoryPage from "./components/CategoryPage";
+import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
 
 const NewTabApp: React.FC = () => {
   const {
@@ -50,6 +51,36 @@ const NewTabApp: React.FC = () => {
     window.open(url, "_blank");
   };
 
+  // 删除链接确认弹窗状态
+  const [isDeleteLinkDialogOpen, setIsDeleteLinkDialogOpen] = useState(false);
+  const [linkToDelete, setLinkToDelete] = useState<{ id: string; title: string } | null>(null);
+
+  // 处理删除链接点击 - 打开确认弹窗
+  const onDeleteLinkClick = useCallback((linkId: string) => {
+    // 查找链接标题
+    let linkTitle = "";
+    for (const category of categories) {
+      const link = category.links.find(l => l.id === linkId);
+      if (link) {
+        linkTitle = link.title;
+        break;
+      }
+    }
+    setLinkToDelete({ id: linkId, title: linkTitle });
+    setIsDeleteLinkDialogOpen(true);
+  }, [categories]);
+
+  // 确认删除链接
+  const confirmDeleteLink = useCallback(async () => {
+    if (linkToDelete) {
+      await onDeleteLink(linkToDelete.id);
+      await refreshCategoriesData();
+      toast.success("删除链接成功");
+    }
+    setIsDeleteLinkDialogOpen(false);
+    setLinkToDelete(null);
+  }, [linkToDelete, onDeleteLink, refreshCategoriesData]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div
@@ -83,8 +114,7 @@ const NewTabApp: React.FC = () => {
               categoryInfo={category}
               currentCategoryId={currentCategoryId}
               onOpenEditLink={onOpenEditLink}
-              onDeleteLink={onDeleteLink}
-              refreshCategoryLinks={refreshCategoriesData}
+              onDeleteLinkClick={onDeleteLinkClick}
               handleSkipClick={handleSkipClick}
               updateLinkOrder={updateLinkOrder}
               onOpenAddLink={onOpenAddLink}
@@ -123,6 +153,14 @@ const NewTabApp: React.FC = () => {
             await refreshCategoriesData();
             toast.success("操作成功");
           }}
+        />
+        {/* 删除链接确认弹窗 */}
+        <DeleteConfirmDialog
+          isOpen={isDeleteLinkDialogOpen}
+          onOpenChange={setIsDeleteLinkDialogOpen}
+          title="确认删除"
+          itemName={linkToDelete?.title || ""}
+          onConfirm={confirmDeleteLink}
         />
         <Toaster position="top-right" />
       </div>
