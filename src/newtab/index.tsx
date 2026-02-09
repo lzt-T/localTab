@@ -81,6 +81,30 @@ const NewTabApp: React.FC = () => {
     setLinkToDelete(null);
   }, [linkToDelete, onDeleteLink, refreshCategoriesData]);
 
+  // 删除分类确认弹窗状态
+  const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  // 处理删除分类点击 - 打开确认弹窗
+  const onDeleteCategoryClick = useCallback((categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (category) {
+      setCategoryToDelete({ id: categoryId, name: category.name });
+      setIsDeleteCategoryDialogOpen(true);
+    }
+  }, [categories]);
+
+  // 确认删除分类
+  const confirmDeleteCategory = useCallback(async () => {
+    if (categoryToDelete) {
+      await onDeleteCategory(categoryToDelete.id);
+      await refreshCategoriesData();
+      toast.success("删除分类成功");
+    }
+    setIsDeleteCategoryDialogOpen(false);
+    setCategoryToDelete(null);
+  }, [categoryToDelete, onDeleteCategory, refreshCategoriesData]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div
@@ -94,11 +118,7 @@ const NewTabApp: React.FC = () => {
             changeCurrentCategory={changeCurrentCategory}
             addCategory={() => onOpenAdd()}
             handleEditClick={(categoryId) => onOpenEdit(categoryId)}
-            handleDeleteClick={async (categoryId) => {
-              await onDeleteCategory(categoryId);
-              await refreshCategoriesData();
-              toast.success("删除分类成功");
-            }}
+            handleDeleteClick={onDeleteCategoryClick}
             onMoveCategory={updateCategoryOrder}
           />
         </section>
@@ -158,9 +178,17 @@ const NewTabApp: React.FC = () => {
         <DeleteConfirmDialog
           isOpen={isDeleteLinkDialogOpen}
           onOpenChange={setIsDeleteLinkDialogOpen}
-          title="确认删除"
+          title="确认删除链接"
           itemName={linkToDelete?.title || ""}
           onConfirm={confirmDeleteLink}
+        />
+        {/* 删除分类确认弹窗 */}
+        <DeleteConfirmDialog
+          isOpen={isDeleteCategoryDialogOpen}
+          onOpenChange={setIsDeleteCategoryDialogOpen}
+          title="确认删除分类"
+          itemName={categoryToDelete?.name || ""}
+          onConfirm={confirmDeleteCategory}
         />
         <Toaster position="top-right" />
       </div>
