@@ -9,6 +9,7 @@ interface LinkActionState {
     description: string;
     url: string;
     icon: string;
+    parentId: string;
   };
 }
 
@@ -38,6 +39,7 @@ export function useLinkAction() {
         description: link.description,
         url: link.url,
         icon: link.icon,
+        parentId: link.parentId,
       },
     });
     setIsOpen(true);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LucideIconConfig } from "../../../utils/icon";
+import type { Category } from "@/type/db";
 import {
   Sheet,
   SheetContent,
@@ -33,28 +34,34 @@ interface AddEditLinkProps {
     description: string;
     url: string;
     icon: string;
+    parentId: string;
   };
+  categories: Category[];
+  defaultCategoryId: string;
   handleClose: () => void;
   handleSubmit: (values: {
     title: string;
     description: string;
     url: string;
     icon: string;
+    parentId: string;
   }) => void;
 }
 
 export default function AddEditLink(props: AddEditLinkProps) {
-  const { open, mode, initialData, handleClose, handleSubmit } = props;
+  const { open, mode, initialData, categories, defaultCategoryId, handleClose, handleSubmit } = props;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
+  const [parentId, setParentId] = useState(defaultCategoryId);
   const [errors, setErrors] = useState<{
     title?: string;
     description?: string;
     url?: string;
     icon?: string;
+    parentId?: string;
   }>({});
   const [isLoadingFavicon, setIsLoadingFavicon] = useState(false);
   const [iconType, setIconType] = useState<"favicon" | "lucide">("lucide");
@@ -147,6 +154,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
       description?: string;
       url?: string;
       icon?: string;
+      parentId?: string;
     } = {};
 
     if (!title.trim()) {
@@ -164,9 +172,13 @@ export default function AddEditLink(props: AddEditLinkProps) {
       }
     }
 
+    if (!parentId) {
+      newErrors.parentId = "请选择分类";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [title, url]);
+  }, [title, url, parentId]);
 
   const onOk = useCallback(() => {
     if (onValidate()) {
@@ -174,10 +186,10 @@ export default function AddEditLink(props: AddEditLinkProps) {
       const finalUrl = url.trim().startsWith("http")
         ? url.trim()
         : `https://${url.trim()}`;
-      handleSubmit({ title, description, url: finalUrl, icon });
+      handleSubmit({ title, description, url: finalUrl, icon, parentId });
       handleClose();
     }
-  }, [title, description, url, icon, handleSubmit, onValidate, handleClose]);
+  }, [title, description, url, icon, parentId, handleSubmit, onValidate, handleClose]);
 
   const onCancel = useCallback(() => {
     handleClose();
@@ -216,6 +228,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
         setDescription(initialData.description);
         setUrl(initialData.url);
         setIcon(initialData.icon);
+        setParentId(initialData.parentId);
         // 判断图标类型
         if (initialData.icon && initialData.icon.startsWith("http")) {
           setIconType("favicon");
@@ -228,6 +241,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
         setUrl("");
         setIcon("link");
         setIconType("lucide");
+        setParentId(defaultCategoryId);
       }
       setErrors({});
     }
@@ -242,6 +256,38 @@ export default function AddEditLink(props: AddEditLinkProps) {
           <SheetDescription>{sheetDescription}</SheetDescription>
         </SheetHeader>
         <div className="grid gap-4 py-4 px-4">
+          <div className="grid gap-2">
+            <Label htmlFor="category">所属分类</Label>
+            <Select value={parentId} onValueChange={(value) => {
+              setParentId(value);
+              setErrors((prev) => ({ ...prev, parentId: undefined }));
+            }}>
+              <SelectTrigger
+                id="category"
+                className={cn(
+                  "w-full cursor-pointer",
+                  errors.parentId ? "border-red-500" : ""
+                )}
+              >
+                <SelectValue placeholder="请选择分类" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                    className="cursor-pointer"
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.parentId && (
+              <p className="text-sm text-red-500">{errors.parentId}</p>
+            )}
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="title">链接标题</Label>
             <Input

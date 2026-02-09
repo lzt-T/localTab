@@ -163,12 +163,11 @@ const NewTabApp: React.FC = () => {
           open={isOpenLink}
           mode={modeLink}
           initialData={initialDataLink}
+          categories={categories}
+          defaultCategoryId={currentCategoryId}
           handleClose={onCloseLink}
           handleSubmit={async (data) => {
-            await onSubmitLink({
-              parentId: currentCategoryId,
-              ...data,
-            });
+            await onSubmitLink(data);
             //刷新当前分类的链接列表
             await refreshCategoriesData();
             toast.success("操作成功");
