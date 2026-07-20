@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
-import { categoryService } from "../services/categoryService";
-import type { CategoryInfo } from "../type/db";
-import useSystemStore from "../store/systemStore";
-import { linkService, systemService } from "../services/index";
-import { useWebActive } from "../hooks/useWebActive";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { categoryService } from "@/services/categoryService";
+import type { CategoryInfo } from "@/type/db";
+import useSystemStore from "@/store/systemStore";
+import { linkService, systemService } from "@/services/index";
+import { useWebActive } from "@/hooks/useWebActive";
 import { toast } from "sonner";
-import { useBackgroundImg } from "../hooks/useBackgroundImg";
+import { useBackgroundImg } from "@/hooks/useBackgroundImg";
 import defaultBackground from "@/assets/defaultBackground.jpg";
-import { useMemo } from "react";
 import { SearchEngineType } from "@/type/db";
 
 export function useData() {
@@ -88,14 +87,27 @@ export function useData() {
     [refreshCategoriesData]
   );
 
-  /* 更新链接排序 */
-  const updateLinkOrder = useCallback(
-    async (parentId: string, dragIndex: number, hoverIndex: number) => {
-      await linkService.updateLinkOrder(parentId, dragIndex, hoverIndex);
+  /* 移动链接并刷新来源、目标分类的数据。 */
+  const moveLink = useCallback(
+    async (linkId: string, targetCategoryId: string, targetIndex: number) => {
+      const sourceCategory = categories.find((category) =>
+        category.links.some((link) => link.id === linkId)
+      );
+      const sourceIndex = sourceCategory?.links.findIndex(
+        (link) => link.id === linkId
+      );
+
+      await linkService.moveLink(linkId, targetCategoryId, targetIndex);
       await refreshCategoriesData();
-      toast.success("链接排序更新成功");
+      setCurrentCategoryId(targetCategoryId);
+
+      if (sourceCategory?.id !== targetCategoryId) {
+        toast.success("链接跨区移动成功");
+      } else if (sourceIndex !== targetIndex) {
+        toast.success("链接排序更新成功");
+      }
     },
-    [refreshCategoriesData]
+    [categories, refreshCategoriesData]
   );
 
   useEffect(() => {
@@ -143,6 +155,6 @@ export function useData() {
     changeCurrentCategory,
     refreshCategoriesData,
     updateCategoryOrder,
-    updateLinkOrder,
+    moveLink,
   };
 }

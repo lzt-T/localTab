@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import LinkList from "../LinkList";
-import { Plus } from "lucide-react";
+import LinkList from "@/newtab/components/LinkList";
 import type { CategoryInfo } from "@/type/db";
 
 interface CategoryPageProps {
@@ -10,11 +9,12 @@ interface CategoryPageProps {
   onOpenEditLink: (linkId: string) => void;
   onDeleteLinkClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
-  updateLinkOrder: (
-    parentId: string,
-    dragIndex: number,
-    hoverIndex: number
-  ) => void;
+  moveLink: (
+    linkId: string,
+    targetCategoryId: string,
+    targetIndex: number
+  ) => Promise<void>;
+  onCancelLinkDrag: () => Promise<void>;
   onOpenAddLink: () => void;
   handleCategoryChange: (categoryId: string) => void;
 }
@@ -26,7 +26,8 @@ export default function CategoryPage(props: CategoryPageProps) {
     onOpenEditLink,
     onDeleteLinkClick,
     handleSkipClick,
-    updateLinkOrder,
+    moveLink,
+    onCancelLinkDrag,
     onOpenAddLink,
     handleCategoryChange,
   } = props;
@@ -94,20 +95,14 @@ export default function CategoryPage(props: CategoryPageProps) {
         >
           <LinkList
             categoryLinks={categoryInfo.links}
-            currentCategoryId={currentCategoryId}
+            categoryId={categoryInfo.id}
             handleEditClick={onOpenEditLink}
             handleDeleteClick={onDeleteLinkClick}
             handleSkipClick={handleSkipClick}
-            onMoveLink={updateLinkOrder}
+            onMoveLink={moveLink}
+            onCancelDrag={onCancelLinkDrag}
+            onOpenAddLink={onOpenAddLink}
           />
-
-          {/* 添加按钮 */}
-          <div
-            className="glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32"
-            onClick={onOpenAddLink}
-          >
-            <Plus size={32} />
-          </div>
         </div>
       </section>
     </div>

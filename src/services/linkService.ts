@@ -3,10 +3,9 @@
  * 处理链接的业务逻辑
  */
 
-import { db, STORE_NAMES } from "../utils/db";
-import type { Link } from "../type/db";
-import { getUniqueId } from "../utils/base";
-import { LinkType } from "@/type/db";
+import { db, STORE_NAMES } from "@/utils/db";
+import { LinkType, type Link } from "@/type/db";
+import { getUniqueId } from "@/utils/base";
 
 export class LinkService {
   /**
@@ -131,38 +130,54 @@ export class LinkService {
     }
   }
 
-  /**
-   * 更新链接排序
-   * @param parentId 分类ID
-   * @param dragIndex 拖拽的源索引
-   * @param hoverIndex 放置的目标索引
-   */
-  async updateLinkOrder(
-    parentId: string,
-    dragIndex: number,
-    hoverIndex: number
+  /** 按数组顺序保存分类内的链接位置。 */
+  private async saveLinkOrder(links: Link[], parentId: string): Promise<void> {
+    for (let index = 0; index < links.length; index++) {
+      const link = links[index];
+      if (link.parentId !== parentId || link.sort !== index) {
+        await db.put(STORE_NAMES.LINK, { ...link, parentId, sort: index });
+      }
+    }
+  }
+
+  /** 将链接移动到目标分类的指定位置。 */
+  async moveLink(
+    linkId: string,
+    targetCategoryId: string,
+    targetIndex: number
   ): Promise<void> {
-    const links = await this.getLinkCountByParentId(parentId);
-
-    // 按 sort 字段排序
-    const sortedLinks = links.sort((a, b) => a.sort - b.sort);
-
-    if (dragIndex === hoverIndex) {
+    const link = await this.getLink(linkId);
+    if (!link) {
       return;
     }
 
-    // 重新计算排序
-    const draggedLink = sortedLinks[dragIndex];
-    const newLinks = [...sortedLinks];
-    newLinks.splice(dragIndex, 1);
-    newLinks.splice(hoverIndex, 0, draggedLink);
+    const sourceCategoryId = link.parentId;
+    const sourceLinks = await this.getLinkCountByParentId(sourceCategoryId);
+    const sourceIndex = sourceLinks.findIndex((item) => item.id === linkId);
 
-    // 更新所有链接的排序
-    for (let i = 0; i < newLinks.length; i++) {
-      if (newLinks[i].sort !== i) {
-        await this.updateLink({ ...newLinks[i], sort: i });
+    if (sourceCategoryId === targetCategoryId) {
+      if (sourceIndex === targetIndex) {
+        return;
       }
+
+      const reorderedLinks = sourceLinks.filter((item) => item.id !== linkId);
+      const insertIndex = Math.max(
+        0,
+        Math.min(targetIndex, reorderedLinks.length)
+      );
+      reorderedLinks.splice(insertIndex, 0, link);
+      await this.saveLinkOrder(reorderedLinks, targetCategoryId);
+      return;
     }
+
+    const targetLinks = await this.getLinkCountByParentId(targetCategoryId);
+    const insertIndex = Math.max(0, Math.min(targetIndex, targetLinks.length));
+    const remainingSourceLinks = sourceLinks.filter((item) => item.id !== linkId);
+    const movedTargetLinks = [...targetLinks];
+    movedTargetLinks.splice(insertIndex, 0, link);
+
+    await this.saveLinkOrder(remainingSourceLinks, sourceCategoryId);
+    await this.saveLinkOrder(movedTargetLinks, targetCategoryId);
   }
 }
 

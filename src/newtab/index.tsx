@@ -1,18 +1,18 @@
 import React, { useState, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import NavigationBar from "./components/NavigationBar";
-import { useData } from "./useData";
-import { useCategoryAction } from "../hooks/useCategoryAction";
-import AddCategory from "./components/AddEditCategory";
-import { Toaster } from "../components/ui/sonner";
+import NavigationBar from "@/newtab/components/NavigationBar";
+import { useData } from "@/newtab/useData";
+import { useCategoryAction } from "@/hooks/useCategoryAction";
+import AddCategory from "@/newtab/components/AddEditCategory";
+import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import AddEditLink from "./components/AddEditLink";
-import { useLinkAction } from "../hooks/useLinkAction";
-import Setting from "./components/Setting";
-import SearchInput from "./components/SearchInput";
-import CategoryPage from "./components/CategoryPage";
-import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
+import AddEditLink from "@/newtab/components/AddEditLink";
+import { useLinkAction } from "@/hooks/useLinkAction";
+import Setting from "@/newtab/components/Setting";
+import SearchInput from "@/newtab/components/SearchInput";
+import CategoryPage from "@/newtab/components/CategoryPage";
+import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 
 const NewTabApp: React.FC = () => {
   const {
@@ -22,7 +22,7 @@ const NewTabApp: React.FC = () => {
     changeCurrentCategory,
     refreshCategoriesData,
     updateCategoryOrder,
-    updateLinkOrder,
+    moveLink,
   } = useData();
   const {
     isOpen,
@@ -136,7 +136,8 @@ const NewTabApp: React.FC = () => {
               onOpenEditLink={onOpenEditLink}
               onDeleteLinkClick={onDeleteLinkClick}
               handleSkipClick={handleSkipClick}
-              updateLinkOrder={updateLinkOrder}
+              moveLink={moveLink}
+              onCancelLinkDrag={refreshCategoriesData}
               onOpenAddLink={onOpenAddLink}
               handleCategoryChange={changeCurrentCategory}
             />

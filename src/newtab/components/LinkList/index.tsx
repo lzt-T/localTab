@@ -1,23 +1,35 @@
 import { useCallback, useState, useEffect, useMemo } from "react";
+import { useDrop } from "react-dnd";
+import { Plus } from "lucide-react";
 import type { Link } from "@/type/db";
-import LinkItemWrapper from "./LinkItemWrapper";
+import { cn } from "@/lib/utils";
+import { DRAG_ITEM_TYPE, type LinkDragItem } from "@/newtab/drag-and-drop";
+import LinkItemWrapper from "@/newtab/components/LinkList/LinkItemWrapper";
 
 interface LinkListProps {
   categoryLinks: Link[];
-  currentCategoryId: string;
+  categoryId: string;
   handleEditClick: (linkId: string) => void;
   handleDeleteClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
-  onMoveLink: (parentId: string, dragIndex: number, hoverIndex: number) => void;
+  onMoveLink: (
+    linkId: string,
+    targetCategoryId: string,
+    targetIndex: number
+  ) => Promise<void>;
+  onCancelDrag: () => Promise<void>;
+  onOpenAddLink: () => void;
 }
 
 export default function LinkList({
   categoryLinks,
-  currentCategoryId,
+  categoryId,
   handleEditClick,
   handleDeleteClick,
   handleSkipClick,
   onMoveLink,
+  onCancelDrag,
+  onOpenAddLink,
 }: LinkListProps) {
   // 按 sort 字段排序的链接列表
   const sortedLinks = useMemo(() => {
@@ -56,23 +68,63 @@ export default function LinkList({
     [handleSkipClick]
   );
 
-  /* 拖拽悬停时更新本地 UI */
-  const onHover = useCallback((dragIndex: number, hoverIndex: number) => {
-    setLocalLinks((prev) => {
-      const newLinks = [...prev];
-      const draggedLink = newLinks[dragIndex];
-      newLinks.splice(dragIndex, 1);
-      newLinks.splice(hoverIndex, 0, draggedLink);
-      return newLinks;
-    });
-  }, []);
+  /* 拖拽悬停时插入或移动预览卡片。 */
+  const onHover = useCallback(
+    (item: LinkDragItem, hoverIndex: number) => {
+      setLocalLinks((previousLinks) => {
+        const previousIndex = previousLinks.findIndex(
+          (link) => link.id === item.link.id
+        );
+        const nextLinks = previousLinks.filter((link) => link.id !== item.link.id);
+        const insertIndex = Math.max(0, Math.min(hoverIndex, nextLinks.length));
+        if (
+          item.currentCategoryId === categoryId &&
+          previousIndex === insertIndex
+        ) {
+          return previousLinks;
+        }
 
-  /* 松开鼠标时更新数据库 */
-  const onDrop = useCallback(
-    async (dragIndex: number, hoverIndex: number) => {
-      await onMoveLink(currentCategoryId, dragIndex, hoverIndex);
+        const previewLink = { ...item.link, parentId: categoryId };
+        nextLinks.splice(insertIndex, 0, previewLink);
+
+        item.currentCategoryId = categoryId;
+        item.index = insertIndex;
+        return nextLinks;
+      });
     },
-    [onMoveLink, currentCategoryId]
+    [categoryId]
+  );
+
+  /* 松开鼠标时提交预览中的最终分类和位置。 */
+  const onDrop = useCallback(
+    (item: LinkDragItem, targetIndex: number) => {
+      void onMoveLink(item.link.id, categoryId, targetIndex);
+    },
+    [categoryId, onMoveLink]
+  );
+
+  const [{ isOverEnd }, dropAtEnd] = useDrop<
+    LinkDragItem,
+    void,
+    { isOverEnd: boolean }
+  >({
+    accept: DRAG_ITEM_TYPE.LINK,
+    hover(item) {
+      onHover(item, localLinks.length);
+    },
+    drop(item) {
+      onDrop(item, item.index);
+    },
+    collect: (monitor) => ({
+      isOverEnd: monitor.isOver({ shallow: true }),
+    }),
+  });
+
+  const addLinkRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      dropAtEnd(node);
+    },
+    [dropAtEnd]
   );
 
   return (
@@ -88,9 +140,21 @@ export default function LinkList({
             onSkipClick={onSkipClick}
             onHover={onHover}
             onDrop={onDrop}
+            onCancelDrag={onCancelDrag}
           />
         );
       })}
+
+      <div
+        ref={addLinkRef}
+        className={cn(
+          "glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 cursor-pointer h-32",
+          isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
+        )}
+        onClick={onOpenAddLink}
+      >
+        <Plus size={32} />
+      </div>
     </>
   );
 }
