@@ -31,49 +31,58 @@ export default function CategoryPage(props: CategoryPageProps) {
     handleCategoryChange,
   } = props;
 
+  const categoryPageRef = useRef<HTMLDivElement>(null);
   const linkListRef = useRef<HTMLDivElement>(null);
-  const isEnter = useRef(false);
+  const isCategoryPageVisibleRef = useRef(false);
 
   useEffect(() => {
-    if (!linkListRef.current) {
+    if (!categoryPageRef.current) {
       return;
     }
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          linkListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-          handleCategoryChange(categoryInfo.id);
-          isEnter.current = true;
-        } else {
-          isEnter.current = false;
-        }
-      });
-    });
-    observer.observe(linkListRef.current as unknown as Element);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const isCategoryPageVisible = entry.intersectionRatio >= 0.5;
+          isCategoryPageVisibleRef.current = isCategoryPageVisible;
+
+          if (isCategoryPageVisible) {
+            linkListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            handleCategoryChange(categoryInfo.id);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(categoryPageRef.current);
 
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [categoryInfo.id, handleCategoryChange]);
 
   useEffect(() => {
-    if (!linkListRef.current) {
+    if (!categoryPageRef.current) {
       return;
     }
 
-    if (currentCategoryId === categoryInfo.id && !isEnter.current) {
-      /* 滚动到页面中间 */
-      linkListRef.current.scrollIntoView({
+    if (
+      currentCategoryId === categoryInfo.id &&
+      !isCategoryPageVisibleRef.current
+    ) {
+      categoryPageRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
         inline: "nearest",
       });
     }
-  }, [currentCategoryId]);
+  }, [categoryInfo.id, currentCategoryId]);
 
   return (
-    <div className="flex flex-col w-full h-screen snap-start items-center">
+    <div
+      ref={categoryPageRef}
+      className="flex flex-col w-full h-screen snap-start items-center"
+    >
       <div className="h-[160px] flex items-center justify-center"></div>
 
       <section className="flex-1 w-[calc(100%-376px)] p-8 min-h-0">

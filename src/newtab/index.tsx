@@ -123,8 +123,8 @@ const NewTabApp: React.FC = () => {
           />
         </section>
 
-        <div className="fixed left-[50%] top-0 translate-x-[-50%] w-full h-[160px] flex items-center justify-center">
-          <SearchInput />
+        <div className="pointer-events-none fixed left-[50%] top-0 translate-x-[-50%] w-full h-[160px] flex items-center justify-center">
+          <SearchInput className="pointer-events-auto" />
         </div>
 
         {categories.map((category) => {
