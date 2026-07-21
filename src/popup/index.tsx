@@ -1,5 +1,6 @@
 import React from 'react'
-import { Home, Settings, Info } from 'lucide-react'
+import { Github, Home } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // Chrome API 类型声明
 declare const chrome: {
@@ -8,68 +9,58 @@ declare const chrome: {
   }
 }
 
+const GITHUB_REPOSITORY_URL = 'https://github.com/lzt-T/localTab'
+
 const PopupApp: React.FC = () => {
   const handleOpenNewTab = () => {
-    // @ts-expect-error - Chrome API is available in extension context
     chrome.tabs.create({ url: 'chrome://newtab/' })
     window.close()
   }
 
-  const handleSettings = () => {
-    // 未来可以打开设置页面
-    alert('设置功能即将推出！')
-  }
-
-  const handleAbout = () => {
-    alert('LocalTab v1.0.0\n一个类似WeTab的新标签页管理器')
+  const handleOpenGitHub = () => {
+    chrome.tabs.create({ url: GITHUB_REPOSITORY_URL })
+    window.close()
   }
 
   return (
-    <div className="w-80 min-h-64 relative overflow-hidden">
-      {/* 背景渐变 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" />
-      
-      {/* 玻璃态内容层 */}
-      <div className="relative h-full backdrop-blur-xl bg-white/5 p-6 flex flex-col">
-        {/* 头部 */}
-        <div className="text-center mb-6">
-          <div className="glass-style-border rounded-2xl px-6 py-4 inline-block mb-3">
-            <div className="text-2xl font-bold text-white mb-1">LocalTab</div>
-            <div className="text-xs text-white/70">v1.0.0</div>
-          </div>
-        </div>
+    <div className="relative w-80 overflow-hidden bg-[#101116] text-white shadow-2xl ring-1 ring-inset ring-white/10">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.22),transparent_44%)]"
+      />
 
-        {/* 菜单 */}
-        <div className="flex flex-col gap-3 flex-1">
-          <button 
-            className="glass-style-border group flex items-center px-4 py-3 rounded-xl text-white cursor-pointer transition-all duration-300 text-sm w-full text-left hover:bg-white/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+      <div className="relative flex flex-col p-5 backdrop-blur-xl">
+        <header className="mb-5 flex items-center justify-between text-left">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-white">LocalTab</h1>
+            <p className="mt-0.5 text-xs text-white/65">新标签页管理器</p>
+          </div>
+          <span className="rounded-full border border-violet-300/20 bg-violet-400/10 px-2.5 py-1 text-[11px] font-medium text-violet-100/85">
+            v1.0.0
+          </span>
+        </header>
+
+        <div className="flex flex-col gap-2">
+          <Button
+            className="group h-11 w-full cursor-pointer justify-start rounded-xl border border-violet-300/20 bg-violet-500 px-4 text-sm text-white shadow-[0_8px_24px_rgba(124,58,237,0.22)] hover:bg-violet-400 focus-visible:border-violet-200/50 focus-visible:ring-violet-300/40"
             onClick={handleOpenNewTab}
           >
-            <Home size={18} className="mr-3 text-blue-200/90 group-hover:text-blue-100 transition-colors" />
+            <Home className="text-violet-100 transition-colors group-hover:text-white" />
             <span className="font-medium">打开新标签页</span>
-          </button>
-          <button 
-            className="glass-style-border group flex items-center px-4 py-3 rounded-xl text-white cursor-pointer transition-all duration-300 text-sm w-full text-left hover:bg-white/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            onClick={handleSettings}
+          </Button>
+          <Button
+            variant="ghost"
+            className="group h-11 w-full cursor-pointer justify-start rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white/85 hover:bg-white/[0.09] hover:text-white focus-visible:border-white/20 focus-visible:ring-white/20"
+            onClick={handleOpenGitHub}
           >
-            <Settings size={18} className="mr-3 text-blue-200/90 group-hover:text-blue-100 transition-colors" />
-            <span className="font-medium">设置</span>
-          </button>
-          <button 
-            className="glass-style-border group flex items-center px-4 py-3 rounded-xl text-white cursor-pointer transition-all duration-300 text-sm w-full text-left hover:bg-white/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            onClick={handleAbout}
-          >
-            <Info size={18} className="mr-3 text-blue-200/90 group-hover:text-blue-100 transition-colors" />
-            <span className="font-medium">关于</span>
-          </button>
+            <Github className="text-violet-200/75 transition-colors group-hover:text-violet-100" />
+            <span className="font-medium">lzt-T/localTab</span>
+          </Button>
         </div>
 
-        {/* 页脚 */}
-        <div className="text-center mt-6 pt-4 border-t border-white/10">
-          <div className="text-xs text-white/60 font-medium">
-            让每个新标签页都充满可能
-          </div>
-        </div>
+        <footer className="mt-4 border-t border-white/10 pt-3 text-center">
+          <p className="text-xs font-medium text-white/65">让每个新标签页都充满可能</p>
+        </footer>
       </div>
     </div>
   )
