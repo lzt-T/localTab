@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Github, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -12,6 +13,8 @@ declare const chrome: {
 const GITHUB_REPOSITORY_URL = 'https://github.com/lzt-T/localTab'
 
 const PopupApp: React.FC = () => {
+  const { t } = useTranslation()
+
   const handleOpenNewTab = () => {
     chrome.tabs.create({ url: 'chrome://newtab/' })
     window.close()
@@ -21,6 +24,10 @@ const PopupApp: React.FC = () => {
     chrome.tabs.create({ url: GITHUB_REPOSITORY_URL })
     window.close()
   }
+
+  useEffect(() => {
+    document.title = t('meta.popupTitle')
+  }, [t])
 
   return (
     <div className="relative w-80 overflow-hidden bg-[#202226] text-white shadow-2xl ring-1 ring-inset ring-white/10">
@@ -33,7 +40,7 @@ const PopupApp: React.FC = () => {
         <header className="mb-5 flex items-center justify-between text-left">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-white">LocalTab</h1>
-            <p className="mt-0.5 text-xs text-white/65">新标签页管理器</p>
+            <p className="mt-0.5 text-xs text-white/65">{t('popup.subtitle')}</p>
           </div>
           <span className="rounded-full border border-blue-300/20 bg-blue-400/10 px-2.5 py-1 text-[11px] font-medium text-blue-100/85">
             v1.0.0
@@ -46,7 +53,7 @@ const PopupApp: React.FC = () => {
             onClick={handleOpenNewTab}
           >
             <Home className="text-blue-100 transition-colors group-hover:text-white" />
-            <span className="font-medium">打开新标签页</span>
+            <span className="font-medium">{t('popup.openNewTab')}</span>
           </Button>
           <Button
             variant="ghost"
@@ -59,7 +66,7 @@ const PopupApp: React.FC = () => {
         </div>
 
         <footer className="mt-4 border-t border-white/10 pt-3 text-center">
-          <p className="text-xs font-medium text-white/65">让每个新标签页都充满可能</p>
+          <p className="text-xs font-medium text-white/65">{t('popup.tagline')}</p>
         </footer>
       </div>
     </div>

@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import NavigationBar from "@/newtab/components/NavigationBar";
@@ -15,6 +16,7 @@ import CategoryPage from "@/newtab/components/CategoryPage";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 
 const NewTabApp: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentCategoryId,
     categories,
@@ -75,11 +77,11 @@ const NewTabApp: React.FC = () => {
     if (linkToDelete) {
       await onDeleteLink(linkToDelete.id);
       await refreshCategoriesData();
-      toast.success("删除链接成功");
+      toast.success(t("link.deleteSuccess"));
     }
     setIsDeleteLinkDialogOpen(false);
     setLinkToDelete(null);
-  }, [linkToDelete, onDeleteLink, refreshCategoriesData]);
+  }, [linkToDelete, onDeleteLink, refreshCategoriesData, t]);
 
   // 删除分类确认弹窗状态
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] = useState(false);
@@ -99,11 +101,15 @@ const NewTabApp: React.FC = () => {
     if (categoryToDelete) {
       await onDeleteCategory(categoryToDelete.id);
       await refreshCategoriesData();
-      toast.success("删除分类成功");
+      toast.success(t("category.deleteSuccess"));
     }
     setIsDeleteCategoryDialogOpen(false);
     setCategoryToDelete(null);
-  }, [categoryToDelete, onDeleteCategory, refreshCategoriesData]);
+  }, [categoryToDelete, onDeleteCategory, refreshCategoriesData, t]);
+
+  useEffect(() => {
+    document.title = t("meta.newTabTitle");
+  }, [t]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -156,7 +162,7 @@ const NewTabApp: React.FC = () => {
             await onSubmit(data);
             //刷新分类列表
             await refreshCategoriesData();
-            toast.success("操作成功");
+            toast.success(t("messages.operationSuccess"));
           }}
         />
         {/* 添加链接 */}
@@ -171,14 +177,14 @@ const NewTabApp: React.FC = () => {
             await onSubmitLink(data);
             //刷新当前分类的链接列表
             await refreshCategoriesData();
-            toast.success("操作成功");
+            toast.success(t("messages.operationSuccess"));
           }}
         />
         {/* 删除链接确认弹窗 */}
         <DeleteConfirmDialog
           isOpen={isDeleteLinkDialogOpen}
           onOpenChange={setIsDeleteLinkDialogOpen}
-          title="确认删除链接"
+          title={t("link.confirmDelete")}
           itemName={linkToDelete?.title || ""}
           onConfirm={confirmDeleteLink}
         />
@@ -186,7 +192,7 @@ const NewTabApp: React.FC = () => {
         <DeleteConfirmDialog
           isOpen={isDeleteCategoryDialogOpen}
           onOpenChange={setIsDeleteCategoryDialogOpen}
-          title="确认删除分类"
+          title={t("category.confirmDelete")}
           itemName={categoryToDelete?.name || ""}
           onConfirm={confirmDeleteCategory}
         />

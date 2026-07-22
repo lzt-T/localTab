@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -6,10 +7,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import BaiduImg from "../../../assets/baidu.png";
-import BingImg from "../../../assets/bing.png";
-import DuckDuckGoImg from "../../../assets/duckduckgo.png";
-import GoogleImg from "../../../assets/google.png";
+import BaiduImg from "@/assets/baidu.png";
+import BingImg from "@/assets/bing.png";
+import DuckDuckGoImg from "@/assets/duckduckgo.png";
+import GoogleImg from "@/assets/google.png";
 import { SearchEngineType } from "@/type/db";
 import { useSearchEngine } from "@/hooks/useSearchEngine";
 
@@ -55,17 +56,18 @@ export interface SearchInputProps {
 
 export default function SearchInput({
   className,
-  placeholder = "搜索或输入网址...",
+  placeholder,
   searchEngines = DEFAULT_SEARCH_ENGINES,
 }: SearchInputProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const { searchEngine, isInitializedSearchEngine, onChangeSearchEngine } =
     useSearchEngine();
 
-  const selectedEngine = useMemo(() => {
+  const selectedEngine = useMemo<SearchEngine>(() => {
     if (!isInitializedSearchEngine) {
       return {
-        id: "",
+        id: SearchEngineType.GOOGLE,
         name: "",
         url: "",
         icon: "",
@@ -73,6 +75,12 @@ export default function SearchInput({
     }
     return searchEngines.find((e) => e.id === searchEngine)!;
   }, [searchEngines, searchEngine, isInitializedSearchEngine]);
+
+  const getEngineName = (engine: SearchEngine) => {
+    return engine.id === SearchEngineType.BAIDU
+      ? t("search.baidu")
+      : engine.name;
+  };
 
   // 处理输入变化
   const onQueryChange = useCallback(
@@ -134,7 +142,7 @@ export default function SearchInput({
               return (
                 <img
                   src={selectedEngine.icon}
-                  alt={selectedEngine.name}
+                  alt={getEngineName(selectedEngine)}
                   className="w-4 h-4 shrink-0"
                 />
               );
@@ -165,10 +173,10 @@ export default function SearchInput({
                   <div className="flex items-center gap-2">
                     <img
                       src={engine.icon}
-                      alt={engine.name}
+                      alt={getEngineName(engine)}
                       className="w-4 h-4 shrink-0"
                     />
-                    <span>{engine.name}</span>
+                    <span>{getEngineName(engine)}</span>
                     {selectedEngine.id === engine.id && (
                       <span className="ml-auto text-white">✓</span>
                     )}
@@ -187,7 +195,7 @@ export default function SearchInput({
       <Input
         type="text"
         className="flex-1 h-12 text-xl border-none bg-transparent text-white placeholder-white/80 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("search.placeholder")}
         onChange={onQueryChange}
         onKeyDown={onKeyDown}
         autoFocus

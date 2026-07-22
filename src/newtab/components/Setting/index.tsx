@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Palette, Settings } from "lucide-react";
+import { Languages, Palette, Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Popover,
   PopoverTrigger,
@@ -8,39 +9,43 @@ import {
 import { cn } from "@/utils/base";
 import BackgroundImg from "@/newtab/components/Setting/BackgroundImg";
 import DataManagement from "@/newtab/components/Setting/DataManagement";
+import LanguageSettings from "@/newtab/components/Setting/LanguageSettings";
 
 type SettingNavItem = {
-  id: string;
-  label: string;
+  id: SettingSection;
+  labelKey: string;
   icon: React.ReactNode;
-  badge?: string;
 };
 
+type SettingSection = "wallpaper" | "data" | "language";
+
+const SETTING_NAV_ITEMS: SettingNavItem[] = [
+  {
+    id: "wallpaper",
+    labelKey: "settings.wallpaper",
+    icon: <Palette size={20} />,
+  },
+  {
+    id: "data",
+    labelKey: "settings.dataManagement",
+    icon: <Palette size={20} />,
+  },
+  {
+    id: "language",
+    labelKey: "settings.language",
+    icon: <Languages size={20} />,
+  },
+];
+
 const Setting: React.FC = () => {
-  const [activeNav, setActiveNav] = useState<string>("wallpaper");
-
-  /* 导航栏 */
-  const navItems: SettingNavItem[] = [
-    { id: "wallpaper", label: "壁纸", icon: <Palette size={20} /> },
-    { id: "data", label: "数据管理", icon: <Palette size={20} /> },
-  ];
-
-  /* 渲染内容 */
-  const renderContent = () => {
-    const config: Record<string, React.ReactNode> = {
-      wallpaper: <BackgroundImg />,
-      data: <DataManagement />,
-    };
-    return (
-      <div className="space-y-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">
-            {navItems.find((item) => item.id === activeNav)?.label}
-          </h2>
-        </div>
-        {config[activeNav]}
-      </div>
-    );
+  const { t } = useTranslation();
+  const [activeNav, setActiveNav] =
+    useState<SettingSection>("wallpaper");
+  const activeItem = SETTING_NAV_ITEMS.find((item) => item.id === activeNav)!;
+  const contentBySection: Record<SettingSection, React.ReactNode> = {
+    wallpaper: <BackgroundImg />,
+    data: <DataManagement />,
+    language: <LanguageSettings />,
   };
 
   return (
@@ -48,7 +53,8 @@ const Setting: React.FC = () => {
       <PopoverTrigger asChild>
         <button
           className="fixed bottom-6 left-6 z-50 p-3 text-white/80 hover:text-white  hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
-          title="设置"
+          title={t("settings.trigger")}
+          aria-label={t("settings.trigger")}
         >
           <Settings size={22} />
         </button>
@@ -72,7 +78,7 @@ const Setting: React.FC = () => {
 
             {/* 导航列表 */}
             <div className="flex-1 overflow-y-auto py-2">
-              {navItems.map((item) => (
+              {SETTING_NAV_ITEMS.map((item) => (
                 <button
                   key={item.id}
                   className={cn(
@@ -82,12 +88,7 @@ const Setting: React.FC = () => {
                   onClick={() => setActiveNav(item.id)}
                 >
                   <span className="text-white/70">{item.icon}</span>
-                  <span className="flex-1 text-sm">{item.label}</span>
-                  {item.badge && (
-                    <span className="px-2 py-0.5 text-xs bg-white/10 rounded">
-                      {item.badge}
-                    </span>
-                  )}
+                  <span className="flex-1 text-sm">{t(item.labelKey)}</span>
                 </button>
               ))}
             </div>
@@ -100,7 +101,14 @@ const Setting: React.FC = () => {
 
           {/* 右侧内容区域 */}
           <div className="flex-1 overflow-y-auto bg-white/[0.025]">
-            <div className="p-6">{renderContent()}</div>
+            <div className="space-y-6 p-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold">
+                  {t(activeItem.labelKey)}
+                </h2>
+              </div>
+              {contentBySection[activeNav]}
+            </div>
           </div>
         </div>
       </PopoverContent>

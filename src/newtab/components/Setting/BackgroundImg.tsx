@@ -1,4 +1,5 @@
 import { Trash2, Image as ImageIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useBackgroundImg } from "@/hooks/useBackgroundImg";
@@ -7,6 +8,7 @@ import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 export default function BackgroundImg() {
+  const { t } = useTranslation();
   const { backgroundImage, onUploadBackground, onDeleteBackground } =
     useBackgroundImg();
 
@@ -14,22 +16,22 @@ export default function BackgroundImg() {
   const handleImageFile = async (file: File) => {
     // 验证文件类型
     if (!file.type.startsWith("image/")) {
-      toast.error("请选择图片文件");
+      toast.error(t("wallpaper.selectImageFile"));
       return;
     }
 
     // 验证文件大小
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error("图片文件大小不能超过 10MB");
+      toast.error(t("wallpaper.imageTooLarge"));
       return;
     }
 
     try {
       await onUploadBackground(file);
-      toast.success("背景图片设置成功");
+      toast.success(t("wallpaper.setSuccess"));
     } catch (error) {
       console.error("上传背景图片失败:", error);
-      toast.error("上传背景图片失败");
+      toast.error(t("wallpaper.uploadFailed"));
     }
   };
 
@@ -37,10 +39,10 @@ export default function BackgroundImg() {
   const handleDeleteBackground = async () => {
     try {
       await onDeleteBackground();
-      toast.success("背景图片已删除");
+      toast.success(t("wallpaper.deleted"));
     } catch (error) {
       console.error("删除背景图片失败:", error);
-      toast.error("删除背景图片失败");
+      toast.error(t("wallpaper.deleteFailed"));
     }
   };
 
@@ -48,8 +50,8 @@ export default function BackgroundImg() {
     <div className="space-y-6">
       <FileDropZone
         accept="image/*"
-        title="点击选择或拖入图片"
-        description="支持常见图片格式，最大 10MB"
+        title={t("wallpaper.selectImage")}
+        description={t("wallpaper.supportedFormats")}
         onFileSelect={handleImageFile}
       />
 
@@ -57,7 +59,9 @@ export default function BackgroundImg() {
       {backgroundImage && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-white/70">当前背景预览：</div>
+            <div className="text-sm text-white/70">
+              {t("wallpaper.currentPreview")}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -65,19 +69,19 @@ export default function BackgroundImg() {
               className="cursor-pointer border-red-400/25 bg-red-500/10 text-red-100 hover:bg-red-500/20 hover:text-white"
             >
               <Trash2 size={16} />
-              删除背景
+              {t("wallpaper.deleteBackground")}
             </Button>
           </div>
           <div className="relative w-full h-64 rounded-lg overflow-hidden border border-white/20">
             <img
               src={backgroundImage}
-              alt="背景预览"
+              alt={t("wallpaper.previewAlt")}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
               <div className="flex items-center gap-2 text-white">
                 <ImageIcon size={20} />
-                <span className="text-sm">背景图片</span>
+                <span className="text-sm">{t("wallpaper.backgroundImage")}</span>
               </div>
             </div>
           </div>
@@ -88,7 +92,7 @@ export default function BackgroundImg() {
       {!backgroundImage && (
         <div className="text-sm text-white/50 flex items-center gap-2">
           <ImageIcon size={16} />
-          <span>尚未设置背景图片</span>
+          <span>{t("wallpaper.notSet")}</span>
         </div>
       )}
     </div>

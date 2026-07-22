@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { categoryService } from "../services/categoryService";
+import { useTranslation } from "react-i18next";
+import { categoryService } from "@/services/categoryService";
 import { toast } from "sonner";
 
 interface CategoryActionState {
@@ -12,6 +13,7 @@ interface CategoryActionState {
 }
 
 export function useCategoryAction() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [actionState, setActionState] = useState<CategoryActionState>({
     mode: "add",
@@ -44,7 +46,7 @@ export function useCategoryAction() {
   const onDeleteCategory = async (categoryId: string) => {
     const length = await categoryService.getCategoryCount();
     if (length === 1) {
-      toast.warning("至少保留一个分类");
+      toast.warning(t("category.keepOne"));
       return;
     }
 

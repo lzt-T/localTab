@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { categoryService } from "@/services/categoryService";
 import type { CategoryInfo } from "@/type/db";
 import useSystemStore from "@/store/systemStore";
@@ -8,8 +9,10 @@ import { toast } from "sonner";
 import { useBackgroundImg } from "@/hooks/useBackgroundImg";
 import defaultBackground from "@/assets/defaultBackground.jpg";
 import { SearchEngineType } from "@/type/db";
+import i18n from "@/i18n";
 
 export function useData() {
+  const { t } = useTranslation();
   const { isWebActive, onChangeWebActive } = useWebActive();
   const { onLoadBackground, backgroundImage } = useBackgroundImg();
   const changeIsInitializedDB = useSystemStore(
@@ -82,9 +85,9 @@ export function useData() {
     async (dragIndex: number, hoverIndex: number) => {
       await categoryService.updateCategoryOrder(dragIndex, hoverIndex);
       await refreshCategoriesData();
-      toast.success("分类排序更新成功");
+      toast.success(t("category.sortSuccess"));
     },
-    [refreshCategoriesData]
+    [refreshCategoriesData, t]
   );
 
   /* 移动链接并刷新来源、目标分类的数据。 */
@@ -102,18 +105,18 @@ export function useData() {
       setCurrentCategoryId(targetCategoryId);
 
       if (sourceCategory?.id !== targetCategoryId) {
-        toast.success("链接跨区移动成功");
+        toast.success(t("link.movedSuccess"));
       } else if (sourceIndex !== targetIndex) {
-        toast.success("链接排序更新成功");
+        toast.success(t("link.sortSuccess"));
       }
     },
-    [categories, refreshCategoriesData]
+    [categories, refreshCategoriesData, t]
   );
 
   useEffect(() => {
     const init = async () => {
       await systemService.init();
-      await categoryService.init();
+      await categoryService.init(i18n.t("category.defaultHome"));
       changeIsInitializedDB(true);
 
       const categories = await categoryService.getAllCategories();

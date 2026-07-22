@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -25,16 +26,18 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   title,
   itemName,
   onConfirm,
-  confirmText = "确认删除",
-  cancelText = "取消",
+  confirmText,
+  cancelText,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="border-white/15 bg-[rgba(32,34,38,0.92)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
         <DialogHeader>
           <DialogTitle className="text-white">{title}</DialogTitle>
           <DialogDescription className="text-white/60">
-            确定要删除 "{itemName}" 吗？此操作无法撤销。
+            {t("deleteDialog.description", { itemName })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -43,14 +46,14 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
             onClick={() => onOpenChange(false)}
             className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
           >
-            {cancelText}
+            {cancelText ?? t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
             className="cursor-pointer border border-red-400/30 bg-red-500/70 text-white hover:bg-red-500/90 focus-visible:ring-red-300/30 dark:bg-red-500/70 dark:hover:bg-red-500/90"
           >
-            {confirmText}
+            {confirmText ?? t("deleteDialog.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

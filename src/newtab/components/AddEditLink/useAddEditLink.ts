@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { Category } from "@/type/db";
 import _ from "lodash";
 import { fetchFavicon } from "@/utils/webIcon";
@@ -36,6 +37,7 @@ interface Errors {
 
 export function useAddEditLink(props: UseAddEditLinkProps) {
   const { open, mode, initialData, categories, defaultCategoryId, handleClose, handleSubmit } = props;
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,13 +48,10 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const [isLoadingFavicon, setIsLoadingFavicon] = useState(false);
   const [iconType, setIconType] = useState<"favicon" | "lucide">("lucide");
 
-  const sheetTitle = useMemo(() => {
-    return mode === "add" ? "添加链接" : "编辑链接";
-  }, [mode]);
-
-  const sheetDescription = useMemo(() => {
-    return mode === "add" ? "创建一个新的链接" : "修改链接信息";
-  }, [mode]);
+  const sheetTitle = t(mode === "add" ? "link.addTitle" : "link.editTitle");
+  const sheetDescription = t(
+    mode === "add" ? "link.addDescription" : "link.editDescription"
+  );
 
   /* 获取并设置 favicon */
   const onFetchFavicon = useCallback(async () => {
@@ -68,15 +67,15 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         setIcon(faviconUrl);
       } else {
         setIcon("");
-        toast.warning("获取网站图标失败");
+        toast.warning(t("link.faviconFailed"));
       }
     } catch {
       setIcon("");
-      toast.warning("获取网站图标失败");
+      toast.warning(t("link.faviconFailed"));
     } finally {
       setIsLoadingFavicon(false);
     }
-  }, [url]);
+  }, [url, t]);
 
   /* 监听标题变化 */
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,26 +131,26 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     const newErrors: Errors = {};
 
     if (!title.trim()) {
-      newErrors.title = "请输入链接标题";
+      newErrors.title = t("link.titleRequired");
     }
 
     if (!url.trim()) {
-      newErrors.url = "请输入链接地址";
+      newErrors.url = t("link.urlRequired");
     } else {
       try {
         new URL(url.startsWith("http") ? url : `https://${url}`);
       } catch {
-        newErrors.url = "请输入有效的URL格式";
+        newErrors.url = t("link.invalidUrl");
       }
     }
 
     if (!parentId) {
-      newErrors.parentId = "请选择分类";
+      newErrors.parentId = t("link.selectCategory");
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [title, url, parentId]);
+  }, [title, url, parentId, t]);
 
   const onOk = useCallback(() => {
     if (onValidate()) {

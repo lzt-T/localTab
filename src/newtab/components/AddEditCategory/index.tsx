@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LucideIconConfig } from '@/utils/icon';
 import {
   Dialog,
@@ -34,18 +35,18 @@ interface AddEditCategoryProps {
 
 export default function AddEditCategory(props: AddEditCategoryProps) {
   const { open, mode, initialData, handleClose, handleSubmit } = props;
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('');
   const [errors, setErrors] = useState<{ title?: string; icon?: string }>({});
 
-  const dialogTitle = useMemo(() => {
-    return mode === 'add' ? '添加分类' : '编辑分类';
-  }, [mode]);
-
-  const dialogDescription = useMemo(() => {
-    return mode === 'add' ? '创建一个新的分类来组织你的链接' : '修改分类信息';
-  }, [mode]);
+  const dialogTitle = t(
+    mode === 'add' ? 'category.addTitle' : 'category.editTitle'
+  );
+  const dialogDescription = t(
+    mode === 'add' ? 'category.addDescription' : 'category.editDescription'
+  );
 
   /* 监听标题变化 */
   const onTitleChange = useCallback(
@@ -63,12 +64,12 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
     const newErrors: { title?: string; icon?: string } = {};
 
     if (!title.trim()) {
-      newErrors.title = '请输入分类名称';
+      newErrors.title = t('category.nameRequired');
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [title]);
+  }, [title, t]);
 
   const onOk = useCallback(() => {
     if (onValidate()) {
@@ -115,10 +116,12 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="title" className="text-white/80">分类名称</Label>
+            <Label htmlFor="title" className="text-white/80">
+              {t('category.name')}
+            </Label>
             <Input
               id="title"
-              placeholder="请输入分类名称"
+              placeholder={t('category.namePlaceholder')}
               defaultValue={title}
               onChange={onTitleChange}
               className={cn(FIELD_CLASS_NAME, errors.title ? 'border-red-500' : '')}
@@ -128,7 +131,9 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="icon" className="text-white/80">图标</Label>
+            <Label htmlFor="icon" className="text-white/80">
+              {t('common.icon')}
+            </Label>
             <Select value={icon} onValueChange={setIcon}>
               <SelectTrigger
                 id="icon"
@@ -138,7 +143,7 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
                   errors.icon ? 'border-red-500' : ''
                 )}
               >
-                <SelectValue placeholder="请选择图标" />
+                <SelectValue placeholder={t('category.selectIcon')} />
               </SelectTrigger>
               <SelectContent className={cn('max-h-[360px] overflow-y-auto', SELECT_CONTENT_CLASS_NAME)}>
                 {Object.entries(LucideIconConfig).map(([key, Icon]) => (
@@ -160,13 +165,13 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
             className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
             onClick={onCancel}
           >
-            取消
+            {t('common.cancel')}
           </Button>
           <Button
             className="cursor-pointer bg-blue-500/80 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40"
             onClick={onOk}
           >
-            确定
+            {t('common.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

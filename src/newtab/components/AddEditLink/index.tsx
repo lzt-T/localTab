@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Sheet,
   SheetContent,
@@ -54,6 +55,7 @@ interface AddEditLinkProps {
 }
 
 export default function AddEditLink(props: AddEditLinkProps) {
+  const { t } = useTranslation();
   const {
     title,
     description,
@@ -93,7 +95,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
         <div className="grid gap-4 py-4 px-4">
           <div className="grid gap-2">
             <Label htmlFor="category" className="text-white/80">
-              所属分类
+              {t("link.category")}
             </Label>
             <Select
               value={parentId}
@@ -110,7 +112,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
                   errors.parentId ? "border-red-500" : ""
                 )}
               >
-                <SelectValue placeholder="请选择分类" />
+                <SelectValue placeholder={t("link.selectCategory")} />
               </SelectTrigger>
               <SelectContent className={SELECT_CONTENT_CLASS_NAME}>
                 {categories.map((category) => (
@@ -131,12 +133,12 @@ export default function AddEditLink(props: AddEditLinkProps) {
 
           <div className="grid gap-2">
             <Label htmlFor="title" className="text-white/80">
-              链接标题
+              {t("link.title")}
             </Label>
             <Input
               key={`title-${props.open}`}
               id="title"
-              placeholder="请输入链接标题"
+              placeholder={t("link.titlePlaceholder")}
               defaultValue={title}
               onChange={onTitleChange}
               className={cn(
@@ -152,12 +154,12 @@ export default function AddEditLink(props: AddEditLinkProps) {
 
           <div className="grid gap-2">
             <Label htmlFor="description" className="text-white/80">
-              描述
+              {t("link.description")}
             </Label>
             <Input
               key={`description-${props.open}`}
               id="description"
-              placeholder="请输入链接描述（可选）"
+              placeholder={t("link.descriptionPlaceholder")}
               defaultValue={description}
               onChange={onDescriptionChange}
               className={cn(
@@ -173,7 +175,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
 
           <div className="grid gap-2">
             <Label htmlFor="url" className="text-white/80">
-              链接地址
+              {t("link.url")}
             </Label>
             <div className="flex gap-2">
               <Input
@@ -194,7 +196,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
 
           <div className="grid gap-2">
             <Label htmlFor="icon" className="text-white/80">
-              图标
+              {t("common.icon")}
             </Label>
             <Tabs value={iconType} onValueChange={onTabChange}>
               <TabsList className="w-full border border-white/10 bg-black/20">
@@ -202,13 +204,13 @@ export default function AddEditLink(props: AddEditLinkProps) {
                   value="favicon"
                   className="flex-1 cursor-pointer text-white/60 data-[state=active]:border-white/10 data-[state=active]:bg-white/10 data-[state=active]:text-white"
                 >
-                  网站图标
+                  {t("link.favicon")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="lucide"
                   className="flex-1 cursor-pointer text-white/60 data-[state=active]:border-white/10 data-[state=active]:bg-white/10 data-[state=active]:text-white"
                 >
-                  Lucide 图标
+                  {t("link.lucideIcon")}
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="favicon" className="mt-2">
@@ -217,7 +219,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
                     <div className="rounded-md border border-white/15 w-11 h-11 bg-white/[0.06] backdrop-blur-xl flex items-center justify-center">
                       <img
                         src={icon}
-                        alt="网站图标"
+                        alt={t("link.favicon")}
                         className="w-8 h-8 rounded"
                         onError={() => setIcon("")}
                       />
@@ -241,7 +243,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
                       errors.icon ? "border-red-500" : ""
                     )}
                   >
-                    <SelectValue placeholder="请选择图标" />
+                    <SelectValue placeholder={t("link.selectIcon")} />
                   </SelectTrigger>
                   <SelectContent
                     className={cn(
@@ -279,13 +281,13 @@ export default function AddEditLink(props: AddEditLinkProps) {
             className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
             onClick={onCancel}
           >
-            取消
+            {t("common.cancel")}
           </Button>
           <Button
             className="cursor-pointer bg-blue-500/80 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40"
             onClick={onOk}
           >
-            确定
+            {t("common.confirm")}
           </Button>
         </SheetFooter>
       </SheetContent>

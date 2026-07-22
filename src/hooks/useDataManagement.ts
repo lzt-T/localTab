@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { categoryService } from "../services/categoryService";
-import { linkService } from "../services/linkService";
-import { systemService } from "../services/systemService";
-import { db, STORE_NAMES } from "../utils/db";
-import type { Category, Link, LinkGroup } from "../type/db";
-import { SearchEngineType } from "../type/db";
+import { categoryService } from "@/services/categoryService";
+import { linkService } from "@/services/linkService";
+import { systemService } from "@/services/systemService";
+import { db, STORE_NAMES } from "@/utils/db";
+import type { Category, Link, LinkGroup } from "@/type/db";
+import { SearchEngineType } from "@/type/db";
 
 // 导出数据类型定义
 export type ExportData = {
@@ -25,6 +26,7 @@ export type ExportData = {
 };
 
 export function useDataManagement() {
+  const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -102,10 +104,10 @@ export function useDataManagement() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success("数据导出成功");
+      toast.success(t("dataManagement.exportSuccess"));
     } catch (error) {
       console.error("导出数据失败:", error);
-      toast.error("导出数据失败");
+      toast.error(t("dataManagement.exportFailed"));
     } finally {
       setIsExporting(false);
     }
@@ -121,7 +123,7 @@ export function useDataManagement() {
 
       // 验证数据格式
       if (!importData.version || !importData.categories || !importData.links) {
-        toast.error("无效的数据文件格式");
+        toast.error(t("dataManagement.invalidFile"));
         return false;
       }
 
@@ -165,11 +167,11 @@ export function useDataManagement() {
         });
       }
 
-      toast.success("数据导入成功，请刷新页面");
+      toast.success(t("dataManagement.importSuccess"));
       return true;
     } catch (error) {
       console.error("导入数据失败:", error);
-      toast.error("导入数据失败，请检查文件格式");
+      toast.error(t("dataManagement.importFailed"));
       return false;
     } finally {
       setIsImporting(false);

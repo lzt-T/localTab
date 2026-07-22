@@ -1,7 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import NewTabApp from './index.tsx'
-import '../index.css'
+import NewTabApp from '@/newtab'
+import '@/i18n'
+import '@/index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

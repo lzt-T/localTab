@@ -3,30 +3,27 @@
  * 处理类别的业务逻辑
  */
 
-import { db, STORE_NAMES } from "../utils/db";
-import type { Category } from "../type/db";
-import { linkService } from "./linkService";
-import { getUniqueId } from "../utils/base";
-
-// 默认主页分类常量
-const DEFAULT_HOME_CATEGORY: Category = {
-  id: "home",
-  name: "主页",
-  icon: "house",
-  sort: 0,
-};
+import { db, STORE_NAMES } from "@/utils/db";
+import type { Category } from "@/type/db";
+import { linkService } from "@/services/linkService";
+import { getUniqueId } from "@/utils/base";
 
 export class CategoryService {
   /**
    * 初始化服务（确保有默认分类）
    */
-  async init(): Promise<void> {
+  async init(defaultCategoryName: string): Promise<void> {
     try {
       const categories = await this.getAllCategories();
 
       // 如果没有分类，创建默认的"主页"分类
       if (categories.length === 0) {
-        await db.put(STORE_NAMES.CATEGORY, DEFAULT_HOME_CATEGORY);
+        await db.put(STORE_NAMES.CATEGORY, {
+          id: "home",
+          name: defaultCategoryName,
+          icon: "house",
+          sort: 0,
+        });
         console.log("已创建默认主页分类");
       }
     } catch (error) {

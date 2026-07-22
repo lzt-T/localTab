@@ -1,8 +1,10 @@
-import useSystemStore from "../store/systemStore";
+import useSystemStore from "@/store/systemStore";
 import { useEffect } from "react";
-import { systemService } from "../services/systemService";
+import { useTranslation } from "react-i18next";
+import { systemService } from "@/services/systemService";
 
 export function useBackgroundImg() {
+  const { t } = useTranslation();
   const changeBackgroundImage = useSystemStore(
     (state) => state.changeBackgroundImage
   );
@@ -46,9 +48,7 @@ export function useBackgroundImg() {
       changeBackgroundImage(imageUrl);
     } catch (error) {
       console.error("保存背景图片失败:", error);
-      const message =
-        error instanceof Error ? error.message : "保存背景图片失败";
-      alert(message);
+      alert(t("wallpaper.saveFailed"));
     }
   };
 
