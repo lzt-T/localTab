@@ -15,6 +15,8 @@ export interface CategoryDragItem {
 export interface LinkDragItem {
   type: typeof DRAG_ITEM_TYPE.LINK;
   link: Link;
+  previewWidth: number;
+  previewHeight: number;
   sourceCategoryId: string;
   currentCategoryId: string;
   index: number;

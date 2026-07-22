@@ -13,6 +13,7 @@ import { useLinkAction } from "@/hooks/useLinkAction";
 import Setting from "@/newtab/components/Setting";
 import SearchInput from "@/newtab/components/SearchInput";
 import CategoryPage from "@/newtab/components/CategoryPage";
+import LinkDragPreview from "@/newtab/components/LinkList/LinkDragPreview";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 
 const NewTabApp: React.FC = () => {
@@ -113,6 +114,8 @@ const NewTabApp: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
+      <LinkDragPreview />
+
       <div
         className="min-h-screen w-screen text-white relative h-screen overflow-y-scroll snap-y snap-mandatory"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}

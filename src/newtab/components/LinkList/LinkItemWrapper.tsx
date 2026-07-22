@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
+import { getEmptyImage } from "react-dnd-html5-backend";
 import LinkItem from "@/newtab/components/LinkItem";
 import { cn } from "@/lib/utils";
 import type { Link } from "@/type/db";
@@ -26,20 +27,27 @@ export default function LinkItemWrapper({
   onDrop,
   onCancelDrag,
 }: LinkItemWrapperProps) {
-  const [{ isDragging }, drag] = useDrag<
+  const elementRef = useRef<HTMLDivElement>(null);
+  const [{ isDragging }, drag, preview] = useDrag<
     LinkDragItem,
     void,
     { isDragging: boolean }
   >({
     type: DRAG_ITEM_TYPE.LINK,
-    item: () => ({
-      type: DRAG_ITEM_TYPE.LINK,
-      link,
-      sourceCategoryId: link.parentId,
-      currentCategoryId: link.parentId,
-      index,
-      originalIndex: index,
-    }),
+    item: () => {
+      const { width, height } = elementRef.current!.getBoundingClientRect();
+
+      return {
+        type: DRAG_ITEM_TYPE.LINK,
+        link,
+        previewWidth: width,
+        previewHeight: height,
+        sourceCategoryId: link.parentId,
+        currentCategoryId: link.parentId,
+        index,
+        originalIndex: index,
+      };
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -77,10 +85,16 @@ export default function LinkItemWrapper({
 
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
+      elementRef.current = node;
       drag(drop(node));
     },
     [drag, drop]
   );
+
+  useEffect(() => {
+    // 玻璃态卡片的浏览器原生拖拽快照会产生矩形角块，改由自定义预览层渲染。
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
 
   return (
     <div
