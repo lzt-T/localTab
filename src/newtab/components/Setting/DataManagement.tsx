@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
-import { Download, Upload, AlertCircle } from "lucide-react";
-import { Button } from "../../../components/ui/button";
+import { useState } from "react";
+import { Download, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,27 +9,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { useDataManagement } from "../../../hooks/useDataManagement";
+} from "@/components/ui/dialog";
+import { useDataManagement } from "@/hooks/useDataManagement";
+import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 
 export default function DataManagement() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { isExporting, isImporting, onExport, onImport } = useDataManagement();
 
-  // 触发文件选择
-  const onSelectFile = () => {
-    fileInputRef.current?.click();
-  };
-
   // 处理文件选择
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileSelect = (file: File) => {
     // 验证文件类型
     if (!file.type.includes("json") && !file.name.endsWith(".json")) {
+      toast.error("请选择 JSON 文件");
       return;
     }
 
@@ -43,11 +37,6 @@ export default function DataManagement() {
     setIsDialogOpen(false);
     const success = await onImport(selectedFile);
 
-    // 清空文件输入
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
     if (success) {
       setSelectedFile(null);
     }
@@ -57,10 +46,6 @@ export default function DataManagement() {
   const handleCancelImport = () => {
     setIsDialogOpen(false);
     setSelectedFile(null);
-    // 清空文件输入
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   return (
@@ -90,21 +75,13 @@ export default function DataManagement() {
           <p className="text-sm text-white/60 mb-4">
             从 JSON 文件导入数据，将覆盖现有数据
           </p>
-          <input
-            ref={fileInputRef}
-            type="file"
+          <FileDropZone
             accept=".json,application/json"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-          <Button
-            onClick={onSelectFile}
+            title={isImporting ? "导入中..." : "点击选择或拖入 JSON 文件"}
+            description="仅支持 LocalTab 导出的 JSON 备份文件"
             disabled={isImporting}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-white/20 cursor-pointer"
-          >
-            <Upload size={18} />
-            {isImporting ? "导入中..." : "导入数据"}
-          </Button>
+            onFileSelect={handleFileSelect}
+          />
         </div>
       </div>
 

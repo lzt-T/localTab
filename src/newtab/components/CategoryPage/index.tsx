@@ -72,7 +72,7 @@ export default function CategoryPage(props: CategoryPageProps) {
       !isCategoryPageVisibleRef.current
     ) {
       categoryPageRef.current.scrollIntoView({
-        behavior: "smooth",
+        behavior: "auto",
         block: "start",
         inline: "nearest",
       });

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { LucideIconConfig } from '../../../utils/icon';
+import { LucideIconConfig } from '@/utils/icon';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import _ from 'lodash';
+
+const FIELD_CLASS_NAME =
+  'border-white/15 bg-white/[0.06] text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20';
+const SELECT_CONTENT_CLASS_NAME =
+  'border-white/15 bg-[rgba(32,34,38,0.98)] text-white shadow-xl backdrop-blur-2xl';
+const SELECT_ITEM_CLASS_NAME = 'cursor-pointer focus:bg-white/10 focus:text-white';
 
 interface AddEditCategoryProps {
   open: boolean;
@@ -102,34 +108,41 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="border-white/15 bg-[rgba(32,34,38,0.92)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl sm:max-w-[425px] [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
         <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
+          <DialogTitle className="text-white">{dialogTitle}</DialogTitle>
+          <DialogDescription className="text-white/60">{dialogDescription}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="title">分类名称</Label>
+            <Label htmlFor="title" className="text-white/80">分类名称</Label>
             <Input
               id="title"
               placeholder="请输入分类名称"
               defaultValue={title}
               onChange={onTitleChange}
-              className={errors.title ? 'border-red-500' : ''}
+              className={cn(FIELD_CLASS_NAME, errors.title ? 'border-red-500' : '')}
               maxLength={10}
             />
             {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="icon">图标</Label>
+            <Label htmlFor="icon" className="text-white/80">图标</Label>
             <Select value={icon} onValueChange={setIcon}>
-              <SelectTrigger id="icon" className={cn('w-full cursor-pointer', errors.icon ? 'border-red-500' : '')}>
+              <SelectTrigger
+                id="icon"
+                className={cn(
+                  'w-full cursor-pointer [&_svg]:text-white/50',
+                  FIELD_CLASS_NAME,
+                  errors.icon ? 'border-red-500' : ''
+                )}
+              >
                 <SelectValue placeholder="请选择图标" />
               </SelectTrigger>
-              <SelectContent className="max-h-[360px] overflow-y-auto">
+              <SelectContent className={cn('max-h-[360px] overflow-y-auto', SELECT_CONTENT_CLASS_NAME)}>
                 {Object.entries(LucideIconConfig).map(([key, Icon]) => (
-                  <SelectItem key={key} value={key} className="cursor-pointer">
+                  <SelectItem key={key} value={key} className={SELECT_ITEM_CLASS_NAME}>
                     <div className="flex items-center gap-2">
                       <Icon size={16} />
                       <span>{key}</span>
@@ -142,10 +155,17 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="cursor-pointer" onClick={onCancel}>
+          <Button
+            variant="outline"
+            className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={onCancel}
+          >
             取消
           </Button>
-          <Button className="cursor-pointer" onClick={onOk}>
+          <Button
+            className="cursor-pointer bg-blue-500/80 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40"
+            onClick={onOk}
+          >
             确定
           </Button>
         </DialogFooter>

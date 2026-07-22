@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import Icon from "../Icon";
 import { Edit, Trash2 } from "lucide-react";
 
@@ -21,6 +21,11 @@ export default function Index({
   handleDeleteClick,
   handleSkipClick,
 }: LinkItemProps) {
+  const [failedExternalIconUrl, setFailedExternalIconUrl] = useState("");
+  const isExternalIcon = link.icon.startsWith("http");
+  const shouldShowExternalIcon =
+    isExternalIcon && failedExternalIconUrl !== link.icon;
+
   const onEditClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
@@ -50,9 +55,13 @@ export default function Index({
     }
   }, [link.url, handleSkipClick]);
 
+  const onExternalIconError = () => {
+    setFailedExternalIconUrl(link.icon);
+  };
+
   return (
     <div
-      className="glass-style-border group/item relative rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl  hover:-translate-y-2 cursor-pointer h-32 flex flex-col justify-center"
+      className="glass-style-border group/item relative rounded-2xl p-6 shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20 hover:shadow-xl hover:shadow-black/20 cursor-pointer h-32 flex flex-col justify-center"
       onClick={onSkipClick}
     >
       {link.id && (handleEditClick || handleDeleteClick) && (
@@ -78,21 +87,26 @@ export default function Index({
         </div>
       )}
       <div className="mb-2 flex items-center justify-center">
-        {link.icon && link.icon.startsWith("http") ? (
-          <img src={link.icon} alt={link.title} className="w-8 h-8 rounded" />
+        {shouldShowExternalIcon ? (
+          <img
+            src={link.icon}
+            alt={link.title}
+            className="w-8 h-8 rounded"
+            onError={onExternalIconError}
+          />
         ) : (
           <Icon
-            name={link.icon || "link"}
+            name={isExternalIcon ? "link" : link.icon || "link"}
             size={32}
             className="text-blue-200/90"
           />
         )}
       </div>
-      <div className="text-base font-semibold overflow-hidden text-ellipsis whitespace-nowrap text-blue-200/90 text-center">
+      <div className="text-base font-medium overflow-hidden text-ellipsis whitespace-nowrap text-white/90 text-center">
         {link.title}
       </div>
       {link.description && (
-        <div className="text-xs opacity-80 overflow-hidden text-ellipsis whitespace-nowrap mt-1 text-blue-200/60 text-center">
+        <div className="text-xs overflow-hidden text-ellipsis whitespace-nowrap mt-1 text-white/60 text-center">
           {link.description}
         </div>
       )}

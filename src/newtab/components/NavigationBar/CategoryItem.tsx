@@ -133,11 +133,11 @@ export default function CategoryItem({
     <div
       ref={ref}
       className={cn(
-        "group/item relative mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-lg cursor-pointer transition-[opacity,background-color,box-shadow] duration-200",
+        "group/item relative mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-lg cursor-pointer transition-[opacity,background-color,border-color,box-shadow] duration-200",
         isDragging ? "opacity-50" : "opacity-100",
         isActive
-          ? "bg-white/[0.08] backdrop-blur-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] hover:bg-white/[0.1]"
-          : "hover:bg-white/[0.05]",
+          ? "glass-style-border shadow-lg shadow-black/10 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20"
+          : "hover:bg-white/[0.06]",
         isLinkOver && "bg-white/10 hover:bg-white/10"
       )}
       onClick={() => onChangeCurrentCategory(category.id)}
@@ -156,7 +156,7 @@ export default function CategoryItem({
             "flex shrink-0 items-center cursor-pointer justify-center w-10 h-10 rounded-full transition-colors duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
             isActive
               ? "text-blue-100"
-              : "text-blue-200/60 group-hover/item:text-blue-100",
+              : "text-blue-200/75 group-hover/item:text-blue-100",
             isLinkOver && "bg-white/15 text-blue-100"
           )}
           aria-label={category.name}
@@ -168,7 +168,7 @@ export default function CategoryItem({
             "flex-1 min-w-0 text-left px-2 py-1.5 text-sm font-medium transition-colors duration-200 overflow-hidden text-ellipsis whitespace-nowrap",
             isActive
               ? "font-semibold text-white"
-              : "text-white/70 group-hover/item:text-white/90"
+              : "text-white/80 group-hover/item:text-white/90"
           )}
         >
           {category.name}

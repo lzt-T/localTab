@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
-import type { Category } from "../../../type/db";
 import { useCallback, useState, useEffect } from "react";
-import CategoryItem from "./CategoryItem";
+import type { Category } from "@/type/db";
+import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
 
 interface NavigationBarProps {
   activeCategoryId: string;
@@ -88,10 +88,11 @@ export default function Index(props: NavigationBarProps) {
       </div>
 
       {/* 添加按钮 */}
-      <div className="flex justify-start mt-4 pl-3">
+      <div className="mt-3 flex justify-start pl-5">
         <button
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-300 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/15 text-white/70 hover:text-white transition-all duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer"
           aria-label="添加分类"
+          title="添加分类"
           onClick={addCategory}
         >
           <Plus size={20} />

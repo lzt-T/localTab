@@ -1,33 +1,25 @@
-import React, { useRef } from "react";
-import { useBackgroundImg } from "../../../hooks/useBackgroundImg";
-import { Upload, Trash2, Image as ImageIcon } from "lucide-react";
+import { Trash2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "../../../components/ui/button";
+import { Button } from "@/components/ui/button";
+import { useBackgroundImg } from "@/hooks/useBackgroundImg";
+import FileDropZone from "@/newtab/components/Setting/FileDropZone";
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 export default function BackgroundImg() {
   const { backgroundImage, onUploadBackground, onDeleteBackground } =
     useBackgroundImg();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 触发文件选择
-  const handleSelectImage = () => {
-    fileInputRef.current?.click();
-  };
 
   // 处理文件上传
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleImageFile = async (file: File) => {
     // 验证文件类型
     if (!file.type.startsWith("image/")) {
       toast.error("请选择图片文件");
       return;
     }
 
-    // 验证文件大小（例如：最大 10MB）
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
+    // 验证文件大小
+    if (file.size > MAX_IMAGE_SIZE) {
       toast.error("图片文件大小不能超过 10MB");
       return;
     }
@@ -35,10 +27,6 @@ export default function BackgroundImg() {
     try {
       await onUploadBackground(file);
       toast.success("背景图片设置成功");
-      // 清空文件输入，以便可以再次选择同一文件
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     } catch (error) {
       console.error("上传背景图片失败:", error);
       toast.error("上传背景图片失败");
@@ -58,40 +46,28 @@ export default function BackgroundImg() {
 
   return (
     <div className="space-y-6">
-      {/* 隐藏的文件输入 */}
-      <input
-        ref={fileInputRef}
-        type="file"
+      <FileDropZone
         accept="image/*"
-        className="hidden"
-        onChange={handleImageUpload}
+        title="点击选择或拖入图片"
+        description="支持常见图片格式，最大 10MB"
+        onFileSelect={handleImageFile}
       />
-
-      {/* 上传按钮 */}
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={handleSelectImage}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-white/20 cursor-pointer"
-        >
-          <Upload size={18} />
-          选择图片
-        </Button>
-
-        {backgroundImage && (
-          <Button
-            onClick={handleDeleteBackground}
-            className="px-6 py-3 bg-red-500/30 hover:bg-red-500/40 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-red-500/30 cursor-pointer"
-          >
-            <Trash2 size={18} />
-            删除背景
-          </Button>
-        )}
-      </div>
 
       {/* 当前背景预览 */}
       {backgroundImage && (
         <div className="space-y-2">
-          <div className="text-sm text-white/70">当前背景预览：</div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-white/70">当前背景预览：</div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteBackground}
+              className="cursor-pointer border-red-400/25 bg-red-500/10 text-red-100 hover:bg-red-500/20 hover:text-white"
+            >
+              <Trash2 size={16} />
+              删除背景
+            </Button>
+          </div>
           <div className="relative w-full h-64 rounded-lg overflow-hidden border border-white/20">
             <img
               src={backgroundImage}
@@ -112,7 +88,7 @@ export default function BackgroundImg() {
       {!backgroundImage && (
         <div className="text-sm text-white/50 flex items-center gap-2">
           <ImageIcon size={16} />
-          <span>尚未设置背景图片，点击"选择图片"按钮上传</span>
+          <span>尚未设置背景图片</span>
         </div>
       )}
     </div>

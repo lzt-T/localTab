@@ -119,7 +119,7 @@ export default function SearchInput({
   return (
     <div
       className={cn(
-        "flex items-center w-full max-w-[600px] bg-white/15 backdrop-blur-md rounded-md overflow-hidden transition-all duration-300 focus-within:bg-white/25 focus-within:shadow-xl focus-within:shadow-black/20",
+        "glass-style-border flex items-center w-full max-w-[600px] rounded-xl overflow-hidden shadow-lg shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 focus-within:bg-[rgba(68,70,74,0.66)] focus-within:border-white/20 focus-within:shadow-xl focus-within:shadow-black/20",
         className
       )}
     >
@@ -143,7 +143,7 @@ export default function SearchInput({
         </TooltipTrigger>
         <TooltipContent
           side="bottom"
-          className="bg-white/15 backdrop-blur-xl text-white p-2 min-w-[180px] border border-white/20"
+          className="glass-style-border text-white p-2 min-w-[180px] shadow-lg shadow-black/20"
           sideOffset={8}
           arrowClassName="bg-transparent fill-transparent"
         >
@@ -186,7 +186,7 @@ export default function SearchInput({
       {/* 搜索输入框 */}
       <Input
         type="text"
-        className="flex-1 h-12 text-xl border-none bg-transparent text-white placeholder-white/70 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
+        className="flex-1 h-12 text-xl border-none bg-transparent text-white placeholder-white/80 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
         placeholder={placeholder}
         onChange={onQueryChange}
         onKeyDown={onKeyDown}

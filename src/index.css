@@ -62,7 +62,10 @@ body {
 }
 
 .glass-style-border {
-  @apply bg-white/10  backdrop-blur-xl border-2 border-white/20;
+  background: rgba(58, 60, 64, 0.58);
+  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.22);
 }
 
 @theme inline {

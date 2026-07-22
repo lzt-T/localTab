@@ -148,7 +148,7 @@ export default function LinkList({
       <div
         ref={addLinkRef}
         className={cn(
-          "glass-style-border flex items-center justify-center rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 cursor-pointer h-32",
+          "glass-style-border flex items-center justify-center rounded-2xl p-6 text-white/80 shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20 hover:shadow-xl hover:shadow-black/20 cursor-pointer h-32",
           isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
         )}
         onClick={onOpenAddLink}
