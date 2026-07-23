@@ -3,23 +3,34 @@ import { useTranslation } from 'react-i18next'
 import { Github, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-// Chrome API 类型声明
+// Chromium 扩展 API 最小类型声明
 declare const chrome: {
   tabs: {
-    create: (options: { url: string }) => void
+    create: (options?: { url?: string }) => void
   }
 }
 
+// GitHub 仓库地址
 const GITHUB_REPOSITORY_URL = 'https://github.com/lzt-T/localTab'
 
+/**
+ * 扩展弹窗入口。
+ */
 const PopupApp: React.FC = () => {
+  // 国际化工具
   const { t } = useTranslation()
 
+  /**
+   * 打开当前浏览器的新标签页。
+   */
   const handleOpenNewTab = () => {
-    chrome.tabs.create({ url: 'chrome://newtab/' })
+    chrome.tabs.create({})
     window.close()
   }
 
+  /**
+   * 打开项目仓库。
+   */
   const handleOpenGitHub = () => {
     chrome.tabs.create({ url: GITHUB_REPOSITORY_URL })
     window.close()
@@ -43,7 +54,7 @@ const PopupApp: React.FC = () => {
             <p className="mt-0.5 text-xs text-white/65">{t('popup.subtitle')}</p>
           </div>
           <span className="rounded-full border border-blue-300/20 bg-blue-400/10 px-2.5 py-1 text-[11px] font-medium text-blue-100/85">
-            v1.0.0
+            v1.0.1
           </span>
         </header>
 

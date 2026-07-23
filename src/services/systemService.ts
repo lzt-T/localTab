@@ -1,57 +1,106 @@
 /**
- * 背景图片服务
- * 处理背景图片的业务逻辑
+ * 系统设置服务
+ * 处理搜索设置和背景图片的持久化。
  */
 
-import { db, STORE_NAMES } from "../utils/db";
+import { db, STORE_NAMES } from "@/utils/db";
 import { getUniqueId } from "@/utils/base";
-import { SearchEngineType } from "@/type/db";
+import {
+  DEFAULT_SEARCH_ENGINE_ID,
+  LEGACY_DEFAULT_SEARCH_ENGINE_ID,
+  type CustomSearchEngine,
+} from "@/type/db";
 
-/*  背景图片键 */
+// 背景图片键
 const BACKGROUND_IMAGE_KEY = "backgroundImage";
-/* 搜索引擎键 */
-const SEARCH_ENGINES_KEY = "searchEngines";
+// 旧版搜索引擎键
+const LEGACY_SEARCH_ENGINE_KEY = "searchEngines";
+// 当前搜索引擎标识键
+const SELECTED_SEARCH_ENGINE_ID_KEY = "selectedSearchEngineId";
+// 自定义搜索引擎列表键
+const CUSTOM_SEARCH_ENGINES_KEY = "customSearchEngines";
 
 export class SystemService {
   /**
-   * 初始化服务
+   * 初始化系统设置并迁移旧版搜索配置。
    */
   async init(): Promise<void> {
-    const searchEngine = await this.getSearchEngine();
+    // 并行读取旧版和新版搜索设置
+    const [legacySearchEngine, selectedSearchEngineId] = await Promise.all([
+      db.get<string>(STORE_NAMES.SYSTEM, LEGACY_SEARCH_ENGINE_KEY),
+      db.get<string>(STORE_NAMES.SYSTEM, SELECTED_SEARCH_ENGINE_ID_KEY),
+    ]);
 
-    // 如果搜索引擎类型不存在，则设置为谷歌
-    if (!searchEngine) {
-      await this.updateSearchEngine(SearchEngineType.GOOGLE);
+    if (
+      legacySearchEngine ||
+      !selectedSearchEngineId ||
+      selectedSearchEngineId === LEGACY_DEFAULT_SEARCH_ENGINE_ID
+    ) {
+      await this.updateSelectedSearchEngineId(DEFAULT_SEARCH_ENGINE_ID);
+    }
+
+    if (legacySearchEngine) {
+      await db.delete(STORE_NAMES.SYSTEM, LEGACY_SEARCH_ENGINE_KEY);
     }
   }
 
   /**
-   * 保存搜索引擎类型
-   * @param searchEngine 搜索引擎类型
-   * @returns void
+   * 获取当前搜索引擎标识。
    */
-  async updateSearchEngine(
-    searchEngine: keyof typeof SearchEngineType
-  ): Promise<void> {
-    await db.putWithKey(STORE_NAMES.SYSTEM, SEARCH_ENGINES_KEY, searchEngine);
+  async getSelectedSearchEngineId(): Promise<string> {
+    // 已保存的搜索引擎标识
+    const selectedSearchEngineId = await db.get<string>(
+      STORE_NAMES.SYSTEM,
+      SELECTED_SEARCH_ENGINE_ID_KEY
+    );
+    return selectedSearchEngineId === LEGACY_DEFAULT_SEARCH_ENGINE_ID
+      ? DEFAULT_SEARCH_ENGINE_ID
+      : selectedSearchEngineId ?? DEFAULT_SEARCH_ENGINE_ID;
   }
 
   /**
-   * 获取搜索引擎类型
-   * @returns 搜索引擎类型
+   * 保存当前搜索引擎标识。
    */
-  async getSearchEngine(): Promise<typeof SearchEngineType | undefined> {
-    const result = await db.get<typeof SearchEngineType>(
+  async updateSelectedSearchEngineId(
+    selectedSearchEngineId: string
+  ): Promise<void> {
+    await db.putWithKey(
       STORE_NAMES.SYSTEM,
-      SEARCH_ENGINES_KEY
+      SELECTED_SEARCH_ENGINE_ID_KEY,
+      selectedSearchEngineId
     );
-    return result;
+  }
+
+  /**
+   * 获取自定义搜索引擎列表。
+   */
+  async getCustomSearchEngines(): Promise<CustomSearchEngine[]> {
+    // 已保存的自定义搜索引擎
+    const customSearchEngines = await db.get<CustomSearchEngine[]>(
+      STORE_NAMES.SYSTEM,
+      CUSTOM_SEARCH_ENGINES_KEY
+    );
+    return customSearchEngines ?? [];
+  }
+
+  /**
+   * 保存自定义搜索引擎列表。
+   */
+  async updateCustomSearchEngines(
+    customSearchEngines: CustomSearchEngine[]
+  ): Promise<void> {
+    await db.putWithKey(
+      STORE_NAMES.SYSTEM,
+      CUSTOM_SEARCH_ENGINES_KEY,
+      customSearchEngines
+    );
   }
 
   /**
    * 保存背景图片
    */
   async saveBackgroundImage(file: File | Blob): Promise<string> {
+    // 背景图片唯一标识
     const id = getUniqueId();
     // 验证文件类型
     if (file instanceof File && !file.type.startsWith("image/")) {
@@ -73,6 +122,7 @@ export class SystemService {
     id: string;
     url: string;
   } | null> {
+    // 已保存的背景图片数据
     const result = await db.get<{ id: string; blob: Blob }>(
       STORE_NAMES.SYSTEM,
       BACKGROUND_IMAGE_KEY
@@ -95,6 +145,7 @@ export class SystemService {
    * 检查是否有背景图片
    */
   async hasBackgroundImage(): Promise<boolean> {
+    // 已保存的背景图片数据
     const result = await db.get<{ id: string; blob: Blob }>(
       STORE_NAMES.SYSTEM,
       BACKGROUND_IMAGE_KEY

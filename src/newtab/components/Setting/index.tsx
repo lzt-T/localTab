@@ -19,6 +19,7 @@ type SettingNavItem = {
 
 type SettingSection = "wallpaper" | "data" | "language";
 
+// 设置导航配置
 const SETTING_NAV_ITEMS: SettingNavItem[] = [
   {
     id: "wallpaper",
@@ -37,11 +38,18 @@ const SETTING_NAV_ITEMS: SettingNavItem[] = [
   },
 ];
 
+/**
+ * 新标签页设置面板。
+ */
 const Setting: React.FC = () => {
+  // 国际化工具
   const { t } = useTranslation();
+  // 当前设置区域
   const [activeNav, setActiveNav] =
     useState<SettingSection>("wallpaper");
+  // 当前设置导航项
   const activeItem = SETTING_NAV_ITEMS.find((item) => item.id === activeNav)!;
+  // 设置区域内容映射
   const contentBySection: Record<SettingSection, React.ReactNode> = {
     wallpaper: <BackgroundImg />,
     data: <DataManagement />,
@@ -95,7 +103,7 @@ const Setting: React.FC = () => {
 
             {/* 底部信息 */}
             <div className="p-4 border-t border-white/10 space-y-2">
-              <div className="text-xs text-white/50">V1.0.0</div>
+              <div className="text-xs text-white/50">V1.0.1</div>
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+// 应用中英文文案
 export const resources = {
   "zh-CN": {
     translation: {
@@ -69,7 +70,21 @@ export const resources = {
       },
       search: {
         placeholder: "搜索或输入网址...",
-        baidu: "百度",
+        browserDefault: "浏览器默认搜索",
+        addEngine: "添加搜索引擎",
+        deleteEngine: "删除搜索引擎",
+        defaultUnsupported:
+          "当前浏览器不支持默认搜索，请添加自定义搜索引擎。",
+        addTitle: "添加搜索引擎",
+        addDescription: "添加一个仅在你主动选择后使用的搜索地址。",
+        name: "搜索引擎名称",
+        namePlaceholder: "例如：Google",
+        searchUrl: "搜索地址",
+        nameRequired: "请输入搜索引擎名称",
+        urlRequired: "请输入搜索地址",
+        invalidUrl: "请输入有效的 HTTP 或 HTTPS 地址",
+        urlTemplateRequired: "搜索地址必须且只能包含一个 %s",
+        urlTemplateHint: "使用 %s 表示搜索关键词。",
       },
       category: {
         addTitle: "添加分类",
@@ -195,7 +210,22 @@ export const resources = {
       },
       search: {
         placeholder: "Search or enter a URL...",
-        baidu: "Baidu",
+        browserDefault: "Browser default search",
+        addEngine: "Add search engine",
+        deleteEngine: "Delete search engine",
+        defaultUnsupported:
+          "Default browser search is unavailable. Add a custom search engine.",
+        addTitle: "Add search engine",
+        addDescription:
+          "Add a search URL that is used only after you explicitly select it.",
+        name: "Search engine name",
+        namePlaceholder: "For example: Google",
+        searchUrl: "Search URL",
+        nameRequired: "Enter a search engine name",
+        urlRequired: "Enter a search URL",
+        invalidUrl: "Enter a valid HTTP or HTTPS URL",
+        urlTemplateRequired: "The search URL must contain exactly one %s",
+        urlTemplateHint: "Use %s as the search query placeholder.",
       },
       category: {
         addTitle: "Add Category",

@@ -2,17 +2,18 @@ export type Settings = {
   backgroundImage?: string
 }
 
-/* 搜索引擎类型 */
-export const SearchEngineType = {
-  /* 谷歌 */
-  GOOGLE: 'GOOGLE',
-  /* 必应 */
-  BING: 'BING',
-  /* 鸭子搜索 */
-  DUCKDUCKGO: 'DUCKDUCKGO',
-  /* 百度 */
-  BAIDU: 'BAIDU'
-} as const
+/* 浏览器默认搜索引擎标识 */
+export const DEFAULT_SEARCH_ENGINE_ID = 'browser-default'
+
+/* 旧版默认搜索引擎标识 */
+export const LEGACY_DEFAULT_SEARCH_ENGINE_ID = 'chrome-default'
+
+/* 用户自定义搜索引擎 */
+export type CustomSearchEngine = {
+  id: string
+  name: string
+  searchUrl: string
+}
 
 /* 链接类型，链接或链接组 */
 export const LinkType = {

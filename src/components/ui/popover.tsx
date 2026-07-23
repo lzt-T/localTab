@@ -1,20 +1,29 @@
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 
-import { cn } from "../../utils/base"
+import { cn } from "@/lib/utils"
 
+/**
+ * Popover 根组件。
+ */
 function Popover({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
+/**
+ * Popover 触发器。
+ */
 function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
 }
 
+/**
+ * Popover 内容区域。
+ */
 function PopoverContent({
   className,
   align = "center",
@@ -37,6 +46,9 @@ function PopoverContent({
   )
 }
 
+/**
+ * Popover 锚点。
+ */
 function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
