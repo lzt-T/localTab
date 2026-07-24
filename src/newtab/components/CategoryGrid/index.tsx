@@ -247,12 +247,12 @@ function CategoryGridEndCard({
       type="button"
       ref={addLinkRef}
       className={cn(
-        "flex h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/25 bg-[rgba(58,60,64,0.42)] p-4 text-white/75 shadow-lg shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-1 hover:border-white/45 hover:bg-[rgba(68,70,74,0.58)] hover:text-white/90 hover:shadow-xl hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
+        "flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
         isOverEnd && "border-blue-200/70 bg-white/20 ring-2 ring-blue-200/80"
       )}
       onClick={onOpenAddLink}
     >
-      <Plus size={28} />
+      <Plus size={24} />
       <span className="text-sm font-medium">{t("link.addAction")}</span>
     </button>
   );
@@ -508,7 +508,7 @@ export default function CategoryGrid({
   return (
     <div
       ref={connectGridRef}
-      className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
     >
       {localItems.map((item, index) => (
         <Fragment key={item.id}>

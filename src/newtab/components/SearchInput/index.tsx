@@ -103,7 +103,7 @@ export default function SearchInput({
     <>
       <div
         className={cn(
-          "glass-style-border flex items-center w-full max-w-[600px] rounded-xl overflow-hidden shadow-lg shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 focus-within:bg-[rgba(68,70,74,0.66)] focus-within:border-white/20 focus-within:shadow-xl focus-within:shadow-black/20",
+          "glass-style-border flex w-full max-w-[640px] items-center overflow-hidden rounded-2xl shadow-lg shadow-black/15 transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(62,64,68,0.68)] focus-within:shadow-xl focus-within:shadow-black/25",
           className
         )}
       >
@@ -216,7 +216,7 @@ export default function SearchInput({
         <Input
           type="text"
           value={query}
-          className="h-12 flex-1 border-none bg-transparent text-xl text-white placeholder-white/80 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
+          className="h-12 flex-1 border-none bg-transparent text-base text-white placeholder-white/55 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
           placeholder={placeholder ?? t("search.placeholder")}
           aria-label={placeholder ?? t("search.placeholder")}
           onChange={onQueryChange}

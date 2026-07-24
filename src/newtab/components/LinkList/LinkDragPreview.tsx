@@ -39,7 +39,7 @@ function LinkGroupDragPreviewCard({
   linkGroup,
 }: LinkGroupDragPreviewCardProps) {
   return (
-    <div className="group/folder relative flex h-28 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] p-2 text-white shadow-lg shadow-black/20">
+    <div className="group/folder relative flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] p-2 text-white shadow-lg shadow-black/20">
       <LinkFolderCardContent linkGroup={linkGroup} />
     </div>
   );

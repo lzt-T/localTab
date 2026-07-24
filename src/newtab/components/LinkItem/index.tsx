@@ -15,8 +15,8 @@ type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 // 不同展示模式对应的网址卡片视觉样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "glass-style-border shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[rgba(68,70,74,0.66)] hover:shadow-xl hover:shadow-black/20 has-[[data-state=open]]:-translate-y-1 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/50",
-  "drag-placeholder": "glass-style-border shadow-lg shadow-black/10",
+    "glass-style-border shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(62,64,68,0.64)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/50",
+  "drag-placeholder": "glass-style-border shadow-md shadow-black/10",
   "drag-preview":
     "border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/20",
 };
@@ -129,7 +129,7 @@ export default function Index({
   return (
     <div
       className={cn(
-        "group/item relative flex h-28 cursor-pointer flex-col justify-center rounded-2xl p-4",
+        "group/item relative flex h-24 cursor-pointer flex-col justify-center rounded-xl p-3",
         LINK_ITEM_CLASS_BY_VARIANT[variant]
       )}
       onClick={onSkipClick}
@@ -189,25 +189,25 @@ export default function Index({
           </DropdownMenu>
         </div>
       )}
-      <div className="mb-1.5 flex h-8 items-center justify-center">
+      <div className="mb-1 flex h-7 items-center justify-center">
         {shouldShowExternalIcon ? (
           <img
             src={link.icon}
             alt={link.title}
-            className="h-7 w-7 rounded object-contain"
+            className="h-6 w-6 rounded object-contain"
             onError={onExternalIconError}
           />
         ) : (
           <Icon
             name={isExternalIcon ? "link" : link.icon || "link"}
-            size={28}
+            size={24}
             className="text-blue-200/90"
           />
         )}
       </div>
       <div
         className={cn(
-          "w-full break-words text-center text-base font-medium leading-5 text-white/90",
+          "w-full break-words text-center text-sm font-medium leading-5 text-white/90",
           link.description ? "truncate" : "line-clamp-2"
         )}
         title={link.title}

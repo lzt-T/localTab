@@ -171,10 +171,15 @@ const NewTabApp: React.FC = () => {
       <LinkDragPreview />
 
       <div
-        className="min-h-screen w-screen text-white relative h-screen overflow-y-scroll snap-y snap-mandatory"
+        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-y-scroll text-white"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}
       >
-        <section className="fixed left-0 top-[50%] translate-y-[-50%] w-[220px]">
+        <div
+          className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(90deg,rgba(5,7,10,0.46)_0%,rgba(5,7,10,0.26)_42%,rgba(5,7,10,0.4)_100%)] backdrop-saturate-[0.72]"
+          aria-hidden="true"
+        />
+
+        <section className="fixed top-1/2 left-0 z-10 w-[220px] -translate-y-1/2">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}
@@ -188,7 +193,7 @@ const NewTabApp: React.FC = () => {
           />
         </section>
 
-        <div className="pointer-events-none fixed left-[50%] top-0 translate-x-[-50%] w-full h-[160px] flex items-center justify-center">
+        <div className="pointer-events-none fixed top-0 left-1/2 z-10 flex h-36 w-full -translate-x-1/2 items-center justify-center px-6">
           <SearchInput className="pointer-events-auto" />
         </div>
 

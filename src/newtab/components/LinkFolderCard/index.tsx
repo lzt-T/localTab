@@ -228,7 +228,7 @@ export default function LinkFolderCard({
           type="button"
           ref={connectCardRef}
           className={cn(
-            "glass-style-border group/folder relative flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl p-2 text-white shadow-lg shadow-black/10 outline-none transition-[transform,opacity,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[rgba(68,70,74,0.66)] hover:shadow-xl hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
+            "glass-style-border group/folder relative flex h-24 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl p-2 text-white shadow-md shadow-black/10 outline-none transition-[transform,opacity,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(62,64,68,0.64)] hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
             isDragging && "opacity-50",
             isLinkOver &&
               isJoinTarget &&

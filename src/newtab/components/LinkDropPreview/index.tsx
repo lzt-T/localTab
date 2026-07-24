@@ -47,7 +47,7 @@ export default function LinkDropPreview({
   );
 
   return (
-    <div ref={connectPreviewRef} className="h-28">
+    <div ref={connectPreviewRef} className="h-24">
       <div className="pointer-events-none opacity-50">
         <LinkItem link={link} variant="drag-placeholder" />
       </div>

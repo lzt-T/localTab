@@ -294,13 +294,13 @@ export default function LinkList({
           type="button"
           ref={addLinkRef}
           className={cn(
-            "flex h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/25 bg-[rgba(58,60,64,0.42)] p-4 text-white/75 shadow-lg shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-1 hover:border-white/45 hover:bg-[rgba(68,70,74,0.58)] hover:text-white/90 hover:shadow-xl hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
+            "flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
             !showAddLinkCard && "col-span-full h-20",
             isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
           )}
           onClick={onOpenAddLink}
         >
-          <Plus size={showAddLinkCard ? 28 : 22} />
+          <Plus size={showAddLinkCard ? 24 : 22} />
           <span className="text-sm font-medium">
             {showAddLinkCard
               ? t("link.addAction")

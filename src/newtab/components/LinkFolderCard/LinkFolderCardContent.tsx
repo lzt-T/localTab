@@ -54,10 +54,10 @@ export default function LinkFolderCardContent({
 
   return (
     <>
-      <span className="relative grid size-[66px] grid-cols-2 grid-rows-2 gap-1 rounded-2xl border border-white/10 bg-[rgba(16,18,22,0.88)] p-2 shadow-inner shadow-black/40">
+      <span className="relative grid size-14 grid-cols-2 grid-rows-2 gap-1 rounded-xl border border-white/10 bg-[rgba(16,18,22,0.82)] p-1.5 shadow-inner shadow-black/40">
         {linkGroup.links.length === 0 ? (
           <span className="col-span-2 row-span-2 flex items-center justify-center text-white/30">
-            <Folder size={26} />
+            <Folder size={22} />
           </span>
         ) : (
           previewLinks.map((link, previewIndex) => (

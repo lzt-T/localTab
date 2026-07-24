@@ -98,15 +98,15 @@ export default function CategoryPage({
   return (
     <div
       ref={categoryPageRef}
-      className="flex h-screen w-full snap-start flex-col items-center"
+      className="relative z-[1] flex h-screen w-full snap-start flex-col items-center"
     >
-      <div className="flex h-[128px] items-center justify-center" />
-      <section className="min-h-0 w-[calc(100%-424px)] flex-1 p-8">
+      <div className="flex h-28 items-center justify-center" />
+      <section className="min-h-0 w-[calc(100%-400px)] max-w-[1280px] flex-1 p-6">
         <div
           ref={linkListRef}
           className="h-full overflow-x-hidden overflow-y-auto px-2 pt-2"
         >
-          <div className="pb-8">
+          <div className="pb-6">
             <CategoryGrid
               categoryInfo={categoryInfo}
               onOpenEditLink={onOpenEditLink}
