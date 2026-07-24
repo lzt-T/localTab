@@ -19,6 +19,7 @@ interface CategoryPageProps {
   handleCategoryChange: (categoryId: string) => void;
 }
 
+/** 渲染单个分类及其可滚动的网址卡片网格。 */
 export default function CategoryPage(props: CategoryPageProps) {
   const {
     categoryInfo,
@@ -84,13 +85,13 @@ export default function CategoryPage(props: CategoryPageProps) {
       ref={categoryPageRef}
       className="flex flex-col w-full h-screen snap-start items-center"
     >
-      <div className="h-[160px] flex items-center justify-center"></div>
+      <div className="h-[128px] flex items-center justify-center"></div>
 
-      <section className="flex-1 w-[calc(100%-376px)] p-8 min-h-0">
+      <section className="flex-1 w-[calc(100%-424px)] p-8 min-h-0">
         <div
           ref={linkListRef}
           className={cn(
-            "h-full overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6 content-start"
+            "h-full overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-5 content-start"
           )}
         >
           <LinkList

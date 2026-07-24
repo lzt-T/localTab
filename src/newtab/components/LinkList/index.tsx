@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useDrop } from "react-dnd";
 import { Plus } from "lucide-react";
 import type { Link } from "@/type/db";
@@ -21,6 +22,7 @@ interface LinkListProps {
   onOpenAddLink: () => void;
 }
 
+/** 渲染支持拖拽排序的网址列表和末尾添加入口。 */
 export default function LinkList({
   categoryLinks,
   categoryId,
@@ -31,6 +33,9 @@ export default function LinkList({
   onCancelDrag,
   onOpenAddLink,
 }: LinkListProps) {
+  // 添加入口的本地化文案
+  const { t } = useTranslation();
+
   // 按 sort 字段排序的链接列表
   const sortedLinks = useMemo(() => {
     return [...categoryLinks].sort((a, b) => a.sort - b.sort);
@@ -120,8 +125,9 @@ export default function LinkList({
     }),
   });
 
+  /** 将添加按钮注册为列表末尾的拖放目标。 */
   const addLinkRef = useCallback(
-    (node: HTMLDivElement | null) => {
+    (node: HTMLButtonElement | null) => {
       dropAtEnd(node);
     },
     [dropAtEnd]
@@ -145,16 +151,18 @@ export default function LinkList({
         );
       })}
 
-      <div
+      <button
+        type="button"
         ref={addLinkRef}
         className={cn(
-          "glass-style-border flex items-center justify-center rounded-2xl p-6 text-white/80 shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20 hover:shadow-xl hover:shadow-black/20 cursor-pointer h-32",
+          "flex h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/25 bg-[rgba(58,60,64,0.42)] p-4 text-white/75 shadow-lg shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-1 hover:border-white/45 hover:bg-[rgba(68,70,74,0.58)] hover:text-white/90 hover:shadow-xl hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
           isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
         )}
         onClick={onOpenAddLink}
       >
-        <Plus size={32} />
-      </div>
+        <Plus size={28} />
+        <span className="text-sm font-medium">{t("link.addAction")}</span>
+      </button>
     </>
   );
 }

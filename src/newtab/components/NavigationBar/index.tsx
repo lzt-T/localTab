@@ -71,7 +71,7 @@ export default function Index(props: NavigationBarProps) {
   return (
     <div className="relative w-full">
       <div
-        className="flex flex-col items-center gap-3 w-full h-fit max-h-[70vh] overflow-y-auto overflow-x-visible"
+        className="flex flex-col items-center gap-1.5 w-full h-fit max-h-[70vh] overflow-y-auto overflow-x-visible"
         style={{ scrollbarWidth: "none" }}
       >
         {localCategories.map((category, index) => (
@@ -90,7 +90,7 @@ export default function Index(props: NavigationBarProps) {
       </div>
 
       {/* 添加按钮 */}
-      <div className="mt-3 flex justify-start pl-5">
+      <div className="mt-2 flex justify-start pl-5">
         <button
           className="flex items-center justify-center w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/15 text-white/70 hover:text-white transition-all duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer"
           aria-label={t("category.add")}

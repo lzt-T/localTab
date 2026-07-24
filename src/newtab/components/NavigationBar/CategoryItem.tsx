@@ -133,7 +133,7 @@ export default function CategoryItem({
     <div
       ref={ref}
       className={cn(
-        "group/item relative mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-lg cursor-pointer transition-[opacity,background-color,border-color,box-shadow] duration-200",
+        "group/item relative mx-4 flex w-[calc(100%-2rem)] items-center justify-between rounded-lg cursor-pointer transition-[opacity,background-color,border-color,box-shadow] duration-200",
         isDragging ? "opacity-50" : "opacity-100",
         isActive
           ? "glass-style-border shadow-lg shadow-black/10 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20"
@@ -150,10 +150,10 @@ export default function CategoryItem({
           isActive || isLinkOver ? "opacity-100" : "opacity-0"
         )}
       />
-      <div className="flex h-12 items-center gap-1 flex-1 min-w-0 overflow-x-hidden pl-3">
+      <div className="flex h-10 items-center gap-0.5 flex-1 min-w-0 overflow-x-hidden pl-3 pr-2 transition-[padding] duration-200 group-hover/item:pr-[72px]">
         <button
           className={cn(
-            "flex shrink-0 items-center cursor-pointer justify-center w-10 h-10 rounded-full transition-colors duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+            "flex shrink-0 items-center cursor-pointer justify-center w-8 h-8 rounded-full transition-colors duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
             isActive
               ? "text-blue-100"
               : "text-blue-200/75 group-hover/item:text-blue-100",
@@ -165,7 +165,7 @@ export default function CategoryItem({
         </button>
         <div
           className={cn(
-            "flex-1 min-w-0 text-left px-2 py-1.5 text-sm font-medium transition-colors duration-200 overflow-hidden text-ellipsis whitespace-nowrap",
+            "flex-1 min-w-0 text-left px-1 py-1 text-sm font-medium transition-colors duration-200 overflow-hidden text-ellipsis whitespace-nowrap",
             isActive
               ? "font-semibold text-white"
               : "text-white/80 group-hover/item:text-white/90"
@@ -177,7 +177,7 @@ export default function CategoryItem({
 
       <div
         className={cn(
-          "mr-2 flex items-center gap-1 transition-opacity duration-200",
+          "absolute right-2 flex items-center gap-1 transition-opacity duration-200",
           isLinkOver
             ? "pointer-events-none opacity-0"
             : "opacity-0 group-hover/item:opacity-70"

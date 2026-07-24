@@ -3,9 +3,12 @@ export const resources = {
   "zh-CN": {
     translation: {
       common: {
+        actions: "操作",
         cancel: "取消",
         close: "关闭",
         confirm: "确定",
+        delete: "删除",
+        edit: "编辑",
         icon: "图标",
       },
       meta: {
@@ -103,6 +106,7 @@ export const resources = {
         defaultHome: "主页",
       },
       link: {
+        addAction: "添加网址",
         addTitle: "添加链接",
         editTitle: "编辑链接",
         addDescription: "创建一个新的链接",
@@ -143,9 +147,12 @@ export const resources = {
   "en-US": {
     translation: {
       common: {
+        actions: "Actions",
         cancel: "Cancel",
         close: "Close",
         confirm: "Confirm",
+        delete: "Delete",
+        edit: "Edit",
         icon: "Icon",
       },
       meta: {
@@ -244,6 +251,7 @@ export const resources = {
         defaultHome: "Home",
       },
       link: {
+        addAction: "Add website",
         addTitle: "Add Link",
         editTitle: "Edit Link",
         addDescription: "Create a new link",
