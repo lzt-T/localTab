@@ -76,6 +76,10 @@ export default function LinkItemWrapper({
         dropIntent: LINK_DROP_INTENT.MOVE,
       };
     },
+    /** 按网址标识保持重排后拖动源的视觉状态。 */
+    isDragging(monitor) {
+      return monitor.getItem().link.id === link.id;
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -211,6 +215,7 @@ export default function LinkItemWrapper({
         handleEditClick={onEditClick}
         handleDeleteClick={onDeleteClick}
         handleSkipClick={onSkipClick}
+        variant={isDragging ? "drag-placeholder" : "default"}
       />
       {isMergeTarget && (
         <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-amber-300/10 pb-2">

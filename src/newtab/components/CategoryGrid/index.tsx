@@ -416,25 +416,28 @@ export default function CategoryGrid({
         const previousIndex = previousItems.findIndex(
           (gridItem) => gridItem.id === item.link.id
         );
-        // 移除网址后的主网格项目
-        const nextItems = previousItems.filter(
-          (gridItem) => gridItem.id !== item.link.id
-        );
         // 向后移动时抵消移除项目产生的索引偏移
         const normalizedInsertIndex =
           previousIndex >= 0 && previousIndex < hoverIndex
             ? hoverIndex - 1
             : hoverIndex;
+        // 移除被拖网址后的可用插入位置数量
+        const remainingItemCount =
+          previousIndex >= 0 ? previousItems.length - 1 : previousItems.length;
         // 有效范围内的插入位置
         const insertIndex = Math.max(
           0,
-          Math.min(normalizedInsertIndex, nextItems.length)
+          Math.min(normalizedInsertIndex, remainingItemCount)
         );
         if (previousIndex === insertIndex) {
           item.currentParentId = categoryInfo.id;
           item.index = insertIndex;
           return previousItems;
         }
+        // 仅在位置变化时创建移除网址后的主网格项目
+        const nextItems = previousItems.filter(
+          (gridItem) => gridItem.id !== item.link.id
+        );
         // 更新父级后的网址预览项目
         const previewLink = { ...item.link, parentId: categoryInfo.id };
         nextItems.splice(insertIndex, 0, previewLink);

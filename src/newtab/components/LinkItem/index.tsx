@@ -10,6 +10,17 @@ import {
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
 
+type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
+
+// 不同展示模式对应的网址卡片视觉样式
+const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
+  default:
+    "glass-style-border shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[rgba(68,70,74,0.66)] hover:shadow-xl hover:shadow-black/20 has-[[data-state=open]]:-translate-y-1 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/50",
+  "drag-placeholder": "glass-style-border shadow-lg shadow-black/10",
+  "drag-preview":
+    "border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/20",
+};
+
 interface LinkItemProps {
   link: {
     id?: string;
@@ -21,6 +32,7 @@ interface LinkItemProps {
   handleEditClick?: (linkId: string) => void;
   handleDeleteClick?: (linkId: string) => void;
   handleSkipClick?: (url: string) => void;
+  variant?: LinkItemVariant;
 }
 
 /** 渲染可访问、编辑和删除的网址卡片。 */
@@ -29,6 +41,7 @@ export default function Index({
   handleEditClick,
   handleDeleteClick,
   handleSkipClick,
+  variant = "default",
 }: LinkItemProps) {
   // 卡片操作菜单的本地化文案
   const { t } = useTranslation();
@@ -115,7 +128,10 @@ export default function Index({
 
   return (
     <div
-      className="glass-style-border group/item relative flex h-28 cursor-pointer flex-col justify-center rounded-2xl p-4 shadow-lg shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[rgba(68,70,74,0.66)] hover:shadow-xl hover:shadow-black/20 has-[[data-state=open]]:-translate-y-1 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/50"
+      className={cn(
+        "group/item relative flex h-28 cursor-pointer flex-col justify-center rounded-2xl p-4",
+        LINK_ITEM_CLASS_BY_VARIANT[variant]
+      )}
       onClick={onSkipClick}
       onMouseEnter={clearActionMenuCloseTimer}
       onMouseLeave={scheduleActionMenuClose}

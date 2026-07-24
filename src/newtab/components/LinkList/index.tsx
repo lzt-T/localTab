@@ -131,17 +131,18 @@ export default function LinkList({
         const previousIndex = previousLinks.findIndex(
           (link) => link.id === item.link.id
         );
-        // 移除被拖网址后的预览列表
-        const nextLinks = previousLinks.filter((link) => link.id !== item.link.id);
         // 同一列表向后移动时抵消移除产生的索引偏移
         const normalizedInsertIndex =
           previousIndex >= 0 && previousIndex < hoverIndex
             ? hoverIndex - 1
             : hoverIndex;
+        // 移除被拖网址后的可用插入位置数量
+        const remainingLinkCount =
+          previousIndex >= 0 ? previousLinks.length - 1 : previousLinks.length;
         // 限制在有效范围内的预览插入位置
         const boundedInsertIndex = Math.max(
           0,
-          Math.min(normalizedInsertIndex, nextLinks.length)
+          Math.min(normalizedInsertIndex, remainingLinkCount)
         );
         if (
           item.currentParentId === parentId &&
@@ -149,6 +150,10 @@ export default function LinkList({
         ) {
           return previousLinks;
         }
+        // 仅在位置变化时创建移除被拖网址后的预览列表
+        const nextLinks = previousLinks.filter(
+          (link) => link.id !== item.link.id
+        );
         // 目标父级下的预览网址
         const previewLink = { ...item.link, parentId };
         nextLinks.splice(boundedInsertIndex, 0, previewLink);
