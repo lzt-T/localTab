@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import type { Category } from "@/type/db";
+import type { CategoryInfo } from "@/type/db";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { LucideIconConfig } from "@/utils/icon";
@@ -23,12 +23,18 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAddEditLink } from "@/newtab/components/AddEditLink/useAddEditLink";
+import {
+  NO_LINK_GROUP_VALUE,
+  useAddEditLink,
+} from "@/newtab/components/AddEditLink/useAddEditLink";
 
+// 抽屉表单字段的统一样式
 const FIELD_CLASS_NAME =
   "border-white/15 bg-white/[0.06] text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20";
+// 下拉内容的统一样式
 const SELECT_CONTENT_CLASS_NAME =
   "border-white/15 bg-[rgba(32,34,38,0.98)] text-white shadow-xl backdrop-blur-2xl";
+// 下拉选项的统一样式
 const SELECT_ITEM_CLASS_NAME =
   "cursor-pointer focus:bg-white/10 focus:text-white";
 
@@ -40,10 +46,11 @@ interface AddEditLinkProps {
     description: string;
     url: string;
     icon: string;
-    parentId: string;
+    categoryId: string;
+    linkGroupId: string;
   };
-  categories: Category[];
-  defaultCategoryId: string;
+  categories: CategoryInfo[];
+  defaultParentId: string;
   handleClose: () => void;
   handleSubmit: (values: {
     title: string;
@@ -54,22 +61,26 @@ interface AddEditLinkProps {
   }) => void;
 }
 
+/** 渲染支持选择所属文件夹的网址编辑抽屉。 */
 export default function AddEditLink(props: AddEditLinkProps) {
+  // 抽屉的本地化文案
   const { t } = useTranslation();
+  // 网址表单状态与操作
   const {
     title,
     description,
     url,
     icon,
-    parentId,
+    categoryId,
+    linkGroupId,
     errors,
     isLoadingFavicon,
     iconType,
     sheetTitle,
     sheetDescription,
     categories,
-    setParentId,
-    setErrors,
+    availableLinkGroups,
+    setLinkGroupId,
     setIcon,
     onTitleChange,
     onDescriptionChange,
@@ -78,6 +89,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
     onCancel,
     onOpenChange,
     onTabChange,
+    onCategoryChange,
   } = useAddEditLink(props);
 
   return (
@@ -98,11 +110,8 @@ export default function AddEditLink(props: AddEditLinkProps) {
               {t("link.category")}
             </Label>
             <Select
-              value={parentId}
-              onValueChange={(value) => {
-                setParentId(value);
-                setErrors((prev) => ({ ...prev, parentId: undefined }));
-              }}
+              value={categoryId}
+              onValueChange={onCategoryChange}
             >
               <SelectTrigger
                 id="category"
@@ -129,6 +138,40 @@ export default function AddEditLink(props: AddEditLinkProps) {
             {errors.parentId && (
               <p className="text-sm text-red-500">{errors.parentId}</p>
             )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="link-group" className="text-white/80">
+              {t("link.group")}
+            </Label>
+            <Select value={linkGroupId} onValueChange={setLinkGroupId}>
+              <SelectTrigger
+                id="link-group"
+                className={cn(
+                  "w-full cursor-pointer [&_svg]:text-white/50",
+                  FIELD_CLASS_NAME
+                )}
+              >
+                <SelectValue placeholder={t("link.selectGroup")} />
+              </SelectTrigger>
+              <SelectContent className={SELECT_CONTENT_CLASS_NAME}>
+                <SelectItem
+                  value={NO_LINK_GROUP_VALUE}
+                  className={SELECT_ITEM_CLASS_NAME}
+                >
+                  {t("linkGroup.ungrouped")}
+                </SelectItem>
+                {availableLinkGroups.map((linkGroup) => (
+                  <SelectItem
+                    key={linkGroup.id}
+                    value={linkGroup.id}
+                    className={SELECT_ITEM_CLASS_NAME}
+                  >
+                    {linkGroup.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-2">
@@ -252,6 +295,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
                     )}
                   >
                     {Object.entries(LucideIconConfig).map(([key, IconComponent]) => {
+                      // 当前配置对应的图标组件
                       const Icon = IconComponent as React.ComponentType<{ size?: number }>;
                       return (
                         <SelectItem

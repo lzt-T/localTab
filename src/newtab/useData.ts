@@ -5,11 +5,57 @@ import { categoryService } from "@/services/categoryService";
 import { browserSearchService } from "@/services/browserSearchService";
 import useSystemStore from "@/store/systemStore";
 import { linkService, systemService } from "@/services/index";
+import { categoryItemService } from "@/services/categoryItemService";
 import { useWebActive } from "@/hooks/useWebActive";
 import { toast } from "sonner";
 import { useBackgroundImg } from "@/hooks/useBackgroundImg";
 import defaultBackground from "@/assets/defaultBackground.jpg";
-import { DEFAULT_SEARCH_ENGINE_ID, type CategoryInfo } from "@/type/db";
+import {
+  DEFAULT_SEARCH_ENGINE_ID,
+  LinkType,
+  type Category,
+  type CategoryGridItem,
+  type CategoryInfo,
+  type LinkGroupInfo,
+} from "@/type/db";
+
+/** 组合单个分类、未分组网址和网址分组。 */
+async function buildCategoryInfo(category: Category): Promise<CategoryInfo> {
+  // 统一排序后的分类直属网址和文件夹
+  const categoryItems = await categoryItemService.getCategoryItems(category.id);
+  // 分类直属网址
+  const links = categoryItems.filter((item) => item.type === LinkType.LINK);
+  // 分类直属文件夹
+  const linkGroups = categoryItems.filter(
+    (item) => item.type === LinkType.LINK_GROUP
+  );
+  // 组合组内网址后的分组数据
+  const linkGroupInfos: LinkGroupInfo[] = await Promise.all(
+    linkGroups.map(async (linkGroup) => ({
+      ...linkGroup,
+      links: await linkService.getLinkCountByParentId(linkGroup.id),
+    }))
+  );
+  // 文件夹标识对应的页面预览数据
+  const linkGroupInfoMap = new Map(
+    linkGroupInfos.map((linkGroup) => [linkGroup.id, linkGroup])
+  );
+  // 包含文件夹预览数据的混排网格项目
+  const items: CategoryGridItem[] = categoryItems.map((item) => {
+    if (item.type === LinkType.LINK_GROUP) {
+      return linkGroupInfoMap.get(item.id)!;
+    }
+    return item;
+  });
+  return { ...category, links, linkGroups: linkGroupInfos, items };
+}
+
+/** 加载全部分类页面数据。 */
+async function loadCategoriesData(): Promise<CategoryInfo[]> {
+  // 全部分类
+  const categories = await categoryService.getAllCategories();
+  return await Promise.all(categories.map(buildCategoryInfo));
+}
 
 /**
  * 管理新标签页的初始化和页面数据。
@@ -55,18 +101,8 @@ export function useData() {
 
   /* 获取categories数据 */
   const refreshCategoriesData = useCallback(async () => {
-    // 全部分类
-    const categories = await categoryService.getAllCategories();
-    // 组合链接后的分类数据
-    const result: CategoryInfo[] = [];
-    for (const category of categories) {
-      // 当前分类下的链接
-      const links = await linkService.getLinkCountByParentId(category.id);
-      result.push({
-        ...category,
-        links,
-      });
-    }
+    // 组合链接和分组后的分类数据
+    const result = await loadCategoriesData();
 
     // 第一个分类
     const firstCategory = result[0];
@@ -131,27 +167,87 @@ export function useData() {
 
   /* 移动链接并刷新来源、目标分类的数据。 */
   const moveLink = useCallback(
-    async (linkId: string, targetCategoryId: string, targetIndex: number) => {
-      // 链接原所属分类
-      const sourceCategory = categories.find((category) =>
-        category.links.some((link) => link.id === linkId)
-      );
+    async (linkId: string, targetParentId: string, targetIndex: number) => {
+      // 链接原所属父级
+      const sourceParentId = categories
+        .flatMap((category) => [
+          { id: category.id, links: category.links },
+          ...category.linkGroups,
+        ])
+        .find((parent) => parent.links.some((link) => link.id === linkId))?.id;
       // 链接原排序位置
-      const sourceIndex = sourceCategory?.links.findIndex(
-        (link) => link.id === linkId
+      const sourceIndex = categories
+        .flatMap((category) => [
+          { id: category.id, links: category.links },
+          ...category.linkGroups,
+        ])
+        .find((parent) => parent.id === sourceParentId)
+        ?.links.findIndex((link) => link.id === linkId);
+      // 目标父级所属分类
+      const targetCategory = categories.find(
+        (category) =>
+          category.id === targetParentId ||
+          category.linkGroups.some((linkGroup) => linkGroup.id === targetParentId)
       );
 
-      await linkService.moveLink(linkId, targetCategoryId, targetIndex);
+      await categoryItemService.moveLink(linkId, targetParentId, targetIndex);
       await refreshCategoriesData();
-      setCurrentCategoryId(targetCategoryId);
+      if (targetCategory) {
+        setCurrentCategoryId(targetCategory.id);
+      }
 
-      if (sourceCategory?.id !== targetCategoryId) {
+      if (sourceParentId !== targetParentId) {
         toast.success(t("link.movedSuccess"));
       } else if (sourceIndex !== targetIndex) {
         toast.success(t("link.sortSuccess"));
       }
     },
     [categories, refreshCategoriesData, t]
+  );
+
+  /** 将两个未分组网址合并到自动命名的新分组。 */
+  const mergeLinks = useCallback(
+    async (categoryId: string, targetLinkId: string, draggedLinkId: string) => {
+      // 当前分类
+      const category = categories.find((item) => item.id === categoryId);
+      if (!category) {
+        return;
+      }
+
+      // 自动分组名称的递增序号
+      let groupNameIndex = 1;
+      // 当前序号对应的本地化分组名称
+      let groupName = t("linkGroup.defaultName", { index: groupNameIndex });
+      while (category.linkGroups.some((linkGroup) => linkGroup.name === groupName)) {
+        groupNameIndex += 1;
+        groupName = t("linkGroup.defaultName", { index: groupNameIndex });
+      }
+
+      await categoryItemService.mergeLinksIntoFolder(
+        categoryId,
+        targetLinkId,
+        draggedLinkId,
+        groupName
+      );
+      await refreshCategoriesData();
+      setCurrentCategoryId(categoryId);
+      toast.success(t("linkGroup.createSuccess"));
+    },
+    [categories, refreshCategoriesData, t]
+  );
+
+  /** 调整分类网格中的网址或文件夹顺序。 */
+  const moveCategoryItem = useCallback(
+    async (categoryId: string, itemId: string, targetIndex: number) => {
+      await categoryItemService.moveCategoryItem(
+        categoryId,
+        itemId,
+        targetIndex
+      );
+      await refreshCategoriesData();
+      toast.success(t("linkGroup.sortSuccess"));
+    },
+    [refreshCategoriesData, t]
   );
 
   useEffect(() => {
@@ -163,23 +259,12 @@ export function useData() {
       await categoryService.init(i18n.t("category.defaultHome"));
       changeIsInitializedDB(true);
 
-      // 初始化后的全部分类
-      const categories = await categoryService.getAllCategories();
+      // 初始化后的全部分类页面数据
+      const categories = await loadCategoriesData();
       // 默认选中的首个分类
       const firstCategory = categories[0];
 
-      // 组合链接后的分类数据
-      const result: CategoryInfo[] = [];
-      for (const category of categories) {
-        // 当前分类下的链接
-        const links = await linkService.getLinkCountByParentId(category.id);
-        result.push({
-          ...category,
-          links,
-        });
-      }
-
-      setCategories(result);
+      setCategories(categories);
       setCurrentCategoryId(firstCategory.id);
     };
     init();
@@ -210,5 +295,7 @@ export function useData() {
     refreshCategoriesData,
     updateCategoryOrder,
     moveLink,
+    mergeLinks,
+    moveCategoryItem,
   };
 }

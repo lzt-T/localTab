@@ -20,7 +20,7 @@ export type ExportData = {
   exportDate: string;
   categories: Category[];
   links: Link[];
-  linkGroups: LinkGroup[];
+  linkGroups?: LinkGroup[];
   system: {
     selectedSearchEngineId?: string;
     customSearchEngines?: CustomSearchEngine[];

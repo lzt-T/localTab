@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { Category } from "@/type/db";
+import type { CategoryInfo } from "@/type/db";
 import _ from "lodash";
 import { fetchFavicon } from "@/utils/webIcon";
 import { toast } from "sonner";
@@ -13,10 +13,11 @@ interface UseAddEditLinkProps {
     description: string;
     url: string;
     icon: string;
-    parentId: string;
+    categoryId: string;
+    linkGroupId: string;
   };
-  categories: Category[];
-  defaultCategoryId: string;
+  categories: CategoryInfo[];
+  defaultParentId: string;
   handleClose: () => void;
   handleSubmit: (values: {
     title: string;
@@ -27,6 +28,9 @@ interface UseAddEditLinkProps {
   }) => void;
 }
 
+// 未选择网址分组时使用的表单值
+export const NO_LINK_GROUP_VALUE = "__ungrouped__";
+
 interface Errors {
   title?: string;
   description?: string;
@@ -35,23 +39,49 @@ interface Errors {
   parentId?: string;
 }
 
+/** 管理网址添加和编辑抽屉的表单状态。 */
 export function useAddEditLink(props: UseAddEditLinkProps) {
-  const { open, mode, initialData, categories, defaultCategoryId, handleClose, handleSubmit } = props;
+  // 网址表单属性
+  const {
+    open,
+    mode,
+    initialData,
+    categories,
+    defaultParentId,
+    handleClose,
+    handleSubmit,
+  } = props;
+  // 网址表单的本地化文案
   const { t } = useTranslation();
 
+  // 网址标题
   const [title, setTitle] = useState("");
+  // 网址描述
   const [description, setDescription] = useState("");
+  // 网址地址
   const [url, setUrl] = useState("");
+  // 网址图标
   const [icon, setIcon] = useState("");
-  const [parentId, setParentId] = useState(defaultCategoryId);
+  // 当前选择的分类
+  const [categoryId, setCategoryId] = useState("");
+  // 当前选择的网址分组
+  const [linkGroupId, setLinkGroupId] = useState(NO_LINK_GROUP_VALUE);
+  // 当前表单校验错误
   const [errors, setErrors] = useState<Errors>({});
+  // 网站图标是否正在加载
   const [isLoadingFavicon, setIsLoadingFavicon] = useState(false);
+  // 当前图标来源类型
   const [iconType, setIconType] = useState<"favicon" | "lucide">("lucide");
 
+  // 当前模式对应的抽屉标题
   const sheetTitle = t(mode === "add" ? "link.addTitle" : "link.editTitle");
+  // 当前模式对应的抽屉说明
   const sheetDescription = t(
     mode === "add" ? "link.addDescription" : "link.editDescription"
   );
+  // 当前分类中可选择的网址分组
+  const availableLinkGroups =
+    categories.find((category) => category.id === categoryId)?.linkGroups ?? [];
 
   /* 获取并设置 favicon */
   const onFetchFavicon = useCallback(async () => {
@@ -62,6 +92,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     setIsLoadingFavicon(true);
 
     try {
+      // 根据网址获取的网站图标地址
       const faviconUrl = await fetchFavicon(url.trim());
       if (faviconUrl) {
         setIcon(faviconUrl);
@@ -128,6 +159,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
   /* 验证表单 */
   const onValidate = useCallback(() => {
+    // 当前校验产生的错误
     const newErrors: Errors = {};
 
     if (!title.trim()) {
@@ -144,28 +176,55 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
       }
     }
 
-    if (!parentId) {
+    if (!categoryId) {
       newErrors.parentId = t("link.selectCategory");
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [title, url, parentId, t]);
+  }, [title, url, categoryId, t]);
 
+  /** 校验并提交网址表单。 */
   const onOk = useCallback(() => {
     if (onValidate()) {
+      // 补全协议后的网址地址
       const finalUrl = url.trim().startsWith("http")
         ? url.trim()
         : `https://${url.trim()}`;
+      // 网址最终保存的父级标识
+      const parentId =
+        linkGroupId === NO_LINK_GROUP_VALUE ? categoryId : linkGroupId;
       handleSubmit({ title, description, url: finalUrl, icon, parentId });
       handleClose();
     }
-  }, [title, description, url, icon, parentId, handleSubmit, onValidate, handleClose]);
+  }, [
+    title,
+    description,
+    url,
+    icon,
+    categoryId,
+    linkGroupId,
+    handleSubmit,
+    onValidate,
+    handleClose,
+  ]);
 
+  /** 切换所属分类并重置分组选择。 */
+  const onCategoryChange = useCallback((value: string) => {
+    setCategoryId(value);
+    setLinkGroupId(NO_LINK_GROUP_VALUE);
+    setErrors((previousErrors) => ({
+      ...previousErrors,
+      parentId: undefined,
+    }));
+  }, []);
+
+  /** 关闭网址表单。 */
   const onCancel = useCallback(() => {
     handleClose();
   }, [handleClose]);
 
+  /** 同步抽屉关闭操作。 */
   const onOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -198,7 +257,8 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         setDescription(initialData.description);
         setUrl(initialData.url);
         setIcon(initialData.icon);
-        setParentId(initialData.parentId);
+        setCategoryId(initialData.categoryId);
+        setLinkGroupId(initialData.linkGroupId || NO_LINK_GROUP_VALUE);
         if (initialData.icon && initialData.icon.startsWith("http")) {
           setIconType("favicon");
         } else {
@@ -210,7 +270,12 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         setUrl("");
         setIcon("link");
         setIconType("lucide");
-        setParentId(defaultCategoryId);
+        // 默认父级对应的网址分组
+        const defaultLinkGroup = categories
+          .flatMap((category) => category.linkGroups)
+          .find((linkGroup) => linkGroup.id === defaultParentId);
+        setCategoryId(defaultLinkGroup?.parentId ?? defaultParentId);
+        setLinkGroupId(defaultLinkGroup?.id ?? NO_LINK_GROUP_VALUE);
       }
       setErrors({});
     }
@@ -223,16 +288,17 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     description,
     url,
     icon,
-    parentId,
+    categoryId,
+    linkGroupId,
     errors,
     isLoadingFavicon,
     iconType,
     sheetTitle,
     sheetDescription,
     categories,
+    availableLinkGroups,
     // Setters
-    setParentId,
-    setErrors,
+    setLinkGroupId,
     setIcon,
     // Handlers
     onTitleChange,
@@ -242,6 +308,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     onCancel,
     onOpenChange,
     onTabChange,
+    onCategoryChange,
   };
 }
 

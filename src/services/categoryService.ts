@@ -6,6 +6,7 @@
 import { db, STORE_NAMES } from "@/utils/db";
 import type { Category } from "@/type/db";
 import { linkService } from "@/services/linkService";
+import { linkGroupService } from "@/services/linkGroupService";
 import { getUniqueId } from "@/utils/base";
 
 export class CategoryService {
@@ -14,6 +15,7 @@ export class CategoryService {
    */
   async init(defaultCategoryName: string): Promise<void> {
     try {
+      // 当前全部分类
       const categories = await this.getAllCategories();
 
       // 如果没有分类，创建默认的"主页"分类
@@ -36,7 +38,9 @@ export class CategoryService {
    * 创建类别
    */
   async createCategory(data: Partial<Category>): Promise<void> {
+    // 新分类的排序位置
     const sort = await this.getCategoryCount();
+    // 待保存的分类数据
     const result: Category = {
       id: getUniqueId(),
       name: data.name || "",
@@ -50,6 +54,7 @@ export class CategoryService {
    * 更新类别
    */
   async updateCategory(id: string, data: Partial<Category>): Promise<void> {
+    // 待更新的分类
     const category = await this.getCategory(id);
     if (!category) {
       return;
@@ -71,6 +76,7 @@ export class CategoryService {
    * 获取所有类别
    */
   async getAllCategories(): Promise<Category[]> {
+    // 数据库中的全部分类
     const categories = await db.getAll<Category>(STORE_NAMES.CATEGORY);
     /* 按排序号排序 */
     categories.sort((a, b) => a.sort - b.sort);
@@ -81,8 +87,11 @@ export class CategoryService {
    * 删除类别
    */
   async deleteCategory(id: string): Promise<void> {
+    // 当前全部分类
     const allCategories = await this.getAllCategories();
+    // 待删除的分类
     const deleteCategory = allCategories.find((category) => category.id === id);
+    // 待删除分类的排序位置
     const delSort = deleteCategory!.sort;
 
     for (const category of allCategories) {
@@ -92,15 +101,16 @@ export class CategoryService {
       }
     }
 
-    /* 删除类别 */
+    /* 删除分类内的分组和全部网址 */
+    await linkGroupService.deleteLinkGroupsByParentId(id);
+    await linkService.deleteLinkByParentId(id);
+    /* 删除分类 */
     await db.delete(STORE_NAMES.CATEGORY, id);
-
-    /* 删除类别下的所有链接  ( 异步就 可以)*/
-    linkService.deleteLinkByParentId(id);
   }
 
   /* 获取长度 */
   async getCategoryCount(): Promise<number> {
+    // 当前全部分类
     const categories = await db.getAll<Category>(STORE_NAMES.CATEGORY);
     return categories.length;
   }
@@ -111,14 +121,16 @@ export class CategoryService {
    * @param hoverIndex 放置的目标索引
    */
   async updateCategoryOrder(dragIndex: number, hoverIndex: number): Promise<void> {
+    // 当前排序的全部分类
     const categories = await this.getAllCategories();
     
     if (dragIndex === hoverIndex) {
       return;
     }
 
-    // 重新计算排序
+    // 被拖动的分类
     const draggedCategory = categories[dragIndex];
+    // 调整顺序后的分类列表
     const newCategories = [...categories];
     newCategories.splice(dragIndex, 1);
     newCategories.splice(hoverIndex, 0, draggedCategory);

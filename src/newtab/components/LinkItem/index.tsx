@@ -144,7 +144,7 @@ export default function Index({
               side="right"
               align="start"
               sideOffset={8}
-              className="glass-style-border min-w-24 border-white/15 bg-[rgba(24,26,30,0.98)] text-white shadow-2xl shadow-black/50 ring-1 ring-white/15 backdrop-blur-2xl"
+              className="glass-style-border z-[70] min-w-24 border-white/15 bg-[rgba(24,26,30,0.98)] text-white shadow-2xl shadow-black/50 ring-1 ring-white/15 backdrop-blur-2xl"
               onClick={(event) => event.stopPropagation()}
               onMouseEnter={clearActionMenuCloseTimer}
               onMouseLeave={scheduleActionMenuClose}

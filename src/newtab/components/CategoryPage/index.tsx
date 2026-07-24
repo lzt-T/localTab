@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
-import LinkList from "@/newtab/components/LinkList";
-import type { CategoryInfo } from "@/type/db";
+import CategoryGrid from "@/newtab/components/CategoryGrid";
+import type { CategoryInfo, LinkGroupInfo } from "@/type/db";
 
 interface CategoryPageProps {
   categoryInfo: CategoryInfo;
@@ -11,30 +10,47 @@ interface CategoryPageProps {
   handleSkipClick: (url: string) => void;
   moveLink: (
     linkId: string,
-    targetCategoryId: string,
+    targetParentId: string,
+    targetIndex: number
+  ) => Promise<void>;
+  mergeLinks: (
+    categoryId: string,
+    targetLinkId: string,
+    draggedLinkId: string
+  ) => Promise<void>;
+  moveCategoryItem: (
+    categoryId: string,
+    itemId: string,
     targetIndex: number
   ) => Promise<void>;
   onCancelLinkDrag: () => Promise<void>;
-  onOpenAddLink: () => void;
+  onOpenAddLink: (parentId: string) => void;
+  onEditLinkGroup: (linkGroup: LinkGroupInfo) => void;
+  onDeleteLinkGroup: (linkGroup: LinkGroupInfo) => void;
   handleCategoryChange: (categoryId: string) => void;
 }
 
-/** 渲染单个分类及其可滚动的网址卡片网格。 */
-export default function CategoryPage(props: CategoryPageProps) {
-  const {
-    categoryInfo,
-    currentCategoryId,
-    onOpenEditLink,
-    onDeleteLinkClick,
-    handleSkipClick,
-    moveLink,
-    onCancelLinkDrag,
-    onOpenAddLink,
-    handleCategoryChange,
-  } = props;
-
+/** 渲染单个分类及其可滚动的统一卡片网格。 */
+export default function CategoryPage({
+  categoryInfo,
+  currentCategoryId,
+  onOpenEditLink,
+  onDeleteLinkClick,
+  handleSkipClick,
+  moveLink,
+  mergeLinks,
+  moveCategoryItem,
+  onCancelLinkDrag,
+  onOpenAddLink,
+  onEditLinkGroup,
+  onDeleteLinkGroup,
+  handleCategoryChange,
+}: CategoryPageProps) {
+  // 分类整页元素引用
   const categoryPageRef = useRef<HTMLDivElement>(null);
+  // 分类内容滚动区域引用
   const linkListRef = useRef<HTMLDivElement>(null);
+  // 分类页面当前是否可见
   const isCategoryPageVisibleRef = useRef(false);
 
   useEffect(() => {
@@ -42,12 +58,13 @@ export default function CategoryPage(props: CategoryPageProps) {
       return;
     }
 
+    // 分类页面可见性观察器
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          // 当前分类页面是否达到可见阈值
           const isCategoryPageVisible = entry.intersectionRatio >= 0.5;
           isCategoryPageVisibleRef.current = isCategoryPageVisible;
-
           if (isCategoryPageVisible) {
             linkListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             handleCategoryChange(categoryInfo.id);
@@ -57,7 +74,6 @@ export default function CategoryPage(props: CategoryPageProps) {
       { threshold: 0.5 }
     );
     observer.observe(categoryPageRef.current);
-
     return () => {
       observer.disconnect();
     };
@@ -67,7 +83,6 @@ export default function CategoryPage(props: CategoryPageProps) {
     if (!categoryPageRef.current) {
       return;
     }
-
     if (
       currentCategoryId === categoryInfo.id &&
       !isCategoryPageVisibleRef.current
@@ -83,27 +98,29 @@ export default function CategoryPage(props: CategoryPageProps) {
   return (
     <div
       ref={categoryPageRef}
-      className="flex flex-col w-full h-screen snap-start items-center"
+      className="flex h-screen w-full snap-start flex-col items-center"
     >
-      <div className="h-[128px] flex items-center justify-center"></div>
-
-      <section className="flex-1 w-[calc(100%-424px)] p-8 min-h-0">
+      <div className="flex h-[128px] items-center justify-center" />
+      <section className="min-h-0 w-[calc(100%-424px)] flex-1 p-8">
         <div
           ref={linkListRef}
-          className={cn(
-            "h-full overflow-y-auto pt-2 px-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-5 content-start"
-          )}
+          className="h-full overflow-x-hidden overflow-y-auto px-2 pt-2"
         >
-          <LinkList
-            categoryLinks={categoryInfo.links}
-            categoryId={categoryInfo.id}
-            handleEditClick={onOpenEditLink}
-            handleDeleteClick={onDeleteLinkClick}
-            handleSkipClick={handleSkipClick}
-            onMoveLink={moveLink}
-            onCancelDrag={onCancelLinkDrag}
-            onOpenAddLink={onOpenAddLink}
-          />
+          <div className="pb-8">
+            <CategoryGrid
+              categoryInfo={categoryInfo}
+              onOpenEditLink={onOpenEditLink}
+              onDeleteLink={onDeleteLinkClick}
+              onSkipLink={handleSkipClick}
+              onMoveLink={moveLink}
+              onMergeLinks={mergeLinks}
+              onMoveCategoryItem={moveCategoryItem}
+              onCancelLinkDrag={onCancelLinkDrag}
+              onOpenAddLink={onOpenAddLink}
+              onEditFolder={onEditLinkGroup}
+              onDeleteFolder={onDeleteLinkGroup}
+            />
+          </div>
         </div>
       </section>
     </div>

@@ -33,6 +33,8 @@ export type Category = {
 
 export type CategoryInfo = Category & {
   links: Link[]
+  linkGroups: LinkGroupInfo[]
+  items: CategoryGridItem[]
 }
 
 /* 链接组 */
@@ -43,6 +45,11 @@ export type LinkGroup = {
   sort: number
   description: string
   parentId: string
+}
+
+/* 包含组内链接的分组页面数据 */
+export type LinkGroupInfo = LinkGroup & {
+  links: Link[]
 }
 
 /* 链接 */
@@ -57,3 +64,9 @@ export type Link = {
   /* 所属链接组或分类 */
   parentId: string
 }
+
+/* 分类直属网址或文件夹 */
+export type CategoryItem = Link | LinkGroup
+
+/* 包含文件夹预览数据的分类网格项目 */
+export type CategoryGridItem = Link | LinkGroupInfo

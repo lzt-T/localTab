@@ -15,9 +15,15 @@ import SearchInput from "@/newtab/components/SearchInput";
 import CategoryPage from "@/newtab/components/CategoryPage";
 import LinkDragPreview from "@/newtab/components/LinkList/LinkDragPreview";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
+import EditLinkGroup from "@/newtab/components/EditLinkGroup";
+import { useLinkGroupAction } from "@/hooks/useLinkGroupAction";
+import type { LinkGroupInfo } from "@/type/db";
 
+/** 渲染新标签页主应用。 */
 const NewTabApp: React.FC = () => {
+  // 页面本地化文案
   const { t } = useTranslation();
+  // 新标签页数据和拖拽操作
   const {
     currentCategoryId,
     categories,
@@ -26,7 +32,10 @@ const NewTabApp: React.FC = () => {
     refreshCategoriesData,
     updateCategoryOrder,
     moveLink,
+    mergeLinks,
+    moveCategoryItem,
   } = useData();
+  // 分类编辑操作
   const {
     isOpen,
     mode,
@@ -38,16 +47,28 @@ const NewTabApp: React.FC = () => {
     onSubmit,
   } = useCategoryAction();
 
+  // 网址编辑操作
   const {
     isOpen: isOpenLink,
     mode: modeLink,
     initialData: initialDataLink,
+    defaultParentId,
     onOpenAdd: onOpenAddLink,
     onOpenEdit: onOpenEditLink,
     onDeleteLink,
     onClose: onCloseLink,
     onSubmit: onSubmitLink,
   } = useLinkAction();
+
+  // 网址分组编辑和删除操作
+  const {
+    isOpen: isEditLinkGroupOpen,
+    editingLinkGroup,
+    onOpenEdit: onOpenEditLinkGroup,
+    onClose: onCloseEditLinkGroup,
+    onSubmit: onSubmitLinkGroup,
+    onDelete: onDeleteLinkGroup,
+  } = useLinkGroupAction();
 
   /* 跳转链接 */
   const handleSkipClick = (url: string) => {
@@ -56,6 +77,7 @@ const NewTabApp: React.FC = () => {
 
   // 删除链接确认弹窗状态
   const [isDeleteLinkDialogOpen, setIsDeleteLinkDialogOpen] = useState(false);
+  // 待删除的网址
   const [linkToDelete, setLinkToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // 处理删除链接点击 - 打开确认弹窗
@@ -63,7 +85,13 @@ const NewTabApp: React.FC = () => {
     // 查找链接标题
     let linkTitle = "";
     for (const category of categories) {
-      const link = category.links.find(l => l.id === linkId);
+      // 分类及其分组中的全部网址
+      const categoryLinks = [
+        ...category.links,
+        ...category.linkGroups.flatMap((linkGroup) => linkGroup.links),
+      ];
+      // 待删除的网址
+      const link = categoryLinks.find((item) => item.id === linkId);
       if (link) {
         linkTitle = link.title;
         break;
@@ -84,12 +112,38 @@ const NewTabApp: React.FC = () => {
     setLinkToDelete(null);
   }, [linkToDelete, onDeleteLink, refreshCategoriesData, t]);
 
+  // 删除网址分组确认弹窗状态
+  const [isDeleteLinkGroupDialogOpen, setIsDeleteLinkGroupDialogOpen] =
+    useState(false);
+  // 待删除的网址分组
+  const [linkGroupToDelete, setLinkGroupToDelete] =
+    useState<LinkGroupInfo | null>(null);
+
+  /** 打开网址分组删除确认弹窗。 */
+  const onDeleteLinkGroupClick = useCallback((linkGroup: LinkGroupInfo) => {
+    setLinkGroupToDelete(linkGroup);
+    setIsDeleteLinkGroupDialogOpen(true);
+  }, []);
+
+  /** 删除网址分组并刷新分类数据。 */
+  const confirmDeleteLinkGroup = useCallback(async () => {
+    if (linkGroupToDelete) {
+      await onDeleteLinkGroup(linkGroupToDelete.id);
+      await refreshCategoriesData();
+      toast.success(t("linkGroup.deleteSuccess"));
+    }
+    setIsDeleteLinkGroupDialogOpen(false);
+    setLinkGroupToDelete(null);
+  }, [linkGroupToDelete, onDeleteLinkGroup, refreshCategoriesData, t]);
+
   // 删除分类确认弹窗状态
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] = useState(false);
+  // 待删除的分类
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // 处理删除分类点击 - 打开确认弹窗
   const onDeleteCategoryClick = useCallback((categoryId: string) => {
+    // 待删除的分类
     const category = categories.find(c => c.id === categoryId);
     if (category) {
       setCategoryToDelete({ id: categoryId, name: category.name });
@@ -146,8 +200,12 @@ const NewTabApp: React.FC = () => {
               onDeleteLinkClick={onDeleteLinkClick}
               handleSkipClick={handleSkipClick}
               moveLink={moveLink}
+              mergeLinks={mergeLinks}
+              moveCategoryItem={moveCategoryItem}
               onCancelLinkDrag={refreshCategoriesData}
               onOpenAddLink={onOpenAddLink}
+              onEditLinkGroup={onOpenEditLinkGroup}
+              onDeleteLinkGroup={onDeleteLinkGroupClick}
               handleCategoryChange={changeCurrentCategory}
             />
           );
@@ -174,13 +232,24 @@ const NewTabApp: React.FC = () => {
           mode={modeLink}
           initialData={initialDataLink}
           categories={categories}
-          defaultCategoryId={currentCategoryId}
+          defaultParentId={defaultParentId ?? currentCategoryId}
           handleClose={onCloseLink}
           handleSubmit={async (data) => {
             await onSubmitLink(data);
             //刷新当前分类的链接列表
             await refreshCategoriesData();
             toast.success(t("messages.operationSuccess"));
+          }}
+        />
+        {/* 编辑网址分组 */}
+        <EditLinkGroup
+          open={isEditLinkGroupOpen}
+          initialName={editingLinkGroup?.name ?? ""}
+          onClose={onCloseEditLinkGroup}
+          onSubmit={async (name) => {
+            await onSubmitLinkGroup(name);
+            await refreshCategoriesData();
+            toast.success(t("linkGroup.editSuccess"));
           }}
         />
         {/* 删除链接确认弹窗 */}
@@ -190,6 +259,14 @@ const NewTabApp: React.FC = () => {
           title={t("link.confirmDelete")}
           itemName={linkToDelete?.title || ""}
           onConfirm={confirmDeleteLink}
+        />
+        {/* 删除网址分组确认弹窗 */}
+        <DeleteConfirmDialog
+          isOpen={isDeleteLinkGroupDialogOpen}
+          onOpenChange={setIsDeleteLinkGroupDialogOpen}
+          title={t("linkGroup.confirmDelete")}
+          itemName={linkGroupToDelete?.name ?? ""}
+          onConfirm={confirmDeleteLinkGroup}
         />
         {/* 删除分类确认弹窗 */}
         <DeleteConfirmDialog

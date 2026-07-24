@@ -6,6 +6,7 @@ import {
 } from "@/newtab/drag-and-drop";
 
 export default function LinkDragPreview() {
+  // 当前网址拖拽预览所需的项目与屏幕位置
   const { item, isDragging, sourceOffset } = useDragLayer((monitor) => ({
     item: monitor.getItem<DragItem | null>(),
     isDragging: monitor.isDragging(),

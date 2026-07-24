@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import Icon from "@/newtab/components/Icon";
 import { Edit, Trash2 } from "lucide-react";
-import { cn } from "@/utils/base";
+import { cn } from "@/lib/utils";
 import type { Category } from "@/type/db";
 import {
   DRAG_ITEM_TYPE,
@@ -10,6 +10,7 @@ import {
   type DragItem,
 } from "@/newtab/drag-and-drop";
 
+// 网址拖过分类时触发切换的等待时间
 const LINK_HOVER_DELAY_MS = 500;
 
 interface CategoryItemProps {
@@ -33,6 +34,7 @@ export default function CategoryItem({
   onHover,
   onDrop,
 }: CategoryItemProps) {
+  // 分类拖动状态与连接器
   const [{ isDragging }, drag] = useDrag<
     CategoryDragItem,
     void,
@@ -56,11 +58,13 @@ export default function CategoryItem({
     },
   });
 
+  // 不同拖拽项目的悬停处理策略
   const hoverStrategies: Record<
     DragItem["type"],
     (dragItem: DragItem) => void
   > = {
     [DRAG_ITEM_TYPE.CATEGORY]: (dragItem) => {
+      // 当前拖动的分类数据
       const categoryItem = dragItem as CategoryDragItem;
       if (categoryItem.index === index) {
         return;
@@ -70,21 +74,26 @@ export default function CategoryItem({
       categoryItem.index = index;
     },
     [DRAG_ITEM_TYPE.LINK]: () => undefined,
+    [DRAG_ITEM_TYPE.LINK_GROUP]: () => undefined,
   };
 
+  // 不同拖拽项目的投放处理策略
   const dropStrategies: Record<
     DragItem["type"],
     (dragItem: DragItem) => void
   > = {
     [DRAG_ITEM_TYPE.CATEGORY]: (dragItem) => {
+      // 当前投放的分类数据
       const categoryItem = dragItem as CategoryDragItem;
       if (categoryItem.originalIndex !== index) {
         onDrop(categoryItem.originalIndex, index);
       }
     },
     [DRAG_ITEM_TYPE.LINK]: () => undefined,
+    [DRAG_ITEM_TYPE.LINK_GROUP]: () => undefined,
   };
 
+  // 分类投放状态与连接器
   const [{ handlerId, isLinkOver }, drop] = useDrop<
     DragItem,
     void,
@@ -92,7 +101,9 @@ export default function CategoryItem({
   >({
     accept: [DRAG_ITEM_TYPE.CATEGORY, DRAG_ITEM_TYPE.LINK],
     canDrop: (item) => item.type === DRAG_ITEM_TYPE.CATEGORY,
+    /** 收集分类和网址经过侧栏时的状态。 */
     collect(monitor) {
+      // 当前经过分类的拖拽项目
       const item = monitor.getItem<DragItem>();
       return {
         handlerId: monitor.getHandlerId(),
@@ -101,9 +112,11 @@ export default function CategoryItem({
           item?.type === DRAG_ITEM_TYPE.LINK,
       };
     },
+    /** 按拖拽项目类型分发悬停行为。 */
     hover(item) {
       hoverStrategies[item.type](item);
     },
+    /** 按拖拽项目类型分发投放行为。 */
     drop(item) {
       dropStrategies[item.type](item);
     },
@@ -122,6 +135,7 @@ export default function CategoryItem({
     return () => window.clearTimeout(timer);
   }, [category.id, isActive, isLinkOver, onChangeCurrentCategory]);
 
+  // 同时连接分类的拖动与投放能力
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       drag(drop(node));
