@@ -175,10 +175,7 @@ function CategoryGridItemSlot({
         isHidden && "opacity-0",
         isItemOver &&
           linkDropFolder &&
-          "ring-2 ring-amber-200/80 shadow-lg shadow-amber-200/10",
-        isItemOver &&
-          !linkDropFolder &&
-          "ring-2 ring-blue-200/70 shadow-lg shadow-blue-200/10"
+          "ring-2 ring-amber-200/80 shadow-lg shadow-amber-200/10"
       )}
     >
       {children}
@@ -463,24 +460,20 @@ export default function CategoryGrid({
   /** 预览文件夹在分类主网格中的目标位置。 */
   const onHoverFolder = useCallback(
     (item: LinkGroupDragItem, hoverIndex: number) => {
-      if (item.categoryId !== categoryInfo.id) {
-        return;
-      }
       setLocalItems((previousItems) => {
         // 文件夹当前所在的主网格位置
         const previousIndex = previousItems.findIndex(
           (gridItem) => gridItem.id === item.id
         );
-        if (previousIndex < 0) {
-          return previousItems;
-        }
         // 移除文件夹后的主网格项目
         const nextItems = previousItems.filter(
           (gridItem) => gridItem.id !== item.id
         );
         // 向后移动时抵消移除项目产生的索引偏移
         const normalizedInsertIndex =
-          previousIndex < hoverIndex ? hoverIndex - 1 : hoverIndex;
+          previousIndex >= 0 && previousIndex < hoverIndex
+            ? hoverIndex - 1
+            : hoverIndex;
         // 有效范围内的插入位置
         const insertIndex = Math.max(
           0,
@@ -488,11 +481,15 @@ export default function CategoryGrid({
         );
         item.index = insertIndex;
         item.targetIndex = insertIndex;
-        if (previousIndex === insertIndex) {
+        if (previousIndex >= 0 && previousIndex === insertIndex) {
           return previousItems;
         }
-        // 当前拖动的文件夹项目
-        const draggedFolder = previousItems[previousIndex];
+        // 当前拖动或跨区预览的文件夹项目
+        const draggedFolder =
+          previousItems[previousIndex] ?? {
+            ...item.linkGroup,
+            parentId: categoryInfo.id,
+          };
         nextItems.splice(insertIndex, 0, draggedFolder);
         return nextItems;
       });
@@ -503,9 +500,6 @@ export default function CategoryGrid({
   /** 保存文件夹在分类主网格中的最终位置。 */
   const onDropFolder = useCallback(
     (item: LinkGroupDragItem) => {
-      if (item.categoryId !== categoryInfo.id) {
-        return;
-      }
       void onMoveCategoryItem(categoryInfo.id, item.id, item.targetIndex);
     },
     [categoryInfo.id, onMoveCategoryItem]

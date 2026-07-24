@@ -1,4 +1,4 @@
-import type { Link } from "@/type/db";
+import type { Link, LinkGroupInfo } from "@/type/db";
 
 // 页面支持的拖拽项目类型
 export const DRAG_ITEM_TYPE = {
@@ -41,7 +41,9 @@ export interface LinkDragItem {
 export interface LinkGroupDragItem {
   type: typeof DRAG_ITEM_TYPE.LINK_GROUP;
   id: string;
-  categoryId: string;
+  linkGroup: LinkGroupInfo;
+  previewWidth: number;
+  previewHeight: number;
   index: number;
   targetIndex: number;
 }

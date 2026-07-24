@@ -61,22 +61,40 @@ export class CategoryItemService {
     itemId: string,
     targetIndex: number
   ): Promise<void> {
-    // 分类当前的混排项目
+    // 目标分类当前的混排项目
     const categoryItems = await this.getCategoryItems(categoryId);
-    // 待移动的分类项目
-    const draggedItem = categoryItems.find((item) => item.id === itemId);
+    // 待移动的分类项目或跨区文件夹
+    const draggedItem =
+      categoryItems.find((item) => item.id === itemId) ??
+      (await linkGroupService.getLinkGroup(itemId));
     if (!draggedItem) {
       return;
     }
-    // 移除待移动项目后的分类项目
+    // 跨区移动前的来源分类标识
+    const sourceCategoryId =
+      draggedItem.parentId === categoryId ? "" : draggedItem.parentId;
+    // 跨区移动前的来源分类项目
+    const sourceItems = sourceCategoryId
+      ? await this.getCategoryItems(sourceCategoryId)
+      : [];
+    // 移除待移动项目后的目标分类项目
     const remainingItems = categoryItems.filter((item) => item.id !== itemId);
     // 限制在网格范围内的目标位置
     const insertIndex = Math.max(
       0,
       Math.min(targetIndex, remainingItems.length)
     );
-    remainingItems.splice(insertIndex, 0, draggedItem);
+    remainingItems.splice(insertIndex, 0, {
+      ...draggedItem,
+      parentId: categoryId,
+    });
     await this.saveCategoryItemOrder(remainingItems, categoryId);
+    if (sourceCategoryId) {
+      await this.saveCategoryItemOrder(
+        sourceItems.filter((item) => item.id !== itemId),
+        sourceCategoryId
+      );
+    }
   }
 
   /** 将网址移动到分类网格或文件夹。 */

@@ -183,6 +183,8 @@ const NewTabApp: React.FC = () => {
             handleEditClick={(categoryId) => onOpenEdit(categoryId)}
             handleDeleteClick={onDeleteCategoryClick}
             onMoveCategory={updateCategoryOrder}
+            onMoveLink={moveLink}
+            onMoveCategoryItem={moveCategoryItem}
           />
         </section>
 

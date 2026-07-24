@@ -1,20 +1,34 @@
 import { Plus } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import type { Category } from "@/type/db";
+import type { CategoryInfo } from "@/type/db";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
 
 interface NavigationBarProps {
   activeCategoryId: string;
-  categories: Category[];
+  categories: CategoryInfo[];
   changeCurrentCategory: (categoryId: string) => void;
   addCategory: () => void;
   handleEditClick: (categoryId: string) => void;
   handleDeleteClick: (categoryId: string) => void;
   onMoveCategory: (dragIndex: number, hoverIndex: number) => void;
+  onMoveLink: (
+    linkId: string,
+    targetParentId: string,
+    targetIndex: number
+  ) => Promise<void>;
+  onMoveCategoryItem: (
+    categoryId: string,
+    itemId: string,
+    targetIndex: number
+  ) => Promise<void>;
 }
+
+/** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
 export default function Index(props: NavigationBarProps) {
+  // 侧栏界面的本地化文案
   const { t } = useTranslation();
+  // 侧栏展示数据和交互回调
   const {
     activeCategoryId,
     categories,
@@ -23,10 +37,13 @@ export default function Index(props: NavigationBarProps) {
     handleEditClick,
     handleDeleteClick,
     onMoveCategory,
+    onMoveLink,
+    onMoveCategoryItem,
   } = props;
 
   // 本地状态用于拖拽时的 UI 更新
-  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [localCategories, setLocalCategories] =
+    useState<CategoryInfo[]>(categories);
 
   // 当 categories 更新时同步本地状态
   useEffect(() => {
@@ -52,7 +69,9 @@ export default function Index(props: NavigationBarProps) {
   /* 拖拽悬停时更新本地 UI */
   const onHover = useCallback((dragIndex: number, hoverIndex: number) => {
     setLocalCategories((prev) => {
+      // 当前拖拽预览使用的分类副本
       const newCategories = [...prev];
+      // 正在调整位置的分类
       const draggedCategory = newCategories[dragIndex];
       newCategories.splice(dragIndex, 1);
       newCategories.splice(hoverIndex, 0, draggedCategory);
@@ -83,6 +102,8 @@ export default function Index(props: NavigationBarProps) {
             onEditClick={onEditClick}
             onDeleteClick={onDeleteClick}
             onChangeCurrentCategory={changeCurrentCategory}
+            onMoveLink={onMoveLink}
+            onMoveCategoryItem={onMoveCategoryItem}
             onHover={onHover}
             onDrop={onDrop}
           />
