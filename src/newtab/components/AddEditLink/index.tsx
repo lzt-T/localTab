@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   Sheet,
@@ -11,8 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import type { CategoryInfo } from "@/type/db";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
-import { LucideIconConfig } from "@/utils/icon";
 import {
   Select,
   SelectContent,
@@ -20,9 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import LinkIconSelector from "@/newtab/components/AddEditLink/LinkIconSelector";
 import {
   NO_LINK_GROUP_VALUE,
   useAddEditLink,
@@ -43,7 +40,6 @@ const LINK_FORM_ERROR_IDS = {
   title: "link-title-error",
   description: "link-description-error",
   url: "link-url-error",
-  icon: "link-icon-error",
 } as const;
 
 interface AddEditLinkProps {
@@ -83,6 +79,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
     linkGroupId,
     errors,
     isLoadingFavicon,
+    isProcessingCustomIcon,
     iconType,
     sheetTitle,
     sheetDescription,
@@ -96,7 +93,9 @@ export default function AddEditLink(props: AddEditLinkProps) {
     onOk,
     onCancel,
     onOpenChange,
-    onTabChange,
+    onIconTypeChange,
+    onCustomIconSelect,
+    onRemoveCustomIcon,
     onCategoryChange,
   } = useAddEditLink(props);
 
@@ -313,111 +312,17 @@ export default function AddEditLink(props: AddEditLinkProps) {
                 </div>
               </fieldset>
 
-              <fieldset className="min-w-0 border-0 p-0">
-                <legend className="mb-4 text-sm font-semibold text-white/90">
-                  {t("link.iconSection")}
-                </legend>
-                <Tabs value={iconType} onValueChange={onTabChange}>
-                  <TabsList className="h-11 w-full border border-white/10 bg-black/15">
-                    <TabsTrigger
-                      value="favicon"
-                      className="h-9 flex-1 cursor-pointer text-white/60 data-[state=active]:border-white/10 data-[state=active]:bg-white/10 data-[state=active]:text-white"
-                    >
-                      {t("link.favicon")}
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="lucide"
-                      className="h-9 flex-1 cursor-pointer text-white/60 data-[state=active]:border-white/10 data-[state=active]:bg-white/10 data-[state=active]:text-white"
-                    >
-                      {t("link.lucideIcon")}
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="favicon" className="mt-3">
-                    <div className="flex min-h-11 w-full items-center">
-                      {icon && icon.startsWith("http") ? (
-                        <div className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-xl">
-                          <img
-                            src={icon}
-                            alt={t("link.favicon")}
-                            className="size-8 rounded"
-                            onError={() => setIcon("")}
-                          />
-                        </div>
-                      ) : (
-                        isLoadingFavicon && (
-                          <div
-                            className="flex items-center gap-2 text-sm text-white/60"
-                            role="status"
-                            aria-live="polite"
-                          >
-                            <Loader2
-                              className="size-5 animate-spin"
-                              aria-hidden="true"
-                            />
-                            <span className="sr-only">
-                              {t("link.faviconLoading")}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="lucide" className="mt-3 cursor-pointer">
-                    <Select value={icon} onValueChange={setIcon}>
-                      <SelectTrigger
-                        id="icon"
-                        aria-invalid={Boolean(errors.icon)}
-                        aria-describedby={
-                          errors.icon ? LINK_FORM_ERROR_IDS.icon : undefined
-                        }
-                        className={cn(
-                          "w-full cursor-pointer [&_svg]:text-white/50",
-                          FIELD_CLASS_NAME,
-                          errors.icon ? "border-red-400" : ""
-                        )}
-                      >
-                        <SelectValue placeholder={t("link.selectIcon")} />
-                      </SelectTrigger>
-                      <SelectContent
-                        className={cn(
-                          "max-h-[360px] overflow-y-auto",
-                          SELECT_CONTENT_CLASS_NAME
-                        )}
-                      >
-                        {Object.entries(LucideIconConfig).map(
-                          ([key, IconComponent]) => {
-                            // 当前配置对应的图标组件
-                            const Icon =
-                              IconComponent as React.ComponentType<{
-                                size?: number;
-                              }>;
-                            return (
-                              <SelectItem
-                                key={key}
-                                value={key}
-                                className={SELECT_ITEM_CLASS_NAME}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Icon size={16} />
-                                  <span>{key}</span>
-                                </div>
-                              </SelectItem>
-                            );
-                          }
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </TabsContent>
-                </Tabs>
-                {errors.icon && (
-                  <p
-                    id={LINK_FORM_ERROR_IDS.icon}
-                    className="mt-2 text-sm text-red-300"
-                  >
-                    {errors.icon}
-                  </p>
-                )}
-              </fieldset>
+              <LinkIconSelector
+                icon={icon}
+                iconType={iconType}
+                isLoadingFavicon={isLoadingFavicon}
+                isProcessingCustomIcon={isProcessingCustomIcon}
+                error={errors.icon}
+                onIconChange={setIcon}
+                onIconTypeChange={onIconTypeChange}
+                onCustomIconSelect={onCustomIconSelect}
+                onRemoveCustomIcon={onRemoveCustomIcon}
+              />
             </div>
           </div>
           <SheetFooter className="shrink-0 flex-row border-t border-white/[0.08] px-4 py-4 sm:justify-end sm:px-6">
@@ -431,6 +336,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
             </Button>
             <Button
               type="submit"
+              disabled={isProcessingCustomIcon}
               className="h-11 flex-[1.4] cursor-pointer bg-blue-500/80 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40 sm:flex-none sm:w-28"
             >
               {t("common.confirm")}

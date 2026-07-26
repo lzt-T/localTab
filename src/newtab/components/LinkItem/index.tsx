@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
+import { isImageIcon } from "@/utils/icon";
 
 type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 
@@ -47,15 +48,15 @@ export default function Index({
   // 卡片操作菜单的本地化文案
   const { t } = useTranslation();
 
-  // 外部图标加载失败时记录对应地址
-  const [failedExternalIconUrl, setFailedExternalIconUrl] = useState("");
+  // 图片图标加载失败时记录对应值
+  const [failedImageIcon, setFailedImageIcon] = useState("");
 
-  // 当前链接是否使用网络图标
-  const isExternalIcon = link.icon.startsWith("http");
+  // 当前链接是否使用图片图标
+  const hasImageIcon = isImageIcon(link.icon);
 
-  // 网络图标可用时优先展示原始图标
-  const shouldShowExternalIcon =
-    isExternalIcon && failedExternalIconUrl !== link.icon;
+  // 图片图标可用时优先展示原始图标
+  const shouldShowImageIcon =
+    hasImageIcon && failedImageIcon !== link.icon;
   // 当前网址是否包含可展示的详情
   const hasDescription = link.description.trim().length > 0;
   // 卡片无障碍名称使用的站点域名
@@ -78,9 +79,9 @@ export default function Index({
     }
   }, [link.url, handleSkipClick]);
 
-  /** 标记加载失败的网络图标并回退到默认图标。 */
-  const onExternalIconError = () => {
-    setFailedExternalIconUrl(link.icon);
+  /** 标记加载失败的图片图标并回退到默认图标。 */
+  const onImageIconError = () => {
+    setFailedImageIcon(link.icon);
   };
 
   return (
@@ -108,16 +109,16 @@ export default function Index({
         aria-label={`${link.title}, ${linkHostname}`}
       >
         <span className="mb-1 flex h-7 shrink-0 items-center justify-center">
-          {shouldShowExternalIcon ? (
+          {shouldShowImageIcon ? (
             <img
               src={link.icon}
               alt=""
               className="size-6 rounded object-contain"
-              onError={onExternalIconError}
+              onError={onImageIconError}
             />
           ) : (
             <Icon
-              name={isExternalIcon ? "link" : link.icon || "link"}
+              name={hasImageIcon ? "link" : link.icon || "link"}
               size={24}
               className="text-blue-100/90"
             />

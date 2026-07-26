@@ -4,6 +4,16 @@ import type { CategoryInfo } from "@/type/db";
 import _ from "lodash";
 import { fetchFavicon } from "@/utils/webIcon";
 import { toast } from "sonner";
+import {
+  createCustomIconDataUrl,
+  getLinkIconType,
+  isCustomImageIcon,
+  isRemoteImageIcon,
+  isSupportedCustomIconFile,
+  LINK_ICON_TYPE,
+  MAX_CUSTOM_ICON_FILE_SIZE,
+  type LinkIconType,
+} from "@/utils/icon";
 
 interface UseAddEditLinkProps {
   open: boolean;
@@ -70,8 +80,12 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const [errors, setErrors] = useState<Errors>({});
   // 网站图标是否正在加载
   const [isLoadingFavicon, setIsLoadingFavicon] = useState(false);
+  // 自定义图标是否正在处理
+  const [isProcessingCustomIcon, setIsProcessingCustomIcon] = useState(false);
   // 当前图标来源类型
-  const [iconType, setIconType] = useState<"favicon" | "lucide">("lucide");
+  const [iconType, setIconType] = useState<LinkIconType>(
+    LINK_ICON_TYPE.LUCIDE
+  );
 
   // 当前模式对应的抽屉标题
   const sheetTitle = t(mode === "add" ? "link.addTitle" : "link.editTitle");
@@ -150,7 +164,10 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         return prev;
       });
 
-      if (iconType === "favicon" && e.target.value.startsWith("http")) {
+      if (
+        iconType === LINK_ICON_TYPE.FAVICON &&
+        e.target.value.startsWith("http")
+      ) {
         onFetchFavicon();
       }
     }, 200),
@@ -186,6 +203,10 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
   /** 校验并提交网址表单。 */
   const onOk = useCallback(() => {
+    if (isProcessingCustomIcon) {
+      return;
+    }
+
     if (onValidate()) {
       // 补全协议后的网址地址
       const finalUrl = url.trim().startsWith("http")
@@ -207,6 +228,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     handleSubmit,
     onValidate,
     handleClose,
+    isProcessingCustomIcon,
   ]);
 
   /** 切换所属分类并重置分组选择。 */
@@ -234,20 +256,68 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     [handleClose]
   );
 
-  /* 切换图标类型 */
-  const onTabChange = useCallback(
+  /** 切换图标来源类型并初始化对应值。 */
+  const onIconTypeChange = useCallback(
     (value: string) => {
-      setIconType(value as "favicon" | "lucide");
-      if (value === "favicon" && !icon.startsWith("http")) {
+      // 用户选择的图标来源类型
+      const nextIconType = value as LinkIconType;
+      setIconType(nextIconType);
+
+      if (
+        nextIconType === LINK_ICON_TYPE.FAVICON &&
+        !isRemoteImageIcon(icon)
+      ) {
         onFetchFavicon();
       }
 
-      if (value === "lucide" && (icon.startsWith("http") || !icon)) {
+      if (
+        nextIconType === LINK_ICON_TYPE.LUCIDE &&
+        (getLinkIconType(icon) !== LINK_ICON_TYPE.LUCIDE || !icon)
+      ) {
         setIcon("link");
+      }
+
+      if (
+        nextIconType === LINK_ICON_TYPE.CUSTOM &&
+        !isCustomImageIcon(icon)
+      ) {
+        setIcon("");
       }
     },
     [icon, onFetchFavicon]
   );
+
+  /** 校验、压缩并设置用户上传的自定义图标。 */
+  const onCustomIconSelect = useCallback(
+    async (file: File) => {
+      if (!isSupportedCustomIconFile(file)) {
+        toast.error(t("link.customIconInvalidFile"));
+        return;
+      }
+
+      if (file.size > MAX_CUSTOM_ICON_FILE_SIZE) {
+        toast.error(t("link.customIconTooLarge"));
+        return;
+      }
+
+      setIsProcessingCustomIcon(true);
+      try {
+        // 压缩后可持久化的自定义图标数据
+        const customIconDataUrl = await createCustomIconDataUrl(file);
+        setIcon(customIconDataUrl);
+      } catch {
+        toast.error(t("link.customIconProcessingFailed"));
+      } finally {
+        setIsProcessingCustomIcon(false);
+      }
+    },
+    [t]
+  );
+
+  /** 移除当前自定义图标。 */
+  const onRemoveCustomIcon = useCallback(() => {
+    setIcon("");
+  }, []);
 
   // 当抽屉状态改变时，重置或初始化表单数据
   useEffect(() => {
@@ -259,17 +329,13 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         setIcon(initialData.icon);
         setCategoryId(initialData.categoryId);
         setLinkGroupId(initialData.linkGroupId || NO_LINK_GROUP_VALUE);
-        if (initialData.icon && initialData.icon.startsWith("http")) {
-          setIconType("favicon");
-        } else {
-          setIconType("lucide");
-        }
+        setIconType(getLinkIconType(initialData.icon));
       } else {
         setTitle("");
         setDescription("");
         setUrl("");
         setIcon("link");
-        setIconType("lucide");
+        setIconType(LINK_ICON_TYPE.LUCIDE);
         // 默认父级对应的网址分组
         const defaultLinkGroup = categories
           .flatMap((category) => category.linkGroups)
@@ -292,6 +358,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     linkGroupId,
     errors,
     isLoadingFavicon,
+    isProcessingCustomIcon,
     iconType,
     sheetTitle,
     sheetDescription,
@@ -307,7 +374,9 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     onOk,
     onCancel,
     onOpenChange,
-    onTabChange,
+    onIconTypeChange,
+    onCustomIconSelect,
+    onRemoveCustomIcon,
     onCategoryChange,
   };
 }

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Folder } from "lucide-react";
 import Icon from "@/newtab/components/Icon";
 import type { Link, LinkGroupInfo } from "@/type/db";
+import { isImageIcon } from "@/utils/icon";
 
 interface FolderPreviewIconProps {
   link?: Link;
@@ -14,14 +15,17 @@ interface LinkFolderCardContentProps {
 
 /** 渲染文件夹卡片中的单个网址预览图标。 */
 function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
-  // 外部图标是否加载失败
-  const [hasImageError, setHasImageError] = useState(false);
+  // 加载失败的图片图标值
+  const [failedImageIcon, setFailedImageIcon] = useState("");
   if (!link) {
     return <span className="rounded-md border border-white/5 bg-white/[0.04]" />;
   }
 
-  // 当前网址是否使用可展示的外部图标
-  const shouldShowImage = link.icon.startsWith("http") && !hasImageError;
+  // 当前网址是否使用可展示的图片图标
+  const hasImageIcon = isImageIcon(link.icon);
+  // 当前图片图标是否可以展示
+  const shouldShowImage =
+    hasImageIcon && failedImageIcon !== link.icon;
   return (
     <span className="flex items-center justify-center overflow-hidden rounded-md bg-white/[0.08]">
       {shouldShowImage ? (
@@ -29,11 +33,11 @@ function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
           src={link.icon}
           alt=""
           className="size-3 rounded-sm object-contain"
-          onError={() => setHasImageError(true)}
+          onError={() => setFailedImageIcon(link.icon)}
         />
       ) : (
         <Icon
-          name={link.icon.startsWith("http") ? "link" : link.icon || "link"}
+          name={hasImageIcon ? "link" : link.icon || "link"}
           size={12}
           className="text-blue-100/90"
         />

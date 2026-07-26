@@ -10,6 +10,7 @@ import { useDrag, useDrop } from "react-dnd";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
+import { isImageIcon } from "@/utils/icon";
 import Setting from "@/newtab/components/Setting";
 import {
   DRAG_ITEM_TYPE,
@@ -53,13 +54,13 @@ function DockLinkItem({
   const { t } = useTranslation();
   // Dock 网址拖拽目标引用
   const elementRef = useRef<HTMLDivElement>(null);
-  // 加载失败的外部图标地址
-  const [failedExternalIconUrl, setFailedExternalIconUrl] = useState("");
-  // 当前网址是否配置了网络图标
-  const isExternalIcon = link.icon.startsWith("http");
-  // 当前网址是否可以展示网络图标
-  const shouldShowExternalIcon =
-    isExternalIcon && failedExternalIconUrl !== link.icon;
+  // 加载失败的图片图标值
+  const [failedImageIcon, setFailedImageIcon] = useState("");
+  // 当前网址是否配置了图片图标
+  const hasImageIcon = isImageIcon(link.icon);
+  // 当前网址是否可以展示图片图标
+  const shouldShowImageIcon =
+    hasImageIcon && failedImageIcon !== link.icon;
   // Dock 网址的拖动状态与连接器
   const [{ isDragging }, drag] = useDrag<
     DockLinkDragItem,
@@ -144,9 +145,9 @@ function DockLinkItem({
     onOpen(link.url);
   }
 
-  /** 标记当前网络图标加载失败。 */
-  function handleExternalIconError() {
-    setFailedExternalIconUrl(link.icon);
+  /** 标记当前图片图标加载失败。 */
+  function handleImageIconError() {
+    setFailedImageIcon(link.icon);
   }
 
   return (
@@ -175,16 +176,16 @@ function DockLinkItem({
         aria-label={t("dock.openLink", { title: link.title })}
       >
         <span className="flex size-8 items-center justify-center">
-          {shouldShowExternalIcon ? (
+          {shouldShowImageIcon ? (
             <img
               src={link.icon}
               alt=""
               className="size-8 rounded-md object-contain"
-              onError={handleExternalIconError}
+              onError={handleImageIconError}
             />
           ) : (
             <Icon
-              name={isExternalIcon ? "link" : link.icon || "link"}
+              name={hasImageIcon ? "link" : link.icon || "link"}
               size={28}
               className="text-blue-100/90"
             />
