@@ -129,7 +129,7 @@ export default function SearchInput({
             side="bottom"
             align="start"
             sideOffset={8}
-            className="glass-style-border w-64 border-white/15 bg-[rgba(32,34,38,0.96)] p-2 text-white shadow-xl shadow-black/30 backdrop-blur-2xl"
+            className="glass-style-overlay w-64 p-2 text-white shadow-xl shadow-black/30"
           >
             <div className="flex flex-col gap-1">
               {isDefaultSearchSupported ? (

@@ -19,7 +19,7 @@ import _ from 'lodash';
 const FIELD_CLASS_NAME =
   'border-white/15 bg-white/[0.06] text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20';
 const SELECT_CONTENT_CLASS_NAME =
-  'border-white/15 bg-[rgba(32,34,38,0.98)] text-white shadow-xl backdrop-blur-2xl';
+  'glass-style-overlay text-white shadow-xl';
 const SELECT_ITEM_CLASS_NAME = 'cursor-pointer focus:bg-white/10 focus:text-white';
 
 interface AddEditCategoryProps {
@@ -109,7 +109,7 @@ export default function AddEditCategory(props: AddEditCategoryProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/15 bg-[rgba(32,34,38,0.92)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl sm:max-w-[425px] [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
+      <DialogContent className="shadow-2xl shadow-black/40 sm:max-w-[425px] [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
         <DialogHeader>
           <DialogTitle className="text-white">{dialogTitle}</DialogTitle>
           <DialogDescription className="text-white/60">{dialogDescription}</DialogDescription>

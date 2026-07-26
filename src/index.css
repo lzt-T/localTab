@@ -70,6 +70,22 @@ body {
   border-top-color: rgba(255, 255, 255, 0.22);
 }
 
+/* 与基础玻璃同色相、层级稍深的浮动工具表面 */
+.glass-style-floating {
+  background: rgba(46, 48, 52, 0.76);
+  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.22);
+}
+
+/* 用于弹窗、抽屉和临时菜单的高不透明玻璃表面 */
+.glass-style-overlay {
+  background: rgba(38, 40, 44, 0.94);
+  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.22);
+}
+
 /* 壁纸氛围遮罩 */
 .atmosphere-backdrop {
   background:

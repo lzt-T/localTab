@@ -61,7 +61,7 @@ export default function Dock({
 
   return (
     <nav
-      className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/15 bg-[rgba(20,22,26,0.72)] p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:bottom-6"
+      className="glass-style-floating fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-2xl p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.28)] md:bottom-6"
       aria-label={t("dock.navigation")}
     >
       <button

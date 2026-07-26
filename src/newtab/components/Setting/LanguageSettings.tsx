@@ -52,7 +52,7 @@ export default function LanguageSettings() {
         >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="border-white/15 bg-[rgba(32,34,38,0.98)] text-white shadow-xl backdrop-blur-2xl">
+        <SelectContent className="glass-style-overlay text-white shadow-xl">
           {LANGUAGE_OPTIONS.map((option) => (
             <SelectItem
               key={option.value}

@@ -95,7 +95,7 @@ const Setting: React.FC<SettingProps> = ({ triggerClassName }) => {
         sideOffset={12}
       >
         <div
-          className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[rgba(15,20,26,0.96)] text-white shadow-[0_18px_46px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:flex-row"
+          className="glass-style-overlay flex flex-col overflow-hidden rounded-2xl text-white shadow-[0_18px_46px_rgba(0,0,0,0.36)] sm:flex-row"
           style={{
             width: "min(860px, calc(100vw - 2rem))",
             height: "min(560px, calc(100vh - 7rem))",

@@ -243,7 +243,7 @@ export default function LinkFolderCard({
         align="center"
         sideOffset={10}
         collisionPadding={16}
-        className="glass-style-border z-[60] w-[min(420px,calc(100vw-2rem))] border-white/15 bg-[rgba(15,20,26,0.98)] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10 backdrop-blur-2xl"
+        className="glass-style-overlay z-[60] w-[min(420px,calc(100vw-2rem))] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10"
       >
         <div className="mb-3 flex h-9 items-center gap-2 border-b border-white/10 pb-3">
           <span className="min-w-0 flex-1 truncate text-sm font-semibold">

@@ -126,7 +126,7 @@ export default function AddSearchEngineDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-style-border border-white/15 bg-[rgba(32,34,38,0.96)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl">
+      <DialogContent className="shadow-2xl shadow-black/40">
         <form className="space-y-5" onSubmit={onFormSubmit}>
           <DialogHeader>
             <DialogTitle>{t("search.addTitle")}</DialogTitle>

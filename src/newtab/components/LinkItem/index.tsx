@@ -56,7 +56,9 @@ export default function Index({
   // 网络图标可用时优先展示原始图标
   const shouldShowExternalIcon =
     isExternalIcon && failedExternalIconUrl !== link.icon;
-  // 卡片辅助信息优先展示稳定的站点域名
+  // 当前网址是否包含可展示的详情
+  const hasDescription = link.description.trim().length > 0;
+  // 卡片无障碍名称使用的站点域名
   const linkHostname = getLinkHostname(link.url);
 
   /** 打开当前网址的编辑弹窗。 */
@@ -91,7 +93,7 @@ export default function Index({
       {link.id && handleEditClick && (
         <button
           type="button"
-          className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-25 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
+          className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-0 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
           onClick={onEditClick}
           title={t("common.edit")}
           aria-label={t("common.edit")}
@@ -123,17 +125,22 @@ export default function Index({
         </span>
         <span className="w-full min-w-0">
           <span
-            className="block truncate text-sm font-medium leading-5 text-white/90"
+            className={cn(
+              "block text-sm font-medium leading-5 text-white/90",
+              hasDescription ? "truncate" : "line-clamp-2"
+            )}
             title={link.title}
           >
             {link.title}
           </span>
-          <span
-            className="block truncate text-xs leading-4 text-white/50"
-            title={link.description || linkHostname}
-          >
-            {link.description || linkHostname}
-          </span>
+          {hasDescription && (
+            <span
+              className="block truncate text-xs leading-4 text-white/50"
+              title={link.description}
+            >
+              {link.description}
+            </span>
+          )}
         </span>
       </button>
     </div>

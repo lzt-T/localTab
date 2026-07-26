@@ -116,7 +116,7 @@ export default function DataManagement() {
 
       {/* 确认导入对话框 */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-gray-900/95 backdrop-blur-xl text-white border-white/10">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-white">
               {t("dataManagement.confirmImportTitle")}
