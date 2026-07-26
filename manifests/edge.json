@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LocalTab - 简洁新标签页",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "简洁美观的新标签页工具，支持快捷链接、搜索、主题与个性化布局",
   "permissions": [
     "storage",
