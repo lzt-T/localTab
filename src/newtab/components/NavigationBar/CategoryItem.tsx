@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useDrag, useDrop } from "react-dnd";
 import Icon from "@/newtab/components/Icon";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CategoryInfo } from "@/type/db";
 import {
@@ -20,7 +21,6 @@ interface CategoryItemProps {
   index: number;
   isActive: boolean;
   onEditClick: (categoryId: string) => void;
-  onDeleteClick: (categoryId: string) => void;
   onChangeCurrentCategory: (categoryId: string) => void;
   onMoveLink: (
     linkId: string,
@@ -42,13 +42,21 @@ export default function CategoryItem({
   index,
   isActive,
   onEditClick,
-  onDeleteClick,
   onChangeCurrentCategory,
   onMoveLink,
   onMoveCategoryItem,
   onHover,
   onDrop,
 }: CategoryItemProps) {
+  // 分类操作的本地化文案
+  const { t } = useTranslation();
+  // 分类内包含文件夹子项的全部网址数量
+  const linkCount =
+    category.links.length +
+    category.linkGroups.reduce(
+      (totalCount, linkGroup) => totalCount + linkGroup.links.length,
+      0
+    );
   // 分类拖动状态与连接器
   const [{ isDragging }, drag] = useDrag<
     CategoryDragItem,
@@ -176,75 +184,74 @@ export default function CategoryItem({
     [drag, drop]
   );
 
+  /** 打开当前分类的编辑界面。 */
+  function onEditCategoryClick() {
+    onEditClick(category.id);
+  }
+
   return (
     <div
       ref={ref}
       className={cn(
-        "group/item relative mx-4 flex w-[calc(100%-2rem)] items-center justify-between rounded-lg cursor-pointer transition-[opacity,background-color,border-color,box-shadow] duration-200",
+        "group/item relative flex shrink-0 items-center rounded-xl transition-[opacity,background-color,border-color,box-shadow] duration-200 md:mx-4 md:w-[calc(100%-2rem)]",
         isDragging ? "opacity-50" : "opacity-100",
         isActive
-          ? "glass-style-border shadow-lg shadow-black/10 hover:bg-[rgba(68,70,74,0.66)] hover:border-white/20"
-          : "hover:bg-white/[0.06]",
-        isGridItemOver && "bg-white/10 hover:bg-white/10"
+          ? "bg-white/10 md:glass-style-border md:shadow-lg md:shadow-black/10"
+          : "hover:bg-white/[0.07]",
+        isGridItemOver && "bg-white/15 ring-1 ring-blue-200/45"
       )}
-      onClick={() => onChangeCurrentCategory(category.id)}
       data-handler-id={handlerId}
     >
       <span
         aria-hidden="true"
         className={cn(
-          "absolute left-1 top-2 bottom-2 w-0.5 rounded-full bg-blue-200 transition-opacity duration-200",
+          "absolute bottom-0 left-3 right-3 h-px rounded-full bg-blue-200 transition-opacity duration-200 md:bottom-2 md:left-1 md:right-auto md:top-2 md:h-auto md:w-px",
           isActive || isGridItemOver ? "opacity-100" : "opacity-0"
         )}
       />
-      <div className="flex h-10 items-center gap-0.5 flex-1 min-w-0 overflow-x-hidden pl-3 pr-2 transition-[padding] duration-200 group-hover/item:pr-[72px]">
-        <button
+      <button
+        type="button"
+        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-xl px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:px-3"
+        onClick={() => onChangeCurrentCategory(category.id)}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={`${category.name}, ${t("workspace.websiteCount", {
+          count: linkCount,
+        })}`}
+      >
+        <span
           className={cn(
-            "flex shrink-0 items-center cursor-pointer justify-center w-8 h-8 rounded-full transition-colors duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+            "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
             isActive
-              ? "text-blue-100"
-              : "text-blue-200/75 group-hover/item:text-blue-100",
+              ? "bg-white/12 text-blue-100"
+              : "text-white/55 group-hover/item:bg-white/[0.06] group-hover/item:text-white/85",
             isGridItemOver && "bg-white/15 text-blue-100"
           )}
-          aria-label={category.name}
         >
           <Icon name={category.icon} size={20} />
-        </button>
-        <div
-          className={cn(
-            "flex-1 min-w-0 text-left px-1 py-1 text-sm font-medium transition-colors duration-200 overflow-hidden text-ellipsis whitespace-nowrap",
-            isActive
-              ? "font-semibold text-white"
-              : "text-white/80 group-hover/item:text-white/90"
-          )}
-        >
-          {category.name}
-        </div>
-      </div>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "block truncate text-sm font-medium transition-colors",
+              isActive
+                ? "text-white"
+                : "text-white/65 group-hover/item:text-white"
+            )}
+          >
+            {category.name}
+          </span>
+        </span>
+      </button>
 
-      <div
-        className={cn(
-          "absolute right-2 flex items-center gap-1 transition-opacity duration-200",
-          isGridItemOver
-            ? "pointer-events-none opacity-0"
-            : "opacity-0 group-hover/item:opacity-70"
-        )}
-        onClick={(event) => event.stopPropagation()}
+      <button
+        type="button"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white/45 outline-none transition-[background-color,color,opacity] hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 md:mr-2 md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-within/item:opacity-100"
+        onClick={onEditCategoryClick}
+        title={t("common.edit")}
+        aria-label={t("common.edit")}
       >
-        <button
-          className="text-white/60 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-          onClick={() => onEditClick(category.id)}
-        >
-          <Edit size={16} />
-        </button>
-
-        <button
-          className="text-white/60 hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-          onClick={() => onDeleteClick(category.id)}
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
+        <Edit size={15} />
+      </button>
     </div>
   );
 }

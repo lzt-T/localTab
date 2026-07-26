@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryInfo } from "@/type/db";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
+import LocalTabMark from "@/newtab/components/LocalTabMark";
 
 interface NavigationBarProps {
   activeCategoryId: string;
@@ -10,7 +11,6 @@ interface NavigationBarProps {
   changeCurrentCategory: (categoryId: string) => void;
   addCategory: () => void;
   handleEditClick: (categoryId: string) => void;
-  handleDeleteClick: (categoryId: string) => void;
   onMoveCategory: (dragIndex: number, hoverIndex: number) => void;
   onMoveLink: (
     linkId: string,
@@ -25,7 +25,7 @@ interface NavigationBarProps {
 }
 
 /** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
-export default function Index(props: NavigationBarProps) {
+export default function NavigationBar(props: NavigationBarProps) {
   // 侧栏界面的本地化文案
   const { t } = useTranslation();
   // 侧栏展示数据和交互回调
@@ -35,7 +35,6 @@ export default function Index(props: NavigationBarProps) {
     changeCurrentCategory,
     addCategory,
     handleEditClick,
-    handleDeleteClick,
     onMoveCategory,
     onMoveLink,
     onMoveCategoryItem,
@@ -56,14 +55,6 @@ export default function Index(props: NavigationBarProps) {
       handleEditClick(categoryId);
     },
     [handleEditClick]
-  );
-
-  /* 删除分类 */
-  const onDeleteClick = useCallback(
-    (categoryId: string) => {
-      handleDeleteClick(categoryId);
-    },
-    [handleDeleteClick]
   );
 
   /* 拖拽悬停时更新本地 UI */
@@ -88,9 +79,16 @@ export default function Index(props: NavigationBarProps) {
   );
 
   return (
-    <div className="relative w-full">
+    <nav
+      className="flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(20,22,26,0.58)] p-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:flex-col md:items-stretch md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
+      aria-label={t("workspace.navigation")}
+    >
+      <LocalTabMark
+        className="flex shrink-0 justify-center px-1 md:mb-2 md:justify-start md:pl-5"
+        compact
+      />
       <div
-        className="flex flex-col items-center gap-1.5 w-full h-fit max-h-[70vh] overflow-y-auto overflow-x-visible"
+        className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:max-h-[62vh] md:flex-col md:items-stretch md:overflow-x-visible md:overflow-y-auto"
         style={{ scrollbarWidth: "none" }}
       >
         {localCategories.map((category, index) => (
@@ -100,7 +98,6 @@ export default function Index(props: NavigationBarProps) {
             index={index}
             isActive={activeCategoryId === category.id}
             onEditClick={onEditClick}
-            onDeleteClick={onDeleteClick}
             onChangeCurrentCategory={changeCurrentCategory}
             onMoveLink={onMoveLink}
             onMoveCategoryItem={onMoveCategoryItem}
@@ -111,16 +108,16 @@ export default function Index(props: NavigationBarProps) {
       </div>
 
       {/* 添加按钮 */}
-      <div className="mt-2 flex justify-start pl-5">
+      <div className="shrink-0 md:mt-2 md:pl-5">
         <button
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/15 text-white/70 hover:text-white transition-all duration-200 active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer"
+          className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/[0.07] text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60"
           aria-label={t("category.add")}
           title={t("category.add")}
           onClick={addCategory}
         >
-          <Plus size={20} />
+          <Plus size={18} />
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

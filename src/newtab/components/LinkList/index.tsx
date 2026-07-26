@@ -25,7 +25,6 @@ interface LinkListProps {
   allowMerge?: boolean;
   showAddLinkCard?: boolean;
   handleEditClick: (linkId: string) => void;
-  handleDeleteClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
   onMoveLink: (
     linkId: string,
@@ -50,7 +49,6 @@ export default function LinkList({
   allowMerge = false,
   showAddLinkCard = false,
   handleEditClick,
-  handleDeleteClick,
   handleSkipClick,
   onMoveLink,
   onMergeLinks,
@@ -86,14 +84,6 @@ export default function LinkList({
       handleEditClick(linkId);
     },
     [handleEditClick]
-  );
-
-  /* 删除链接 */
-  const onDeleteClick = useCallback(
-    (linkId: string) => {
-      handleDeleteClick(linkId);
-    },
-    [handleDeleteClick]
   );
 
   /* 跳转链接 */
@@ -265,7 +255,6 @@ export default function LinkList({
               link={link}
               index={index}
               onEditClick={onEditClick}
-              onDeleteClick={onDeleteClick}
               onSkipClick={onSkipClick}
               onHover={onHover}
               onDrop={onDrop}

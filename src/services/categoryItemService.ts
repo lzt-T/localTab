@@ -31,6 +31,22 @@ export class CategoryItemService {
     return createdLink;
   }
 
+  /** 创建空文件夹并将其追加到分类主网格末尾。 */
+  async createFolder(name: string, categoryId: string): Promise<LinkGroup> {
+    // 新建前的分类混排项目
+    const categoryItems = await this.getCategoryItems(categoryId);
+    // 已保存的空文件夹
+    const createdFolder = await linkGroupService.createLinkGroup(
+      name,
+      categoryId
+    );
+    await this.saveCategoryItemOrder(
+      [...categoryItems, createdFolder],
+      categoryId
+    );
+    return createdFolder;
+  }
+
   /** 获取并按需归一化分类网格项目。 */
   async getCategoryItems(categoryId: string): Promise<CategoryItem[]> {
     // 分类直属网址和文件夹

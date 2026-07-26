@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 
 interface EditLinkGroupProps {
   open: boolean;
+  mode: "create" | "edit";
   initialName: string;
   onClose: () => void;
   onSubmit: (name: string) => Promise<void>;
@@ -22,6 +23,7 @@ interface EditLinkGroupProps {
 /** 渲染网址分组重命名弹窗。 */
 export default function EditLinkGroup({
   open,
+  mode,
   initialName,
   onClose,
   onSubmit,
@@ -57,20 +59,23 @@ export default function EditLinkGroup({
     }
   };
 
-  useEffect(() => {
-    if (open) {
-      setName(initialName);
-      setError("");
-    }
-  }, [initialName, open]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-white/15 bg-[rgba(32,34,38,0.92)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl sm:max-w-[425px] [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
         <DialogHeader>
-          <DialogTitle>{t("linkGroup.editTitle")}</DialogTitle>
+          <DialogTitle>
+            {t(
+              mode === "create"
+                ? "linkGroup.createTitle"
+                : "linkGroup.editTitle"
+            )}
+          </DialogTitle>
           <DialogDescription className="text-white/60">
-            {t("linkGroup.editDescription")}
+            {t(
+              mode === "create"
+                ? "linkGroup.createDescription"
+                : "linkGroup.editDescription"
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2 py-4">

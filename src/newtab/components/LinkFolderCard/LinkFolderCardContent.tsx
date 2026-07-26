@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Folder } from "lucide-react";
 import Icon from "@/newtab/components/Icon";
 import type { Link, LinkGroupInfo } from "@/type/db";
@@ -27,13 +28,13 @@ function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
         <img
           src={link.icon}
           alt=""
-          className="size-4 rounded-sm object-contain"
+          className="size-3 rounded-sm object-contain"
           onError={() => setHasImageError(true)}
         />
       ) : (
         <Icon
           name={link.icon.startsWith("http") ? "link" : link.icon || "link"}
-          size={16}
+          size={12}
           className="text-blue-100/90"
         />
       )}
@@ -45,6 +46,8 @@ function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
 export default function LinkFolderCardContent({
   linkGroup,
 }: LinkFolderCardContentProps) {
+  // 文件夹摘要的本地化文案
+  const { t } = useTranslation();
   // 前四个预览位置对应的网址
   const previewLinks = Array.from({ length: 4 }, (_, previewIndex) =>
     linkGroup.links.at(previewIndex)
@@ -54,10 +57,10 @@ export default function LinkFolderCardContent({
 
   return (
     <>
-      <span className="relative grid size-14 grid-cols-2 grid-rows-2 gap-1 rounded-xl border border-white/10 bg-[rgba(16,18,22,0.82)] p-1.5 shadow-inner shadow-black/40">
+      <span className="relative mb-1 grid size-8 shrink-0 grid-cols-2 grid-rows-2 gap-px rounded-md bg-white/[0.06] p-1">
         {linkGroup.links.length === 0 ? (
           <span className="col-span-2 row-span-2 flex items-center justify-center text-white/30">
-            <Folder size={22} />
+            <Folder size={18} />
           </span>
         ) : (
           previewLinks.map((link, previewIndex) => (
@@ -70,8 +73,13 @@ export default function LinkFolderCardContent({
           </span>
         )}
       </span>
-      <span className="w-full truncate text-center text-sm font-medium text-white/90">
-        {linkGroup.name}
+      <span className="w-full min-w-0 text-center">
+        <span className="block truncate text-sm font-medium leading-5 text-white/90">
+          {linkGroup.name}
+        </span>
+        <span className="block truncate text-xs leading-4 text-white/50">
+          {t("workspace.websiteCount", { count: linkGroup.links.length })}
+        </span>
       </span>
     </>
   );

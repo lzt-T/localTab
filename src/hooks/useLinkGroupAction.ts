@@ -3,7 +3,10 @@ import { linkGroupService } from "@/services/linkGroupService";
 import { categoryItemService } from "@/services/categoryItemService";
 import type { LinkGroup } from "@/type/db";
 
-/** 管理网址分组的重命名弹窗与持久化操作。 */
+// 文件夹弹窗的操作模式
+type LinkGroupActionMode = "create" | "edit";
+
+/** 管理网址分组的新建、重命名弹窗与持久化操作。 */
 export function useLinkGroupAction() {
   // 重命名弹窗是否打开
   const [isOpen, setIsOpen] = useState(false);
@@ -11,10 +14,24 @@ export function useLinkGroupAction() {
   const [editingLinkGroup, setEditingLinkGroup] = useState<LinkGroup | null>(
     null
   );
+  // 当前文件夹弹窗操作模式
+  const [mode, setMode] = useState<LinkGroupActionMode>("edit");
+  // 新建文件夹所属分类标识
+  const [targetCategoryId, setTargetCategoryId] = useState("");
+
+  /** 打开新建网址分组弹窗。 */
+  const onOpenCreate = useCallback((categoryId: string) => {
+    setEditingLinkGroup(null);
+    setTargetCategoryId(categoryId);
+    setMode("create");
+    setIsOpen(true);
+  }, []);
 
   /** 打开网址分组重命名弹窗。 */
   const onOpenEdit = useCallback((linkGroup: LinkGroup) => {
     setEditingLinkGroup(linkGroup);
+    setTargetCategoryId(linkGroup.parentId);
+    setMode("edit");
     setIsOpen(true);
   }, []);
 
@@ -26,13 +43,24 @@ export function useLinkGroupAction() {
   /** 提交网址分组名称。 */
   const onSubmit = useCallback(
     async (name: string) => {
-      if (!editingLinkGroup) {
+      // 不同文件夹操作模式对应的持久化策略
+      const submitStrategies: Record<LinkGroupActionMode, () => Promise<void>> = {
+        create: async () => {
+          await categoryItemService.createFolder(name, targetCategoryId);
+        },
+        edit: async () => {
+          if (editingLinkGroup) {
+            await linkGroupService.updateLinkGroup(editingLinkGroup.id, name);
+          }
+        },
+      };
+      if (mode === "create" && !targetCategoryId) {
         return;
       }
-      await linkGroupService.updateLinkGroup(editingLinkGroup.id, name);
+      await submitStrategies[mode]();
       setIsOpen(false);
     },
-    [editingLinkGroup]
+    [editingLinkGroup, mode, targetCategoryId]
   );
 
   /** 删除网址分组并保留组内网址。 */
@@ -42,7 +70,9 @@ export function useLinkGroupAction() {
 
   return {
     isOpen,
+    mode,
     editingLinkGroup,
+    onOpenCreate,
     onOpenEdit,
     onClose,
     onSubmit,

@@ -15,7 +15,6 @@ interface LinkItemWrapperProps {
   link: Link;
   index: number;
   onEditClick: (linkId: string) => void;
-  onDeleteClick: (linkId: string) => void;
   onSkipClick: (url: string) => void;
   onHover: (item: LinkDragItem, hoverIndex: number) => void;
   onDrop: (item: LinkDragItem, targetIndex: number) => void;
@@ -36,7 +35,6 @@ export default function LinkItemWrapper({
   link,
   index,
   onEditClick,
-  onDeleteClick,
   onSkipClick,
   onHover,
   onDrop,
@@ -213,7 +211,6 @@ export default function LinkItemWrapper({
       <LinkItem
         link={link}
         handleEditClick={onEditClick}
-        handleDeleteClick={onDeleteClick}
         handleSkipClick={onSkipClick}
         variant={isDragging ? "drag-placeholder" : "default"}
       />

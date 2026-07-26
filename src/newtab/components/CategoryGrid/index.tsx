@@ -2,21 +2,19 @@ import {
   Fragment,
   useCallback,
   useEffect,
-  useRef,
   useState,
-  type ReactNode,
 } from "react";
-import { useTranslation } from "react-i18next";
 import { useDrop } from "react-dnd";
-import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
 import LinkFolderCard from "@/newtab/components/LinkFolderCard";
 import LinkDropPreview from "@/newtab/components/LinkDropPreview";
 import useAutoOpenFolder from "@/newtab/components/CategoryGrid/useAutoOpenFolder";
+import {
+  CategoryGridItemSlot,
+  EmptyCategoryDropZone,
+} from "@/newtab/components/CategoryGrid/CategoryGridCards";
 import LinkItemWrapper from "@/newtab/components/LinkList/LinkItemWrapper";
 import {
   DRAG_ITEM_TYPE,
-  LINK_DROP_INTENT,
   type LinkDragItem,
   type LinkGroupDragItem,
 } from "@/newtab/drag-and-drop";
@@ -31,7 +29,6 @@ import {
 interface CategoryGridProps {
   categoryInfo: CategoryInfo;
   onOpenEditLink: (linkId: string) => void;
-  onDeleteLink: (linkId: string) => void;
   onSkipLink: (url: string) => void;
   onMoveLink: (
     linkId: string,
@@ -51,218 +48,12 @@ interface CategoryGridProps {
   onCancelLinkDrag: () => Promise<void>;
   onOpenAddLink: (parentId: string) => void;
   onEditFolder: (linkGroup: LinkGroupInfo) => void;
-  onDeleteFolder: (linkGroup: LinkGroupInfo) => void;
-}
-
-interface CategoryGridItemSlotProps {
-  index: number;
-  isHidden?: boolean;
-  linkDropFolder?: LinkGroupInfo;
-  children: ReactNode;
-  onClearLinkDropPreview: () => void;
-  onHoverLink: (item: LinkDragItem, targetIndex: number) => void;
-  onDropLink: (item: LinkDragItem, targetIndex: number) => void;
-  onHoverFolder: (item: LinkGroupDragItem, targetIndex: number) => void;
-  onDropFolder: (item: LinkGroupDragItem) => void;
-}
-
-interface CategoryGridEndCardProps {
-  itemCount: number;
-  onOpenAddLink: () => void;
-  onHoverLink: (item: LinkDragItem, targetIndex: number) => void;
-  onDropLink: (item: LinkDragItem, targetIndex: number) => void;
-  onHoverFolder: (item: LinkGroupDragItem, targetIndex: number) => void;
-  onDropFolder: (item: LinkGroupDragItem) => void;
-}
-
-/** 为每个网格位置提供文件夹排序投放能力。 */
-function CategoryGridItemSlot({
-  index,
-  isHidden = false,
-  linkDropFolder,
-  children,
-  onClearLinkDropPreview,
-  onHoverLink,
-  onDropLink,
-  onHoverFolder,
-  onDropFolder,
-}: CategoryGridItemSlotProps) {
-  // 网格位置元素引用
-  const slotRef = useRef<HTMLDivElement>(null);
-  // 网格间隙悬停状态与投放连接器
-  const [{ isItemOver }, dropItem] = useDrop<
-    LinkDragItem | LinkGroupDragItem,
-    void,
-    { isItemOver: boolean }
-  >({
-    accept: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
-    /** 根据卡片左右区域计算项目插入位置。 */
-    hover(item, monitor) {
-      if (!monitor.isOver({ shallow: true })) {
-        return;
-      }
-      if (item.type === DRAG_ITEM_TYPE.LINK && linkDropFolder) {
-        // 自动展开文件夹过渡区内的当前网址拖拽数据
-        const linkItem = item as LinkDragItem;
-        linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
-        linkItem.mergeTargetLinkId = undefined;
-        linkItem.targetLinkGroupId = linkDropFolder.id;
-        linkItem.currentParentId = linkDropFolder.id;
-        linkItem.index = linkDropFolder.links.length;
-        onClearLinkDropPreview();
-        return;
-      }
-      // 当前指针位置
-      const clientOffset = monitor.getClientOffset();
-      // 当前网格卡片边界
-      const slotRect = slotRef.current?.getBoundingClientRect();
-      if (!clientOffset || !slotRect) {
-        return;
-      }
-      // 指针在卡片中的横向比例
-      const horizontalRatio =
-        (clientOffset.x - slotRect.left) / slotRect.width;
-      // 卡片左侧插入前方，右侧插入后方
-      const targetIndex = horizontalRatio < 0.5 ? index : index + 1;
-      // 不同拖拽项目的网格间隙悬停策略
-      const hoverStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () => {
-          // 当前网址拖拽数据
-          const linkItem = item as LinkDragItem;
-          linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
-          linkItem.mergeTargetLinkId = undefined;
-          linkItem.targetLinkGroupId = undefined;
-          onHoverLink(linkItem, targetIndex);
-        },
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onHoverFolder(item as LinkGroupDragItem, targetIndex),
-      };
-      hoverStrategies[item.type]();
-    },
-    /** 保存从网格间隙投放的项目位置。 */
-    drop(item, monitor) {
-      if (monitor.didDrop()) {
-        return;
-      }
-      // 不同拖拽项目的网格间隙投放策略
-      const dropStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () =>
-          onDropLink(item as LinkDragItem, (item as LinkDragItem).index),
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onDropFolder(item as LinkGroupDragItem),
-      };
-      dropStrategies[item.type]();
-    },
-    collect: (monitor) => ({
-      isItemOver: monitor.isOver({ shallow: true }),
-    }),
-  });
-
-  /** 连接网格位置与项目投放区域。 */
-  const connectSlotRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      slotRef.current = node;
-      dropItem(node);
-    },
-    [dropItem]
-  );
-
-  return (
-    <div
-      ref={connectSlotRef}
-      className={cn(
-        "relative -m-2.5 rounded-[26px] p-2.5 transition-[opacity,box-shadow]",
-        isHidden && "opacity-0",
-        isItemOver &&
-          linkDropFolder &&
-          "ring-2 ring-amber-200/80 shadow-lg shadow-amber-200/10"
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-/** 渲染主网格末尾的添加与拖放入口。 */
-function CategoryGridEndCard({
-  itemCount,
-  onOpenAddLink,
-  onHoverLink,
-  onDropLink,
-  onHoverFolder,
-  onDropFolder,
-}: CategoryGridEndCardProps) {
-  // 添加卡片的本地化文案
-  const { t } = useTranslation();
-  // 末尾投放状态与连接器
-  const [{ isOverEnd }, dropAtEnd] = useDrop<
-    LinkDragItem | LinkGroupDragItem,
-    void,
-    { isOverEnd: boolean }
-  >({
-    accept: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
-    /** 将拖拽项目预览移动到网格末尾。 */
-    hover(item) {
-      // 不同拖拽项目的末尾悬停策略
-      const hoverStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () => {
-          // 当前网址拖拽数据
-          const linkItem = item as LinkDragItem;
-          linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
-          linkItem.mergeTargetLinkId = undefined;
-          linkItem.targetLinkGroupId = undefined;
-          onHoverLink(linkItem, itemCount);
-        },
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onHoverFolder(item as LinkGroupDragItem, itemCount),
-      };
-      hoverStrategies[item.type]();
-    },
-    /** 保存拖拽项目的末尾位置。 */
-    drop(item) {
-      // 不同拖拽项目的末尾投放策略
-      const dropStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () =>
-          onDropLink(item as LinkDragItem, (item as LinkDragItem).index),
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onDropFolder(item as LinkGroupDragItem),
-      };
-      dropStrategies[item.type]();
-    },
-    collect: (monitor) => ({
-      isOverEnd: monitor.isOver({ shallow: true }),
-    }),
-  });
-
-  /** 连接添加卡片与网格末尾投放区域。 */
-  const addLinkRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      dropAtEnd(node);
-    },
-    [dropAtEnd]
-  );
-
-  return (
-    <button
-      type="button"
-      ref={addLinkRef}
-      className={cn(
-        "flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
-        isOverEnd && "border-blue-200/70 bg-white/20 ring-2 ring-blue-200/80"
-      )}
-      onClick={onOpenAddLink}
-    >
-      <Plus size={24} />
-      <span className="text-sm font-medium">{t("link.addAction")}</span>
-    </button>
-  );
 }
 
 /** 渲染分类内网址与文件夹混排的统一网格。 */
 export default function CategoryGrid({
   categoryInfo,
   onOpenEditLink,
-  onDeleteLink,
   onSkipLink,
   onMoveLink,
   onMergeLinks,
@@ -270,7 +61,6 @@ export default function CategoryGrid({
   onCancelLinkDrag,
   onOpenAddLink,
   onEditFolder,
-  onDeleteFolder,
 }: CategoryGridProps) {
   // 拖拽期间用于即时重排的网格项目
   const [localItems, setLocalItems] = useState<CategoryGridItem[]>(
@@ -508,8 +298,16 @@ export default function CategoryGrid({
   return (
     <div
       ref={connectGridRef}
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
+      className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
     >
+      {localItems.length === 0 && (
+        <EmptyCategoryDropZone
+          categoryId={categoryInfo.id}
+          onMoveLink={onMoveLink}
+          onMoveCategoryItem={onMoveCategoryItem}
+        />
+      )}
+
       {localItems.map((item, index) => (
         <Fragment key={item.id}>
           {linkDropPreview?.index === index && (
@@ -541,7 +339,6 @@ export default function CategoryGrid({
                 link={item}
                 index={index}
                 onEditClick={onOpenEditLink}
-                onDeleteClick={onDeleteLink}
                 onSkipClick={onSkipLink}
                 onHover={onHoverLink}
                 onDrop={onDropLink}
@@ -568,13 +365,11 @@ export default function CategoryGrid({
                 onCancelPendingAutoOpen={cancelPendingAutoOpen}
                 onOpenAddLink={onOpenAddLink}
                 onOpenEditLink={onOpenEditLink}
-                onDeleteLink={onDeleteLink}
                 onSkipLink={onSkipLink}
                 onMoveLink={onMoveLink}
                 onMergeLinks={onMergeLinks}
                 onCancelLinkDrag={onCancelGridLinkDrag}
                 onEditFolder={onEditFolder}
-                onDeleteFolder={onDeleteFolder}
               />
             )}
           </CategoryGridItemSlot>
@@ -589,15 +384,6 @@ export default function CategoryGrid({
           onDrop={onDropLink}
         />
       )}
-
-      <CategoryGridEndCard
-        itemCount={localItems.length}
-        onOpenAddLink={() => onOpenAddLink(categoryInfo.id)}
-        onHoverLink={onHoverLink}
-        onDropLink={onDropLink}
-        onHoverFolder={onHoverFolder}
-        onDropFolder={onDropFolder}
-      />
     </div>
   );
 }

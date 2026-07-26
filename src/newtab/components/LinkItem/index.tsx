@@ -1,12 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Edit, Ellipsis, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
 
@@ -15,10 +9,10 @@ type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 // 不同展示模式对应的网址卡片视觉样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "glass-style-border shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(62,64,68,0.64)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/50",
+    "glass-style-border shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.62)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
   "drag-placeholder": "glass-style-border shadow-md shadow-black/10",
   "drag-preview":
-    "border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/20",
+    "border border-white/20 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/30",
 };
 
 interface LinkItemProps {
@@ -30,30 +24,31 @@ interface LinkItemProps {
     description: string;
   };
   handleEditClick?: (linkId: string) => void;
-  handleDeleteClick?: (linkId: string) => void;
   handleSkipClick?: (url: string) => void;
   variant?: LinkItemVariant;
 }
 
-/** 渲染可访问、编辑和删除的网址卡片。 */
+/** 提取网址卡片需要展示的主机名。 */
+function getLinkHostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/** 渲染可访问和编辑的网址卡片。 */
 export default function Index({
   link,
   handleEditClick,
-  handleDeleteClick,
   handleSkipClick,
   variant = "default",
 }: LinkItemProps) {
   // 卡片操作菜单的本地化文案
   const { t } = useTranslation();
 
-  // 当前卡片操作菜单是否打开
-  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
-
   // 外部图标加载失败时记录对应地址
   const [failedExternalIconUrl, setFailedExternalIconUrl] = useState("");
-
-  // 鼠标移出后的延迟关闭计时器
-  const actionMenuCloseTimerRef = useRef<number | null>(null);
 
   // 当前链接是否使用网络图标
   const isExternalIcon = link.icon.startsWith("http");
@@ -61,34 +56,8 @@ export default function Index({
   // 网络图标可用时优先展示原始图标
   const shouldShowExternalIcon =
     isExternalIcon && failedExternalIconUrl !== link.icon;
-
-  /** 清除操作菜单的延迟关闭任务。 */
-  const clearActionMenuCloseTimer = useCallback(() => {
-    if (actionMenuCloseTimerRef.current === null) {
-      return;
-    }
-
-    window.clearTimeout(actionMenuCloseTimerRef.current);
-    actionMenuCloseTimerRef.current = null;
-  }, []);
-
-  /** 鼠标离开卡片或菜单后延迟关闭操作菜单。 */
-  const scheduleActionMenuClose = useCallback(() => {
-    clearActionMenuCloseTimer();
-    actionMenuCloseTimerRef.current = window.setTimeout(() => {
-      setIsActionMenuOpen(false);
-      actionMenuCloseTimerRef.current = null;
-    }, 160);
-  }, [clearActionMenuCloseTimer]);
-
-  /** 同步操作菜单状态并取消待执行的关闭任务。 */
-  const onActionMenuOpenChange = useCallback(
-    (isOpen: boolean) => {
-      clearActionMenuCloseTimer();
-      setIsActionMenuOpen(isOpen);
-    },
-    [clearActionMenuCloseTimer]
-  );
+  // 卡片辅助信息优先展示稳定的站点域名
+  const linkHostname = getLinkHostname(link.url);
 
   /** 打开当前网址的编辑弹窗。 */
   const onEditClick = useCallback(
@@ -98,16 +67,6 @@ export default function Index({
       }
     },
     [link.id, handleEditClick]
-  );
-
-  /** 打开当前网址的删除确认弹窗。 */
-  const onDeleteClick = useCallback(
-    () => {
-      if (link.id && handleDeleteClick) {
-        handleDeleteClick(link.id);
-      }
-    },
-    [link.id, handleDeleteClick]
   );
 
   /** 在新标签页打开当前网址。 */
@@ -122,106 +81,61 @@ export default function Index({
     setFailedExternalIconUrl(link.icon);
   };
 
-  useEffect(() => {
-    return clearActionMenuCloseTimer;
-  }, [clearActionMenuCloseTimer]);
-
   return (
     <div
       className={cn(
-        "group/item relative flex h-24 cursor-pointer flex-col justify-center rounded-xl p-3",
+        "group/item relative flex h-24 rounded-xl",
         LINK_ITEM_CLASS_BY_VARIANT[variant]
       )}
-      onClick={onSkipClick}
-      onMouseEnter={clearActionMenuCloseTimer}
-      onMouseLeave={scheduleActionMenuClose}
     >
-      {link.id && (handleEditClick || handleDeleteClick) && (
-        <div
-          className="absolute top-2 right-2 opacity-0 transition-opacity group-hover/item:opacity-100 group-focus-within/item:opacity-100"
-          onClick={(event) => event.stopPropagation()}
+      {link.id && handleEditClick && (
+        <button
+          type="button"
+          className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-25 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
+          onClick={onEditClick}
+          title={t("common.edit")}
+          aria-label={t("common.edit")}
         >
-          <DropdownMenu
-            modal={false}
-            open={isActionMenuOpen}
-            onOpenChange={onActionMenuOpenChange}
-          >
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex size-7 cursor-pointer items-center justify-center rounded-md text-white/70 outline-none transition-colors hover:bg-white/20 hover:text-white focus-visible:ring-2 focus-visible:ring-white/50 data-[state=open]:bg-white/20 data-[state=open]:text-white"
-                aria-label={t("common.actions")}
-              >
-                <Ellipsis size={16} />
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              side="right"
-              align="start"
-              sideOffset={8}
-              className="glass-style-border z-[70] min-w-24 border-white/15 bg-[rgba(24,26,30,0.98)] text-white shadow-2xl shadow-black/50 ring-1 ring-white/15 backdrop-blur-2xl"
-              onClick={(event) => event.stopPropagation()}
-              onMouseEnter={clearActionMenuCloseTimer}
-              onMouseLeave={scheduleActionMenuClose}
-            >
-              {handleEditClick && (
-                <DropdownMenuItem
-                  className="cursor-pointer focus:bg-white/15 focus:text-white"
-                  onSelect={onEditClick}
-                >
-                  <Edit />
-                  {t("common.edit")}
-                </DropdownMenuItem>
-              )}
-
-              {handleDeleteClick && (
-                <DropdownMenuItem
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onSelect={onDeleteClick}
-                >
-                  <Trash2 />
-                  {t("common.delete")}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <Edit size={15} />
+        </button>
       )}
-      <div className="mb-1 flex h-7 items-center justify-center">
-        {shouldShowExternalIcon ? (
-          <img
-            src={link.icon}
-            alt={link.title}
-            className="h-6 w-6 rounded object-contain"
-            onError={onExternalIconError}
-          />
-        ) : (
-          <Icon
-            name={isExternalIcon ? "link" : link.icon || "link"}
-            size={24}
-            className="text-blue-200/90"
-          />
-        )}
-      </div>
-      <div
-        className={cn(
-          "w-full break-words text-center text-sm font-medium leading-5 text-white/90",
-          link.description ? "truncate" : "line-clamp-2"
-        )}
-        title={link.title}
+      <button
+        type="button"
+        className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
+        onClick={onSkipClick}
+        aria-label={`${link.title}, ${linkHostname}`}
       >
-        {link.title}
-      </div>
-      {link.description && (
-        <div
-          className="mt-1 w-full truncate text-center text-xs leading-4 text-white/60"
-          title={link.description}
-        >
-          {link.description}
-        </div>
-      )}
+        <span className="mb-1 flex h-7 shrink-0 items-center justify-center">
+          {shouldShowExternalIcon ? (
+            <img
+              src={link.icon}
+              alt=""
+              className="size-6 rounded object-contain"
+              onError={onExternalIconError}
+            />
+          ) : (
+            <Icon
+              name={isExternalIcon ? "link" : link.icon || "link"}
+              size={24}
+              className="text-blue-100/90"
+            />
+          )}
+        </span>
+        <span className="w-full min-w-0">
+          <span
+            className="block truncate text-sm font-medium leading-5 text-white/90"
+            title={link.title}
+          >
+            {link.title}
+          </span>
+          <span
+            className="block truncate text-xs leading-4 text-white/50"
+            title={link.description || linkHostname}
+          >
+            {link.description || linkHostname}
+          </span>
+        </span>
+      </button>
     </div>
   );
 }

@@ -10,14 +10,21 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import AddEditLink from "@/newtab/components/AddEditLink";
 import { useLinkAction } from "@/hooks/useLinkAction";
-import Setting from "@/newtab/components/Setting";
 import SearchInput from "@/newtab/components/SearchInput";
 import CategoryPage from "@/newtab/components/CategoryPage";
 import LinkDragPreview from "@/newtab/components/LinkList/LinkDragPreview";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 import EditLinkGroup from "@/newtab/components/EditLinkGroup";
+import Dock from "@/newtab/components/Dock";
 import { useLinkGroupAction } from "@/hooks/useLinkGroupAction";
 import type { LinkGroupInfo } from "@/type/db";
+import {
+  DRAG_ITEM_TYPE,
+  type CategoryDragItem,
+  type DragItem,
+  type LinkDragItem,
+  type LinkGroupDragItem,
+} from "@/newtab/drag-and-drop";
 
 /** 渲染新标签页主应用。 */
 const NewTabApp: React.FC = () => {
@@ -63,7 +70,9 @@ const NewTabApp: React.FC = () => {
   // 网址分组编辑和删除操作
   const {
     isOpen: isEditLinkGroupOpen,
+    mode: linkGroupMode,
     editingLinkGroup,
+    onOpenCreate: onOpenCreateLinkGroup,
     onOpenEdit: onOpenEditLinkGroup,
     onClose: onCloseEditLinkGroup,
     onSubmit: onSubmitLinkGroup,
@@ -162,6 +171,39 @@ const NewTabApp: React.FC = () => {
     setCategoryToDelete(null);
   }, [categoryToDelete, onDeleteCategory, refreshCategoriesData, t]);
 
+  /** 还原拖拽预览后按对象类型打开对应删除确认弹窗。 */
+  const onDropToTrash = useCallback(
+    async (item: DragItem) => {
+      await refreshCategoriesData();
+      // 不同拖拽对象对应的删除确认策略
+      const deleteRequestStrategies: Record<DragItem["type"], () => void> = {
+        [DRAG_ITEM_TYPE.CATEGORY]: () =>
+          onDeleteCategoryClick((item as CategoryDragItem).id),
+        [DRAG_ITEM_TYPE.LINK]: () =>
+          onDeleteLinkClick((item as LinkDragItem).link.id),
+        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+          onDeleteLinkGroupClick((item as LinkGroupDragItem).linkGroup),
+      };
+      deleteRequestStrategies[item.type]();
+    },
+    [
+      onDeleteCategoryClick,
+      onDeleteLinkClick,
+      onDeleteLinkGroupClick,
+      refreshCategoriesData,
+    ]
+  );
+
+  /** 从 Dock 为当前分类打开网址添加表单。 */
+  function openAddLinkFromDock() {
+    onOpenAddLink(currentCategoryId);
+  }
+
+  /** 从 Dock 为当前分类打开文件夹创建表单。 */
+  function openCreateFolderFromDock() {
+    onOpenCreateLinkGroup(currentCategoryId);
+  }
+
   useEffect(() => {
     document.title = t("meta.newTabTitle");
   }, [t]);
@@ -171,29 +213,28 @@ const NewTabApp: React.FC = () => {
       <LinkDragPreview />
 
       <div
-        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-y-scroll text-white"
+        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-y-scroll bg-[#090c10] text-white"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}
       >
         <div
-          className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(90deg,rgba(5,7,10,0.46)_0%,rgba(5,7,10,0.26)_42%,rgba(5,7,10,0.4)_100%)] backdrop-saturate-[0.72]"
+          className="atmosphere-backdrop pointer-events-none fixed inset-0 z-0 backdrop-saturate-[0.82]"
           aria-hidden="true"
         />
 
-        <section className="fixed top-1/2 left-0 z-10 w-[220px] -translate-y-1/2">
+        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:left-0 md:right-auto md:top-1/2 md:h-auto md:w-[220px] md:-translate-y-1/2">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}
             changeCurrentCategory={changeCurrentCategory}
             addCategory={() => onOpenAdd()}
             handleEditClick={(categoryId) => onOpenEdit(categoryId)}
-            handleDeleteClick={onDeleteCategoryClick}
             onMoveCategory={updateCategoryOrder}
             onMoveLink={moveLink}
             onMoveCategoryItem={moveCategoryItem}
           />
         </section>
 
-        <div className="pointer-events-none fixed top-0 left-1/2 z-10 flex h-36 w-full -translate-x-1/2 items-center justify-center px-6">
+        <div className="pointer-events-none fixed left-4 right-4 top-[76px] z-20 flex justify-center md:left-1/2 md:right-auto md:top-0 md:h-32 md:w-full md:max-w-[840px] md:-translate-x-1/2 md:items-center md:px-8">
           <SearchInput className="pointer-events-auto" />
         </div>
 
@@ -204,7 +245,6 @@ const NewTabApp: React.FC = () => {
               categoryInfo={category}
               currentCategoryId={currentCategoryId}
               onOpenEditLink={onOpenEditLink}
-              onDeleteLinkClick={onDeleteLinkClick}
               handleSkipClick={handleSkipClick}
               moveLink={moveLink}
               mergeLinks={mergeLinks}
@@ -212,14 +252,16 @@ const NewTabApp: React.FC = () => {
               onCancelLinkDrag={refreshCategoriesData}
               onOpenAddLink={onOpenAddLink}
               onEditLinkGroup={onOpenEditLinkGroup}
-              onDeleteLinkGroup={onDeleteLinkGroupClick}
               handleCategoryChange={changeCurrentCategory}
             />
           );
         })}
 
-        {/* 设置组件 */}
-        <Setting />
+        <Dock
+          onAddLink={openAddLinkFromDock}
+          onCreateFolder={openCreateFolderFromDock}
+          onDropToTrash={onDropToTrash}
+        />
         {/* 添加分类 */}
         <AddCategory
           open={isOpen}
@@ -249,16 +291,25 @@ const NewTabApp: React.FC = () => {
           }}
         />
         {/* 编辑网址分组 */}
-        <EditLinkGroup
-          open={isEditLinkGroupOpen}
-          initialName={editingLinkGroup?.name ?? ""}
-          onClose={onCloseEditLinkGroup}
-          onSubmit={async (name) => {
-            await onSubmitLinkGroup(name);
-            await refreshCategoriesData();
-            toast.success(t("linkGroup.editSuccess"));
-          }}
-        />
+        {isEditLinkGroupOpen ? (
+          <EditLinkGroup
+            open
+            mode={linkGroupMode}
+            initialName={editingLinkGroup?.name ?? ""}
+            onClose={onCloseEditLinkGroup}
+            onSubmit={async (name) => {
+              await onSubmitLinkGroup(name);
+              await refreshCategoriesData();
+              toast.success(
+                t(
+                  linkGroupMode === "create"
+                    ? "linkGroup.createSuccess"
+                    : "linkGroup.editSuccess"
+                )
+              );
+            }}
+          />
+        ) : null}
         {/* 删除链接确认弹窗 */}
         <DeleteConfirmDialog
           isOpen={isDeleteLinkDialogOpen}

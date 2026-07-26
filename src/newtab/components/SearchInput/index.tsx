@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Plus, Search, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import {
@@ -103,7 +103,7 @@ export default function SearchInput({
     <>
       <div
         className={cn(
-          "glass-style-border flex w-full max-w-[640px] items-center overflow-hidden rounded-2xl shadow-lg shadow-black/15 transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(62,64,68,0.68)] focus-within:shadow-xl focus-within:shadow-black/25",
+          "glass-style-border flex w-full max-w-[680px] items-center overflow-hidden rounded-xl bg-[rgba(38,40,44,0.52)] shadow-[0_16px_44px_rgba(0,0,0,0.22)] transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(46,48,52,0.66)] focus-within:shadow-[0_20px_52px_rgba(0,0,0,0.28)]",
           className
         )}
       >
@@ -111,12 +111,18 @@ export default function SearchInput({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex h-12 w-12 cursor-pointer items-center justify-center bg-transparent px-3 py-2 text-white outline-none transition-all duration-200 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50"
+              className="flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 bg-transparent px-2.5 py-2 text-white/65 outline-none transition-colors duration-200 hover:bg-white/[0.07] hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 sm:min-w-36 sm:justify-start"
               title={selectedSearchEngineName}
               aria-label={selectedSearchEngineName}
               disabled={!isInitializedSearchEngine}
             >
-              <Search className="size-4" />
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-blue-100/85">
+                <Search className="size-4" />
+              </span>
+              <span className="hidden min-w-0 flex-1 truncate text-left text-xs font-medium sm:block">
+                {selectedSearchEngineName}
+              </span>
+              <ChevronDown className="hidden size-3.5 shrink-0 text-slate-500 sm:block" />
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -211,18 +217,21 @@ export default function SearchInput({
           </PopoverContent>
         </Popover>
 
-        <div className="h-6 w-px bg-white/20" />
+        <div className="h-5 w-px bg-white/12" />
 
         <Input
           type="text"
           value={query}
-          className="h-12 flex-1 border-none bg-transparent text-base text-white placeholder-white/55 outline-none transition-all duration-300 focus:bg-transparent focus:ring-0 focus-visible:ring-0"
+          className="h-11 min-w-0 flex-1 border-none bg-transparent px-4 text-[15px] font-medium text-white placeholder:text-white/45 outline-none focus:bg-transparent focus:ring-0 focus-visible:ring-0"
           placeholder={placeholder ?? t("search.placeholder")}
           aria-label={placeholder ?? t("search.placeholder")}
           onChange={onQueryChange}
           onKeyDown={onKeyDown}
           autoFocus
         />
+        <kbd className="mr-3 hidden rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-semibold text-white/40 sm:block">
+          ENTER
+        </kbd>
       </div>
 
       <AddSearchEngineDialog

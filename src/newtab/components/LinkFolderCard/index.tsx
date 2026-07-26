@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -34,7 +34,6 @@ interface LinkFolderCardProps {
   onCancelPendingAutoOpen: (folderId: string) => void;
   onOpenAddLink: (parentId: string) => void;
   onOpenEditLink: (linkId: string) => void;
-  onDeleteLink: (linkId: string) => void;
   onSkipLink: (url: string) => void;
   onMoveLink: (
     linkId: string,
@@ -48,7 +47,6 @@ interface LinkFolderCardProps {
   ) => Promise<void>;
   onCancelLinkDrag: () => Promise<void>;
   onEditFolder: (linkGroup: LinkGroupInfo) => void;
-  onDeleteFolder: (linkGroup: LinkGroupInfo) => void;
 }
 
 /** 渲染可拖拽、可展开的网址文件夹卡片。 */
@@ -67,13 +65,11 @@ export default function LinkFolderCard({
   onCancelPendingAutoOpen,
   onOpenAddLink,
   onOpenEditLink,
-  onDeleteLink,
   onSkipLink,
   onMoveLink,
   onMergeLinks,
   onCancelLinkDrag,
   onEditFolder,
-  onDeleteFolder,
 }: LinkFolderCardProps) {
   // 文件夹界面的本地化文案
   const { t } = useTranslation();
@@ -228,7 +224,7 @@ export default function LinkFolderCard({
           type="button"
           ref={connectCardRef}
           className={cn(
-            "glass-style-border group/folder relative flex h-24 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl p-2 text-white shadow-md shadow-black/10 outline-none transition-[transform,opacity,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(62,64,68,0.64)] hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
+            "glass-style-border group/folder relative flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2.5 text-white shadow-md shadow-black/10 outline-none transition-[transform,opacity,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.62)] hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/75",
             isDragging && "opacity-50",
             isLinkOver &&
               isJoinTarget &&
@@ -247,7 +243,7 @@ export default function LinkFolderCard({
         align="center"
         sideOffset={10}
         collisionPadding={16}
-        className="glass-style-border z-[60] w-[420px] border-white/15 bg-[rgba(24,26,30,0.96)] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10 backdrop-blur-2xl"
+        className="glass-style-border z-[60] w-[min(420px,calc(100vw-2rem))] border-white/15 bg-[rgba(15,20,26,0.98)] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10 backdrop-blur-2xl"
       >
         <div className="mb-3 flex h-9 items-center gap-2 border-b border-white/10 pb-3">
           <span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -270,14 +266,6 @@ export default function LinkFolderCard({
           >
             <Edit size={15} />
           </button>
-          <button
-            type="button"
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-300/70 outline-none transition-colors hover:bg-red-400/10 hover:text-red-200 focus-visible:ring-2 focus-visible:ring-red-300/70"
-            onClick={() => onDeleteFolder(linkGroup)}
-            aria-label={t("common.delete")}
-          >
-            <Trash2 size={15} />
-          </button>
         </div>
         <div className="max-h-[264px] overflow-y-auto px-1 pb-2 pt-2">
           <LinkList
@@ -285,7 +273,6 @@ export default function LinkFolderCard({
             parentId={linkGroup.id}
             categoryId={categoryId}
             handleEditClick={onOpenEditLink}
-            handleDeleteClick={onDeleteLink}
             handleSkipClick={onSkipLink}
             onMoveLink={onMoveLink}
             onMergeLinks={onMergeLinks}

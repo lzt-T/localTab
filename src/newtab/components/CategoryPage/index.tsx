@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import CategoryGrid from "@/newtab/components/CategoryGrid";
 import type { CategoryInfo, LinkGroupInfo } from "@/type/db";
 
@@ -6,7 +7,6 @@ interface CategoryPageProps {
   categoryInfo: CategoryInfo;
   currentCategoryId: string;
   onOpenEditLink: (linkId: string) => void;
-  onDeleteLinkClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
   moveLink: (
     linkId: string,
@@ -26,7 +26,6 @@ interface CategoryPageProps {
   onCancelLinkDrag: () => Promise<void>;
   onOpenAddLink: (parentId: string) => void;
   onEditLinkGroup: (linkGroup: LinkGroupInfo) => void;
-  onDeleteLinkGroup: (linkGroup: LinkGroupInfo) => void;
   handleCategoryChange: (categoryId: string) => void;
 }
 
@@ -35,7 +34,6 @@ export default function CategoryPage({
   categoryInfo,
   currentCategoryId,
   onOpenEditLink,
-  onDeleteLinkClick,
   handleSkipClick,
   moveLink,
   mergeLinks,
@@ -43,15 +41,23 @@ export default function CategoryPage({
   onCancelLinkDrag,
   onOpenAddLink,
   onEditLinkGroup,
-  onDeleteLinkGroup,
   handleCategoryChange,
 }: CategoryPageProps) {
+  // 分类页操作的本地化文案
+  const { t } = useTranslation();
   // 分类整页元素引用
   const categoryPageRef = useRef<HTMLDivElement>(null);
   // 分类内容滚动区域引用
   const linkListRef = useRef<HTMLDivElement>(null);
   // 分类页面当前是否可见
   const isCategoryPageVisibleRef = useRef(false);
+  // 分类内包含文件夹子项的全部网址数量
+  const linkCount =
+    categoryInfo.links.length +
+    categoryInfo.linkGroups.reduce(
+      (totalCount, linkGroup) => totalCount + linkGroup.links.length,
+      0
+    );
 
   useEffect(() => {
     if (!categoryPageRef.current) {
@@ -98,19 +104,26 @@ export default function CategoryPage({
   return (
     <div
       ref={categoryPageRef}
-      className="relative z-[1] flex h-screen w-full snap-start flex-col items-center"
+      className="relative z-[1] flex h-screen w-full snap-start flex-col pt-36 md:pl-[220px] md:pt-32"
     >
-      <div className="flex h-28 items-center justify-center" />
-      <section className="min-h-0 w-[calc(100%-400px)] max-w-[1280px] flex-1 p-6">
+      <section className="mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 flex-col px-4 pb-4 sm:px-6 md:px-8 md:pb-6">
+        <header className="mb-4 flex shrink-0 items-center gap-2 px-1 text-white/70">
+          <h1 className="truncate text-base font-semibold tracking-[-0.015em] text-white/90">
+            {categoryInfo.name}
+          </h1>
+          <span className="size-1 rounded-full bg-white/35" aria-hidden="true" />
+          <p className="truncate text-xs font-medium text-white/50">
+            {t("workspace.websiteCount", { count: linkCount })}
+          </p>
+        </header>
         <div
           ref={linkListRef}
-          className="h-full overflow-x-hidden overflow-y-auto px-2 pt-2"
+          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1 pb-24 pt-1 md:pb-28"
         >
-          <div className="pb-6">
+          <div className="pb-8">
             <CategoryGrid
               categoryInfo={categoryInfo}
               onOpenEditLink={onOpenEditLink}
-              onDeleteLink={onDeleteLinkClick}
               onSkipLink={handleSkipClick}
               onMoveLink={moveLink}
               onMergeLinks={mergeLinks}
@@ -118,7 +131,6 @@ export default function CategoryPage({
               onCancelLinkDrag={onCancelLinkDrag}
               onOpenAddLink={onOpenAddLink}
               onEditFolder={onEditLinkGroup}
-              onDeleteFolder={onDeleteLinkGroup}
             />
           </div>
         </div>
