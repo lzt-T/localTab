@@ -64,6 +64,8 @@ const OPERATION_GUIDE_SECTIONS: OperationGuideSection[] = [
     titleKey: "operationGuide.dockTitle",
     itemKeys: [
       "operationGuide.dockActions",
+      "operationGuide.dockPin",
+      "operationGuide.dockManagePinned",
       "operationGuide.dragDelete",
       "operationGuide.deleteConfirm",
     ],

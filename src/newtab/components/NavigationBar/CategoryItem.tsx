@@ -98,6 +98,7 @@ export default function CategoryItem({
     },
     [DRAG_ITEM_TYPE.LINK]: () => undefined,
     [DRAG_ITEM_TYPE.LINK_GROUP]: () => undefined,
+    [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
   };
 
   // 不同拖拽项目的投放处理策略
@@ -128,6 +129,7 @@ export default function CategoryItem({
         category.items.length
       );
     },
+    [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
   };
 
   // 分类投放状态与连接器

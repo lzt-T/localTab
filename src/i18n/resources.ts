@@ -39,8 +39,17 @@ export const resources = {
       },
       dock: {
         navigation: "常用操作",
+        actions: "Dock 操作",
+        pinnedLinks: "Dock 固定网址",
+        emptyHint: "拖入固定",
+        releaseToPin: "松开鼠标固定到 Dock",
+        pinned: "已固定到 Dock",
+        alreadyPinned: "该网址已在 Dock 中",
+        unpinned: "已从 Dock 取消固定",
+        openLink: "打开 {{title}}",
         trash: "垃圾桶：拖入对象以删除",
         releaseToDelete: "松开鼠标以请求删除",
+        releaseToRemove: "松开鼠标以移除",
       },
       operationGuide: {
         introduction:
@@ -63,6 +72,9 @@ export const resources = {
         dragAcrossCategory: "把网址或文件夹拖到左侧其他分类，即可跨分类移动。",
         dockTitle: "Dock 与垃圾桶",
         dockActions: "底部 Dock 提供添加网址、新建文件夹和设置入口。",
+        dockPin: "把网址卡片拖入 Dock 中间区域即可固定；图标较多时可横向滚动查看。",
+        dockManagePinned:
+          "拖动 Dock 图标可调整顺序；拖到垃圾桶只会取消固定，不会删除原网址。",
         dragDelete: "把网址、文件夹或分类拖到最右侧垃圾桶以请求删除。",
         deleteConfirm: "松开鼠标后仍需在确认弹窗中确认，取消不会删除内容。",
         folderTitle: "文件夹与合并",
@@ -253,8 +265,17 @@ export const resources = {
       },
       dock: {
         navigation: "Common actions",
+        actions: "Dock actions",
+        pinnedLinks: "Pinned Dock links",
+        emptyHint: "Drop to pin",
+        releaseToPin: "Release to pin to the Dock",
+        pinned: "Pinned to the Dock",
+        alreadyPinned: "This link is already in the Dock",
+        unpinned: "Removed from the Dock",
+        openLink: "Open {{title}}",
         trash: "Trash: drop an item here to delete it",
         releaseToDelete: "Release to request deletion",
+        releaseToRemove: "Release to remove",
       },
       operationGuide: {
         introduction:
@@ -278,6 +299,10 @@ export const resources = {
         dragAcrossCategory: "Drop a website or folder onto another category to move it there.",
         dockTitle: "Dock and Trash",
         dockActions: "The bottom Dock provides Add website, New folder, and Settings.",
+        dockPin:
+          "Drag a website card into the middle of the Dock to pin it. Scroll horizontally when more icons are available.",
+        dockManagePinned:
+          "Drag Dock icons to reorder them. Dropping one in the Trash only unpins it and does not delete the original website.",
         dragDelete: "Drag a website, folder, or category to the Trash at the far right to request deletion.",
         deleteConfirm: "Confirm deletion in the dialog after dropping; canceling keeps the item.",
         folderTitle: "Folders and merging",

@@ -16,14 +16,15 @@ import LinkDragPreview from "@/newtab/components/LinkList/LinkDragPreview";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 import EditLinkGroup from "@/newtab/components/EditLinkGroup";
 import Dock from "@/newtab/components/Dock";
+import { useDockLinks } from "@/newtab/useDockLinks";
 import { useLinkGroupAction } from "@/hooks/useLinkGroupAction";
 import type { LinkGroupInfo } from "@/type/db";
 import {
   DRAG_ITEM_TYPE,
   type CategoryDragItem,
-  type DragItem,
   type LinkDragItem,
   type LinkGroupDragItem,
+  type PageDragItem,
 } from "@/newtab/drag-and-drop";
 
 /** 渲染新标签页主应用。 */
@@ -42,6 +43,13 @@ const NewTabApp: React.FC = () => {
     mergeLinks,
     moveCategoryItem,
   } = useData();
+  // Dock 固定网址及其持久化操作
+  const {
+    dockLinks,
+    pinDockLink,
+    moveDockLink,
+    unpinDockLink,
+  } = useDockLinks(categories);
   // 分类编辑操作
   const {
     isOpen,
@@ -173,10 +181,13 @@ const NewTabApp: React.FC = () => {
 
   /** 还原拖拽预览后按对象类型打开对应删除确认弹窗。 */
   const onDropToTrash = useCallback(
-    async (item: DragItem) => {
+    async (item: PageDragItem) => {
       await refreshCategoriesData();
       // 不同拖拽对象对应的删除确认策略
-      const deleteRequestStrategies: Record<DragItem["type"], () => void> = {
+      const deleteRequestStrategies: Record<
+        PageDragItem["type"],
+        () => void
+      > = {
         [DRAG_ITEM_TYPE.CATEGORY]: () =>
           onDeleteCategoryClick((item as CategoryDragItem).id),
         [DRAG_ITEM_TYPE.LINK]: () =>
@@ -193,6 +204,12 @@ const NewTabApp: React.FC = () => {
       refreshCategoriesData,
     ]
   );
+
+  /** 还原网址网格预览后将网址固定到 Dock。 */
+  async function pinLinkFromGrid(item: LinkDragItem) {
+    await refreshCategoriesData();
+    await pinDockLink(item.link.id);
+  }
 
   /** 从 Dock 为当前分类打开网址添加表单。 */
   function openAddLinkFromDock() {
@@ -258,8 +275,13 @@ const NewTabApp: React.FC = () => {
         })}
 
         <Dock
+          dockLinks={dockLinks}
           onAddLink={openAddLinkFromDock}
           onCreateFolder={openCreateFolderFromDock}
+          onOpenLink={handleSkipClick}
+          onPinLink={pinLinkFromGrid}
+          onMoveDockLink={moveDockLink}
+          onUnpinDockLink={unpinDockLink}
           onDropToTrash={onDropToTrash}
         />
         {/* 添加分类 */}

@@ -19,6 +19,8 @@ const LEGACY_SEARCH_ENGINE_KEY = "searchEngines";
 const SELECTED_SEARCH_ENGINE_ID_KEY = "selectedSearchEngineId";
 // 自定义搜索引擎列表键
 const CUSTOM_SEARCH_ENGINES_KEY = "customSearchEngines";
+// Dock 固定网址标识列表键
+const DOCK_LINK_IDS_KEY = "dockLinkIds";
 
 export class SystemService {
   /**
@@ -93,6 +95,29 @@ export class SystemService {
       STORE_NAMES.SYSTEM,
       CUSTOM_SEARCH_ENGINES_KEY,
       customSearchEngines
+    );
+  }
+
+  /**
+   * 获取 Dock 中固定的网址标识。
+   */
+  async getDockLinkIds(): Promise<string[]> {
+    // 已保存的 Dock 网址标识
+    const dockLinkIds = await db.get<string[]>(
+      STORE_NAMES.SYSTEM,
+      DOCK_LINK_IDS_KEY
+    );
+    return dockLinkIds ?? [];
+  }
+
+  /**
+   * 保存 Dock 中固定的网址标识。
+   */
+  async updateDockLinkIds(dockLinkIds: string[]): Promise<void> {
+    await db.putWithKey(
+      STORE_NAMES.SYSTEM,
+      DOCK_LINK_IDS_KEY,
+      dockLinkIds
     );
   }
 

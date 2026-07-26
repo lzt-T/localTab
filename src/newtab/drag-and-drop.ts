@@ -5,6 +5,7 @@ export const DRAG_ITEM_TYPE = {
   CATEGORY: "category",
   LINK: "link",
   LINK_GROUP: "link-group",
+  DOCK_LINK: "dock-link",
 } as const;
 
 // 网址卡片的投放意图
@@ -48,4 +49,15 @@ export interface LinkGroupDragItem {
   targetIndex: number;
 }
 
-export type DragItem = CategoryDragItem | LinkDragItem | LinkGroupDragItem;
+export interface DockLinkDragItem {
+  type: typeof DRAG_ITEM_TYPE.DOCK_LINK;
+  linkId: string;
+  index: number;
+}
+
+export type PageDragItem =
+  | CategoryDragItem
+  | LinkDragItem
+  | LinkGroupDragItem;
+
+export type DragItem = PageDragItem | DockLinkDragItem;
