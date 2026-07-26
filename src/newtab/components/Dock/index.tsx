@@ -229,7 +229,7 @@ function DockLinkItem({
           className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
           arrowClassName="bg-[#202328] fill-[#202328]"
         >
-          {t("dock.unpinShortcut", { title: link.title })}
+          {link.title}
         </TooltipContent>
       </Tooltip>
     </div>
