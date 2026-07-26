@@ -210,7 +210,7 @@ function DockLinkItem({
                 <img
                   src={link.icon}
                   alt=""
-                  className="size-6 rounded-md object-contain drop-shadow-[0_0_1px_rgba(255,255,255,0.7)]"
+                  className="size-6 rounded-md object-contain"
                   onError={handleImageIconError}
                 />
               ) : (
