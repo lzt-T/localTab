@@ -205,19 +205,19 @@ function DockLinkItem({
             aria-label={t("dock.openLink", { title: link.title })}
             aria-keyshortcuts="Delete Backspace"
           >
-            <span className="flex size-7 items-center justify-center rounded-lg bg-white/[0.06]">
+            <span className="flex size-7 items-center justify-center">
               {shouldShowImageIcon ? (
                 <img
                   src={link.icon}
                   alt=""
-                  className="size-6 rounded-md object-contain"
+                  className="size-6 rounded-md object-contain drop-shadow-[0_0_1px_rgba(255,255,255,0.7)]"
                   onError={handleImageIconError}
                 />
               ) : (
                 <Icon
                   name={hasImageIcon ? "link" : link.icon || "link"}
-                  size={24}
-                  className="text-blue-100/85"
+                  size={22}
+                  className="text-white/75"
                 />
               )}
             </span>
@@ -410,7 +410,7 @@ export default function Dock({
             <span className="text-xs font-medium">{t("dock.emptyHint")}</span>
           </div>
         ) : (
-          <div className="flex min-w-max items-center gap-0.5">
+          <div className="flex min-w-max items-center gap-1 px-0.5">
             {dockLinks.map((link, index) => (
               <DockLinkItem
                 key={link.id}
