@@ -8,7 +8,7 @@ import {
   createCustomIconDataUrl,
   getLinkIconType,
   isCustomImageIcon,
-  isRemoteImageIcon,
+  isFaviconImageIcon,
   isSupportedCustomIconFile,
   LINK_ICON_TYPE,
   MAX_CUSTOM_ICON_FILE_SIZE,
@@ -97,9 +97,11 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const availableLinkGroups =
     categories.find((category) => category.id === categoryId)?.linkGroups ?? [];
 
-  /* 获取并设置 favicon */
-  const onFetchFavicon = useCallback(async () => {
-    if (!url.trim()) {
+  /** 获取并设置指定网址的 favicon。 */
+  const onFetchFavicon = useCallback(async (targetUrl: string = url) => {
+    // 当前需要获取图标的网址
+    const trimmedTargetUrl = targetUrl.trim();
+    if (!trimmedTargetUrl) {
       return;
     }
 
@@ -107,7 +109,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
     try {
       // 根据网址获取的网站图标地址
-      const faviconUrl = await fetchFavicon(url.trim());
+      const faviconUrl = await fetchFavicon(trimmedTargetUrl);
       if (faviconUrl) {
         setIcon(faviconUrl);
       } else {
@@ -156,7 +158,9 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onUrlChange = useCallback(
     _.debounce((e: React.ChangeEvent<HTMLInputElement>) => {
-      setUrl(e.target.value);
+      // 防止状态更新延迟导致图标仍按旧网址获取
+      const nextUrl = e.target.value;
+      setUrl(nextUrl);
       setErrors((prev) => {
         if (prev.url) {
           return { ...prev, url: undefined };
@@ -166,9 +170,9 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
       if (
         iconType === LINK_ICON_TYPE.FAVICON &&
-        e.target.value.startsWith("http")
+        nextUrl.trim()
       ) {
-        onFetchFavicon();
+        onFetchFavicon(nextUrl);
       }
     }, 200),
     [iconType, onFetchFavicon]
@@ -265,7 +269,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
       if (
         nextIconType === LINK_ICON_TYPE.FAVICON &&
-        !isRemoteImageIcon(icon)
+        !isFaviconImageIcon(icon)
       ) {
         onFetchFavicon();
       }

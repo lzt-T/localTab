@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "contextMenus",
-    "search"
+    "search",
+    "favicon"
   ],
   "chrome_url_overrides": {
     "newtab": "newtab.html"

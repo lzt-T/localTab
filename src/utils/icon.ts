@@ -72,6 +72,23 @@ export function isRemoteImageIcon(icon: string): boolean {
   return icon.startsWith('http://') || icon.startsWith('https://');
 }
 
+/** 判断图标是否来自 Chromium favicon 接口。 */
+export function isBrowserFaviconIcon(icon: string): boolean {
+  try {
+    return (
+      icon.startsWith('chrome-extension://') &&
+      new URL(icon).pathname === '/_favicon/'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** 判断图标是否为网站图片地址。 */
+export function isFaviconImageIcon(icon: string): boolean {
+  return isRemoteImageIcon(icon) || isBrowserFaviconIcon(icon);
+}
+
 /** 判断图标是否为本地自定义图片数据。 */
 export function isCustomImageIcon(icon: string): boolean {
   return icon.startsWith('data:image/');
@@ -79,7 +96,7 @@ export function isCustomImageIcon(icon: string): boolean {
 
 /** 判断图标是否应当作为图片渲染。 */
 export function isImageIcon(icon: string): boolean {
-  return isRemoteImageIcon(icon) || isCustomImageIcon(icon);
+  return isFaviconImageIcon(icon) || isCustomImageIcon(icon);
 }
 
 /** 根据已保存的图标值识别图标来源。 */
@@ -88,7 +105,7 @@ export function getLinkIconType(icon: string): LinkIconType {
     return LINK_ICON_TYPE.CUSTOM;
   }
 
-  if (isRemoteImageIcon(icon)) {
+  if (isFaviconImageIcon(icon)) {
     return LINK_ICON_TYPE.FAVICON;
   }
 

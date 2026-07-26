@@ -20,7 +20,7 @@ import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 import {
   CUSTOM_ICON_ACCEPT,
   isCustomImageIcon,
-  isRemoteImageIcon,
+  isFaviconImageIcon,
   LINK_ICON_TYPE,
   LucideIconConfig,
   type LinkIconType,
@@ -102,7 +102,7 @@ export default function LinkIconSelector({
 
         <TabsContent value={LINK_ICON_TYPE.FAVICON} className="mt-3">
           <div className="flex min-h-11 w-full items-center">
-            {icon && isRemoteImageIcon(icon) ? (
+            {icon && isFaviconImageIcon(icon) ? (
               <div className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-xl">
                 <img
                   src={icon}
