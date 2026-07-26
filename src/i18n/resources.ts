@@ -40,6 +40,7 @@ export const resources = {
       dock: {
         navigation: "常用操作",
         actions: "Dock 操作",
+        createContent: "添加内容",
         pinnedLinks: "Dock 固定网址",
         emptyHint: "拖入固定",
         releaseToPin: "松开鼠标固定到 Dock",
@@ -47,6 +48,7 @@ export const resources = {
         alreadyPinned: "该网址已在 Dock 中",
         unpinned: "已从 Dock 取消固定",
         openLink: "打开 {{title}}",
+        unpinShortcut: "{{title}} · Delete 取消固定",
         trash: "垃圾桶：拖入对象以删除",
         releaseToDelete: "松开鼠标以请求删除",
         releaseToRemove: "松开鼠标以移除",
@@ -54,14 +56,15 @@ export const resources = {
       operationGuide: {
         introduction:
           "这里汇总了 LocalTab 的常用操作。打开与编辑可直接点击；排序、移动和删除统一使用鼠标拖拽。",
-        pointerOnly: "拖拽整理和删除需要鼠标操作，当前不提供键盘快捷键。",
+        pointerOnly:
+          "排序、移动和页面内容删除仍需鼠标拖拽；聚焦 Dock 网址后可按 Delete 取消固定。",
         searchTitle: "搜索与网址直达",
         searchEngine: "点击搜索框左侧可以选择或添加搜索引擎。",
         searchOrVisit: "输入关键词或完整网址后按 Enter，即可搜索或直接访问。",
         createTitle: "添加内容",
-        createWebsite: "点击底部 Dock 的“添加网址”创建书签。",
+        createWebsite: "打开底部 Dock 的加号菜单，选择“添加网址”创建书签。",
         createCategory: "点击左侧分类列表下方的加号创建分类。",
-        createFolder: "点击底部 Dock 的“新建文件夹”整理相关网址。",
+        createFolder: "打开底部 Dock 的加号菜单，选择“新建文件夹”整理相关网址。",
         manageTitle: "编辑内容",
         manageWebsite: "打开网址卡片右上角菜单可以编辑网址。",
         manageCategory: "打开分类右侧菜单可以编辑分类。",
@@ -71,11 +74,13 @@ export const resources = {
         dragCategory: "拖动左侧分类项目可以调整分类顺序。",
         dragAcrossCategory: "把网址或文件夹拖到左侧其他分类，即可跨分类移动。",
         dockTitle: "Dock 与垃圾桶",
-        dockActions: "底部 Dock 提供添加网址、新建文件夹和设置入口。",
+        dockActions:
+          "底部 Dock 的加号菜单用于添加网址和新建文件夹；设置入口位于左侧分类导航底部。",
         dockPin: "把网址卡片拖入 Dock 中间区域即可固定；图标较多时可横向滚动查看。",
         dockManagePinned:
-          "拖动 Dock 图标可调整顺序；拖到垃圾桶只会取消固定，不会删除原网址。",
-        dragDelete: "把网址、文件夹或分类拖到最右侧垃圾桶以请求删除。",
+          "拖动 Dock 图标可调整顺序；拖到垃圾桶或聚焦后按 Delete 只会取消固定，不会删除原网址。",
+        dragDelete:
+          "开始拖动网址、文件夹或分类后，把它放入 Dock 右侧出现的垃圾桶以请求删除。",
         deleteConfirm: "松开鼠标后仍需在确认弹窗中确认，取消不会删除内容。",
         folderTitle: "文件夹与合并",
         dragIntoFolder: "把网址拖到文件夹中央，可以将其加入文件夹。",
@@ -278,6 +283,7 @@ export const resources = {
       dock: {
         navigation: "Common actions",
         actions: "Dock actions",
+        createContent: "Add content",
         pinnedLinks: "Pinned Dock links",
         emptyHint: "Drop to pin",
         releaseToPin: "Release to pin to the Dock",
@@ -285,6 +291,7 @@ export const resources = {
         alreadyPinned: "This link is already in the Dock",
         unpinned: "Removed from the Dock",
         openLink: "Open {{title}}",
+        unpinShortcut: "{{title}} · Delete to unpin",
         trash: "Trash: drop an item here to delete it",
         releaseToDelete: "Release to request deletion",
         releaseToRemove: "Release to remove",
@@ -293,14 +300,14 @@ export const resources = {
         introduction:
           "This guide covers the most common LocalTab actions. Open and edit items directly; use mouse drag and drop for sorting, moving, and deleting.",
         pointerOnly:
-          "Drag-and-drop organization and deletion require a mouse. Keyboard shortcuts are not currently provided.",
+          "Sorting, moving, and deleting page content still require mouse drag and drop. Focus a Dock link and press Delete to unpin it.",
         searchTitle: "Search and direct navigation",
         searchEngine: "Select or add a search engine from the left side of the search box.",
         searchOrVisit: "Enter keywords or a full URL, then press Enter to search or visit it directly.",
         createTitle: "Add content",
-        createWebsite: "Use “Add website” in the bottom Dock to create a bookmark.",
+        createWebsite: "Open the plus menu in the bottom Dock and choose “Add website” to create a bookmark.",
         createCategory: "Use the plus button below the category list to create a category.",
-        createFolder: "Use “New folder” in the bottom Dock to organize related websites.",
+        createFolder: "Open the plus menu in the bottom Dock and choose “New folder” to organize related websites.",
         manageTitle: "Edit content",
         manageWebsite: "Open the menu at the top-right of a website card to edit it.",
         manageCategory: "Open the menu beside a category to edit it.",
@@ -310,12 +317,14 @@ export const resources = {
         dragCategory: "Drag categories in the left navigation to reorder them.",
         dragAcrossCategory: "Drop a website or folder onto another category to move it there.",
         dockTitle: "Dock and Trash",
-        dockActions: "The bottom Dock provides Add website, New folder, and Settings.",
+        dockActions:
+          "Use the plus menu in the bottom Dock to add websites or folders. Settings is at the bottom of the workspace navigation.",
         dockPin:
           "Drag a website card into the middle of the Dock to pin it. Scroll horizontally when more icons are available.",
         dockManagePinned:
-          "Drag Dock icons to reorder them. Dropping one in the Trash only unpins it and does not delete the original website.",
-        dragDelete: "Drag a website, folder, or category to the Trash at the far right to request deletion.",
+          "Drag Dock icons to reorder them. Drop one in the Trash or focus it and press Delete to unpin it without deleting the original website.",
+        dragDelete:
+          "Start dragging a website, folder, or category, then drop it into the Trash that appears on the right side of the Dock.",
         deleteConfirm: "Confirm deletion in the dialog after dropping; canceling keeps the item.",
         folderTitle: "Folders and merging",
         dragIntoFolder: "Drop a website in the center of a folder to add it.",

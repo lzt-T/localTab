@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   FolderPlus,
   Link2,
@@ -8,10 +14,20 @@ import {
 } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
 import { useTranslation } from "react-i18next";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
 import { isImageIcon } from "@/utils/icon";
-import Setting from "@/newtab/components/Setting";
 import {
   DRAG_ITEM_TYPE,
   type DockLinkDragItem,
@@ -37,11 +53,12 @@ interface DockLinkItemProps {
   link: Link;
   onMove: (linkId: string, targetIndex: number) => Promise<void>;
   onOpen: (url: string) => void;
+  onUnpin: (linkId: string) => Promise<void>;
 }
 
 // Dock 中可点击操作的统一视觉样式
 const DOCK_ACTION_CLASS =
-  "flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/12 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
+  "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
 
 /** 渲染可打开并支持拖拽排序的 Dock 网址。 */
 function DockLinkItem({
@@ -49,6 +66,7 @@ function DockLinkItem({
   link,
   onMove,
   onOpen,
+  onUnpin,
 }: DockLinkItemProps) {
   // Dock 网址文案的本地化工具
   const { t } = useTranslation();
@@ -150,12 +168,21 @@ function DockLinkItem({
     setFailedImageIcon(link.icon);
   }
 
+  /** 通过键盘从 Dock 取消固定当前网址。 */
+  function handleDockLinkKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== "Delete" && event.key !== "Backspace") {
+      return;
+    }
+    event.preventDefault();
+    void onUnpin(link.id);
+  }
+
   return (
     <div
       ref={connectDockLinkRef}
       className={cn(
-        "relative flex size-12 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200",
-        "hover:-translate-y-0.5 hover:bg-white/[0.08] focus-within:bg-white/[0.08]",
+        "relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+        "hover:-translate-y-0.5 hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
         isDragging && "opacity-35",
         isOver && !isDragging && "bg-white/10",
         isOver &&
@@ -168,30 +195,43 @@ function DockLinkItem({
           "after:absolute after:-right-0.5 after:top-2 after:bottom-2 after:w-0.5 after:rounded-full after:bg-blue-100"
       )}
     >
-      <button
-        type="button"
-        className="flex h-full w-full cursor-grab items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
-        onClick={openDockLink}
-        title={link.title}
-        aria-label={t("dock.openLink", { title: link.title })}
-      >
-        <span className="flex size-8 items-center justify-center">
-          {shouldShowImageIcon ? (
-            <img
-              src={link.icon}
-              alt=""
-              className="size-8 rounded-md object-contain"
-              onError={handleImageIconError}
-            />
-          ) : (
-            <Icon
-              name={hasImageIcon ? "link" : link.icon || "link"}
-              size={28}
-              className="text-blue-100/90"
-            />
-          )}
-        </span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="flex h-full w-full cursor-grab items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            onClick={openDockLink}
+            onKeyDown={handleDockLinkKeyDown}
+            aria-label={t("dock.openLink", { title: link.title })}
+            aria-keyshortcuts="Delete Backspace"
+          >
+            <span className="flex size-7 items-center justify-center rounded-lg bg-white/[0.06]">
+              {shouldShowImageIcon ? (
+                <img
+                  src={link.icon}
+                  alt=""
+                  className="size-6 rounded-md object-contain"
+                  onError={handleImageIconError}
+                />
+              ) : (
+                <Icon
+                  name={hasImageIcon ? "link" : link.icon || "link"}
+                  size={24}
+                  className="text-blue-100/85"
+                />
+              )}
+            </span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          sideOffset={8}
+          className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
+          arrowClassName="bg-[#202328] fill-[#202328]"
+        >
+          {t("dock.unpinShortcut", { title: link.title })}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 }
@@ -295,54 +335,67 @@ export default function Dock({
 
   return (
     <nav
-      className="glass-style-floating fixed bottom-4 left-1/2 z-40 flex w-fit max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-2xl p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] md:bottom-6"
+      className="glass-style-floating fixed bottom-4 left-1/2 z-40 flex w-fit max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-2xl p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.28)] md:bottom-5"
       aria-label={t("dock.navigation")}
     >
-      <div
-        className="flex shrink-0 items-center gap-0.5"
-        aria-label={t("dock.actions")}
-      >
-        <button
-          type="button"
-          className={DOCK_ACTION_CLASS}
-          onClick={onAddLink}
-          title={t("link.addAction")}
-          aria-label={t("link.addAction")}
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={DOCK_ACTION_CLASS}
+                aria-label={t("dock.createContent")}
+              >
+                <Plus size={21} />
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            sideOffset={8}
+            className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
+            arrowClassName="bg-[#202328] fill-[#202328]"
+          >
+            {t("dock.createContent")}
+          </TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent
+          side="top"
+          align="start"
+          sideOffset={10}
+          className="glass-style-overlay min-w-40 rounded-xl border-white/10 p-1.5 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] motion-reduce:animate-none"
         >
-          <span className="relative">
-            <Link2 size={22} />
-            <Plus
-              size={11}
-              strokeWidth={2.5}
-              className="absolute -right-1.5 -top-1.5 rounded-full bg-[#26292e]"
-            />
-          </span>
-        </button>
-        <button
-          type="button"
-          className={DOCK_ACTION_CLASS}
-          onClick={onCreateFolder}
-          title={t("linkGroup.createAction")}
-          aria-label={t("linkGroup.createAction")}
-        >
-          <FolderPlus size={22} />
-        </button>
-        <Setting triggerClassName={DOCK_ACTION_CLASS} />
-      </div>
+          <DropdownMenuItem
+            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+            onSelect={onAddLink}
+          >
+            <Link2 />
+            {t("link.addAction")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+            onSelect={onCreateFolder}
+          >
+            <FolderPlus />
+            {t("linkGroup.createAction")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <span
-        className="h-9 w-px shrink-0 bg-white/15"
+        className="h-7 w-px shrink-0 bg-white/10"
         aria-hidden="true"
       />
 
       <div
         ref={connectPinDropRef}
         className={cn(
-          "relative flex h-14 max-w-[600px] items-center overflow-x-auto overflow-y-hidden rounded-xl p-0.5",
-          dockLinks.length === 0 ? "min-w-[120px]" : "w-fit min-w-0",
+          "relative flex h-11 max-w-[560px] items-center overflow-x-auto overflow-y-hidden rounded-xl",
+          dockLinks.length === 0 ? "min-w-[110px]" : "w-fit min-w-0",
           "[scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin]",
           "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-track]:bg-transparent",
-          "transition-[background-color,box-shadow] duration-200",
+          "transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none",
           isPinOver &&
             "bg-blue-100/10 shadow-[0_8px_24px_rgba(191,219,254,0.12)]"
         )}
@@ -350,14 +403,14 @@ export default function Dock({
       >
         {dockLinks.length === 0 ? (
           <div
-            className="pointer-events-none flex min-w-[120px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
+            className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
             title={t("dock.emptyHint")}
           >
-            <Pin size={18} />
+            <Pin size={16} />
             <span className="text-xs font-medium">{t("dock.emptyHint")}</span>
           </div>
         ) : (
-          <div className="flex min-w-max items-center gap-1">
+          <div className="flex min-w-max items-center gap-0.5">
             {dockLinks.map((link, index) => (
               <DockLinkItem
                 key={link.id}
@@ -365,6 +418,7 @@ export default function Dock({
                 link={link}
                 onMove={onMoveDockLink}
                 onOpen={onOpenLink}
+                onUnpin={onUnpinDockLink}
               />
             ))}
           </div>
@@ -372,19 +426,27 @@ export default function Dock({
       </div>
 
       <span
-        className="h-9 w-px shrink-0 bg-white/15"
+        className={cn(
+          "h-7 shrink-0 bg-white/10 transition-[width,opacity] duration-200 motion-reduce:transition-none",
+          canDrop ? "w-px opacity-100" : "w-0 opacity-0"
+        )}
         aria-hidden="true"
       />
 
-      <div className="flex shrink-0 items-center">
+      <div
+        className={cn(
+          "flex shrink-0 items-center overflow-hidden transition-[width,opacity] duration-200 motion-reduce:transition-none",
+          canDrop ? "w-11 opacity-100" : "w-0 opacity-0"
+        )}
+      >
         <div
           ref={connectTrashRef}
           className={cn(
-            "flex size-12 items-center justify-center rounded-xl border border-transparent text-white/55 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+            "flex size-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-white/55 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
             canDrop &&
-              "scale-105 border-white/20 bg-white/10 text-white/85 shadow-[0_8px_24px_rgba(0,0,0,0.24)]",
+              "border-white/15 bg-white/[0.07] text-white/80",
             isTrashOver &&
-              "scale-110 border-red-300/45 bg-red-400/15 text-red-200 shadow-[0_10px_28px_rgba(248,113,113,0.16)]"
+              "scale-105 border-red-300/45 bg-red-400/15 text-red-200 shadow-[0_8px_22px_rgba(248,113,113,0.14)]"
           )}
           role="img"
           title={
@@ -393,8 +455,9 @@ export default function Dock({
           aria-label={
             isTrashOver ? t("dock.releaseToRemove") : t("dock.trash")
           }
+          aria-hidden={!canDrop}
         >
-          <Trash2 size={22} />
+          <Trash2 size={20} />
         </div>
       </div>
 

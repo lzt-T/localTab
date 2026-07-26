@@ -12,6 +12,11 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/utils/base";
 import BackgroundImg from "@/newtab/components/Setting/BackgroundImg";
 import DataManagement from "@/newtab/components/Setting/DataManagement";
@@ -75,23 +80,34 @@ const Setting: React.FC<SettingProps> = ({ triggerClassName }) => {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            triggerClassName ??
-              "flex size-11 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/12 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none"
-          )}
-          title={t("settings.trigger")}
-          aria-label={t("settings.trigger")}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                triggerClassName ??
+                  "flex size-11 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/12 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none"
+              )}
+              aria-label={t("settings.trigger")}
+            >
+              <Settings size={20} />
+            </button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
+          sideOffset={8}
+          className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
+          arrowClassName="bg-[#202328] fill-[#202328]"
         >
-          <Settings size={20} />
-        </button>
-      </PopoverTrigger>
+          {t("settings.trigger")}
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent
         className="w-auto border-none bg-transparent p-0 shadow-none duration-200 motion-reduce:animate-none"
         align="center"
-        side="top"
+        side="right"
         sideOffset={12}
       >
         <div

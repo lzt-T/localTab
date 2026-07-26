@@ -1,7 +1,13 @@
 import { Plus } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { CategoryInfo } from "@/type/db";
+import Setting from "@/newtab/components/Setting";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
 import LocalTabMark from "@/newtab/components/LocalTabMark";
 
@@ -23,6 +29,10 @@ interface NavigationBarProps {
     targetIndex: number
   ) => Promise<void>;
 }
+
+// 分类导航末尾操作的统一视觉样式
+const NAVIGATION_ACTION_CLASS =
+  "flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/[0.07] text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
 
 /** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
 export default function NavigationBar(props: NavigationBarProps) {
@@ -107,16 +117,29 @@ export default function NavigationBar(props: NavigationBarProps) {
         ))}
       </div>
 
-      {/* 添加按钮 */}
-      <div className="shrink-0 md:mt-2 md:pl-5">
-        <button
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/[0.07] text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60"
-          aria-label={t("category.add")}
-          title={t("category.add")}
-          onClick={addCategory}
-        >
-          <Plus size={18} />
-        </button>
+      {/* 分类与全局设置入口 */}
+      <div className="flex shrink-0 items-center gap-1 md:mt-2 md:pl-5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={NAVIGATION_ACTION_CLASS}
+              aria-label={t("category.add")}
+              onClick={addCategory}
+            >
+              <Plus size={18} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="right"
+            sideOffset={8}
+            className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
+            arrowClassName="bg-[#202328] fill-[#202328]"
+          >
+            {t("category.add")}
+          </TooltipContent>
+        </Tooltip>
+        <Setting triggerClassName={NAVIGATION_ACTION_CLASS} />
       </div>
     </nav>
   );
