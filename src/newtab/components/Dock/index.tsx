@@ -181,8 +181,8 @@ function DockLinkItem({
     <div
       ref={connectDockLinkRef}
       className={cn(
-        "relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-        "hover:-translate-y-0.5 hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
+        "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+        "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
         isDragging && "opacity-35",
         isOver && !isDragging && "bg-white/10",
         isOver &&
@@ -205,7 +205,7 @@ function DockLinkItem({
             aria-label={t("dock.openLink", { title: link.title })}
             aria-keyshortcuts="Delete Backspace"
           >
-            <span className="flex size-7 items-center justify-center">
+            <span className="flex size-7 items-center justify-center transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
               {shouldShowImageIcon ? (
                 <img
                   src={link.icon}
@@ -436,7 +436,8 @@ export default function Dock({
       <div
         className={cn(
           "flex shrink-0 items-center overflow-hidden transition-[width,opacity] duration-200 motion-reduce:transition-none",
-          canDrop ? "w-11 opacity-100" : "w-0 opacity-0"
+          canDrop ? "w-11 opacity-100" : "w-0 opacity-0",
+          isTrashOver && "overflow-visible"
         )}
       >
         <div
