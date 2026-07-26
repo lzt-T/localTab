@@ -338,7 +338,8 @@ export default function Dock({
       <div
         ref={connectPinDropRef}
         className={cn(
-          "relative flex h-14 min-w-[120px] max-w-[600px] items-center overflow-x-auto overflow-y-hidden rounded-xl p-0.5",
+          "relative flex h-14 max-w-[600px] items-center overflow-x-auto overflow-y-hidden rounded-xl p-0.5",
+          dockLinks.length === 0 ? "min-w-[120px]" : "w-fit min-w-0",
           "[scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin]",
           "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-track]:bg-transparent",
           "transition-[background-color,box-shadow] duration-200",

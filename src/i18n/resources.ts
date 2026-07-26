@@ -114,7 +114,7 @@ export const resources = {
         cautionsTitle: "注意事项：",
         cautionOverwrite: "导入数据会覆盖现有所有数据，请谨慎操作",
         cautionBackup: "建议在导入前先导出当前数据作为备份",
-        cautionRefresh: "导入成功后需要刷新页面才能看到效果",
+        cautionRefresh: "导入成功后页面会自动刷新并显示新数据",
         confirmImportTitle: "确认导入数据",
         confirmImportDescription:
           "导入数据将覆盖现有所有数据，此操作不可恢复。是否继续？",
@@ -124,7 +124,7 @@ export const resources = {
         exportSuccess: "数据导出成功",
         exportFailed: "数据导出失败",
         invalidFile: "无效的数据文件格式",
-        importSuccess: "数据导入成功，请刷新页面",
+        importSuccess: "数据导入成功，正在刷新页面",
         importFailed: "数据导入失败，请检查文件格式",
       },
       search: {
@@ -354,7 +354,8 @@ export const resources = {
         cautionsTitle: "Important:",
         cautionOverwrite: "Importing will overwrite all existing data",
         cautionBackup: "Export your current data as a backup before importing",
-        cautionRefresh: "Refresh the page after a successful import to see the changes",
+        cautionRefresh:
+          "The page refreshes automatically after a successful import",
         confirmImportTitle: "Confirm Data Import",
         confirmImportDescription:
           "Importing will overwrite all existing data and cannot be undone. Continue?",
@@ -364,7 +365,7 @@ export const resources = {
         exportSuccess: "Data exported successfully",
         exportFailed: "Failed to export data",
         invalidFile: "Invalid data file format",
-        importSuccess: "Data imported successfully. Please refresh the page",
+        importSuccess: "Data imported successfully. Refreshing the page",
         importFailed: "Failed to import data. Check the file format",
       },
       search: {

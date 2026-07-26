@@ -24,6 +24,7 @@ export type ExportData = {
   system: {
     selectedSearchEngineId?: string;
     customSearchEngines?: CustomSearchEngine[];
+    dockLinkIds?: string[];
     /* 兼容旧版备份字段 */
     searchEngine?: string;
     backgroundImage?: {
@@ -74,7 +75,7 @@ export function useDataManagement() {
     return new Blob([byteArray], { type: mimeType });
   };
 
-  // 导出数据
+  /** 导出全部本地数据。 */
   const onExport = async () => {
     setIsExporting(true);
     try {
@@ -86,10 +87,12 @@ export function useDataManagement() {
       const linkGroups = await db.getAll<LinkGroup>(STORE_NAMES.LINK_GROUP);
 
       // 获取系统数据
-      const [selectedSearchEngineId, customSearchEngines] = await Promise.all([
-        systemService.getSelectedSearchEngineId(),
-        systemService.getCustomSearchEngines(),
-      ]);
+      const [selectedSearchEngineId, customSearchEngines, dockLinkIds] =
+        await Promise.all([
+          systemService.getSelectedSearchEngineId(),
+          systemService.getCustomSearchEngines(),
+          systemService.getDockLinkIds(),
+        ]);
       // 已保存的背景图片
       const backgroundImageData = await db.get<{ id: string; blob: Blob }>(
         STORE_NAMES.SYSTEM,
@@ -98,7 +101,7 @@ export function useDataManagement() {
 
       // 准备导出数据
       const exportData: ExportData = {
-        version: "1.0.1",
+        version: "1.0.2",
         exportDate: new Date().toISOString(),
         categories,
         links,
@@ -106,6 +109,7 @@ export function useDataManagement() {
         system: {
           selectedSearchEngineId,
           customSearchEngines,
+          dockLinkIds,
         },
       };
 
@@ -144,7 +148,7 @@ export function useDataManagement() {
     }
   };
 
-  // 导入数据
+  /** 导入备份并覆盖全部本地数据。 */
   const onImport = async (file: File) => {
     setIsImporting(true);
     try {
@@ -158,6 +162,29 @@ export function useDataManagement() {
         toast.error(t("dataManagement.invalidFile"));
         return false;
       }
+
+      // 备份中待恢复的 Dock 网址标识
+      const storedDockLinkIds: unknown = importData.system?.dockLinkIds;
+      // 备份中存在的网址标识
+      const importedLinkIds = new Set(importData.links.map((link) => link.id));
+      // 已接收的 Dock 网址标识
+      const seenDockLinkIds = new Set<string>();
+      // 有效且保持原顺序的 Dock 网址标识
+      const dockLinkIds = Array.isArray(storedDockLinkIds)
+        ? storedDockLinkIds.filter(
+            (dockLinkId): dockLinkId is string => {
+              if (
+                typeof dockLinkId !== "string" ||
+                !importedLinkIds.has(dockLinkId) ||
+                seenDockLinkIds.has(dockLinkId)
+              ) {
+                return false;
+              }
+              seenDockLinkIds.add(dockLinkId);
+              return true;
+            }
+          )
+        : [];
 
       // 清空现有数据
       await db.clear(STORE_NAMES.CATEGORY);
@@ -205,6 +232,7 @@ export function useDataManagement() {
       await Promise.all([
         systemService.updateCustomSearchEngines(customSearchEngines),
         systemService.updateSelectedSearchEngineId(selectedSearchEngineId),
+        systemService.updateDockLinkIds(dockLinkIds),
       ]);
 
       // 导入背景图片

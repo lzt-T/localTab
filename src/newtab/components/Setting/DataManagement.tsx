@@ -15,12 +15,16 @@ import { useDataManagement } from "@/hooks/useDataManagement";
 import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 
 export default function DataManagement() {
+  // 数据管理界面的本地化工具
   const { t } = useTranslation();
+  // 导入确认弹窗是否打开
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // 当前等待导入的备份文件
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // 数据导入导出的状态与操作
   const { isExporting, isImporting, onExport, onImport } = useDataManagement();
 
-  // 处理文件选择
+  /** 校验并暂存用户选择的备份文件。 */
   const handleFileSelect = (file: File) => {
     // 验证文件类型
     if (!file.type.includes("json") && !file.name.endsWith(".json")) {
@@ -32,19 +36,21 @@ export default function DataManagement() {
     setIsDialogOpen(true);
   };
 
-  // 确认导入
+  /** 确认导入并在成功后刷新页面。 */
   const handleConfirmImport = async () => {
     if (!selectedFile) return;
 
     setIsDialogOpen(false);
+    // 当前备份是否成功导入
     const success = await onImport(selectedFile);
 
     if (success) {
       setSelectedFile(null);
+      window.location.reload();
     }
   };
 
-  // 取消导入
+  /** 取消当前导入操作。 */
   const handleCancelImport = () => {
     setIsDialogOpen(false);
     setSelectedFile(null);
