@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
+import { getEmptyImage } from "react-dnd-html5-backend";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
@@ -26,8 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import Icon from "@/newtab/components/Icon";
-import { isImageIcon } from "@/utils/icon";
+import DockLinkIcon from "@/newtab/components/Dock/DockLinkIcon";
 import {
   DRAG_ITEM_TYPE,
   type DockLinkDragItem,
@@ -51,7 +51,11 @@ interface DockProps {
 interface DockLinkItemProps {
   index: number;
   link: Link;
-  onMove: (linkId: string, targetIndex: number) => Promise<void>;
+  onPreviewMove: (linkId: string, targetIndex: number) => void;
+  onDrop: (linkId: string, targetIndex: number) => void;
+  onDragStart: () => void;
+  onDragCancel: () => void;
+  onDragEnd: () => void;
   onOpen: (url: string) => void;
   onUnpin: (linkId: string) => Promise<void>;
 }
@@ -64,7 +68,11 @@ const DOCK_ACTION_CLASS =
 function DockLinkItem({
   index,
   link,
-  onMove,
+  onPreviewMove,
+  onDrop,
+  onDragStart,
+  onDragCancel,
+  onDragEnd,
   onOpen,
   onUnpin,
 }: DockLinkItemProps) {
@@ -72,15 +80,8 @@ function DockLinkItem({
   const { t } = useTranslation();
   // Dock 网址拖拽目标引用
   const elementRef = useRef<HTMLDivElement>(null);
-  // 加载失败的图片图标值
-  const [failedImageIcon, setFailedImageIcon] = useState("");
-  // 当前网址是否配置了图片图标
-  const hasImageIcon = isImageIcon(link.icon);
-  // 当前网址是否可以展示图片图标
-  const shouldShowImageIcon =
-    hasImageIcon && failedImageIcon !== link.icon;
   // Dock 网址的拖动状态与连接器
-  const [{ isDragging }, drag] = useDrag<
+  const [{ isDragging }, drag, preview] = useDrag<
     DockLinkDragItem,
     void,
     { isDragging: boolean }
@@ -88,11 +89,21 @@ function DockLinkItem({
     type: DRAG_ITEM_TYPE.DOCK_LINK,
     /** 创建 Dock 网址拖拽数据。 */
     item() {
+      // Dock 网址当前的预览尺寸
+      const { width, height } = elementRef.current!.getBoundingClientRect();
+      onDragStart();
       return {
         type: DRAG_ITEM_TYPE.DOCK_LINK,
         linkId: link.id,
+        link,
+        previewWidth: width,
+        previewHeight: height,
         index,
       };
+    },
+    /** 按网址标识保持重排后拖动源的视觉状态。 */
+    isDragging(monitor) {
+      return monitor.getItem().linkId === link.id;
     },
     /** 收集 Dock 网址当前是否正在拖动。 */
     collect(monitor) {
@@ -100,52 +111,48 @@ function DockLinkItem({
         isDragging: monitor.isDragging(),
       };
     },
+    /** 在拖拽结束后恢复取消的预览并清理拖拽状态。 */
+    end(_item, monitor) {
+      if (!monitor.didDrop()) {
+        onDragCancel();
+      }
+      onDragEnd();
+    },
   });
   // Dock 网址的排序投放状态与连接器
-  const [{ isOver, isAfterTarget }, drop] = useDrop<
-    DockLinkDragItem,
-    void,
-    { isOver: boolean; isAfterTarget: boolean }
-  >({
+  const [, drop] = useDrop<DockLinkDragItem, void>({
     accept: DRAG_ITEM_TYPE.DOCK_LINK,
-    /** 在目标网址上松开时计算最终插入位置。 */
-    drop(item, monitor) {
+    /** 越过目标网址中线后更新 Dock 的临时预览顺序。 */
+    hover(item, monitor) {
+      if (item.index === index) {
+        return;
+      }
+
       // 目标网址边界
       const targetRect = elementRef.current?.getBoundingClientRect();
       // 当前指针位置
       const clientOffset = monitor.getClientOffset();
-      if (!targetRect || !clientOffset || item.linkId === link.id) {
+      if (!targetRect || !clientOffset) {
         return;
       }
 
-      // 指针是否位于目标网址右半侧
-      const isAfterTarget =
-        clientOffset.x >= targetRect.left + targetRect.width / 2;
-      // 基于原列表计算的插入位置
-      const rawTargetIndex = index + (isAfterTarget ? 1 : 0);
-      // 移除来源项后修正的插入位置
-      const targetIndex =
-        item.index < rawTargetIndex ? rawTargetIndex - 1 : rawTargetIndex;
-      void onMove(item.linkId, targetIndex);
-      item.index = targetIndex;
+      // 目标网址横向中点
+      const targetMiddleX = targetRect.width / 2;
+      // 指针在目标网址中的横向位置
+      const pointerX = clientOffset.x - targetRect.left;
+      if (
+        (item.index < index && pointerX < targetMiddleX) ||
+        (item.index > index && pointerX > targetMiddleX)
+      ) {
+        return;
+      }
+
+      onPreviewMove(item.linkId, index);
+      item.index = index;
     },
-    /** 收集 Dock 网址当前是否被拖拽命中。 */
-    collect(monitor) {
-      // 当前网址是否被 Dock 项目命中
-      const isOver = monitor.isOver({ shallow: true });
-      // 当前网址的屏幕边界
-      const targetRect = elementRef.current?.getBoundingClientRect();
-      // 当前拖拽指针位置
-      const clientOffset = monitor.getClientOffset();
-      return {
-        isOver,
-        isAfterTarget: Boolean(
-          isOver &&
-            targetRect &&
-            clientOffset &&
-            clientOffset.x >= targetRect.left + targetRect.width / 2
-        ),
-      };
+    /** 在 Dock 网址上松开时保存最终预览位置。 */
+    drop(item) {
+      onDrop(item.linkId, item.index);
     },
   });
 
@@ -158,14 +165,14 @@ function DockLinkItem({
     [drag, drop]
   );
 
+  useEffect(() => {
+    // 隐藏浏览器原生拖拽快照，改由页面自定义预览层渲染。
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
+
   /** 打开当前 Dock 网址。 */
   function openDockLink() {
     onOpen(link.url);
-  }
-
-  /** 标记当前图片图标加载失败。 */
-  function handleImageIconError() {
-    setFailedImageIcon(link.icon);
   }
 
   /** 通过键盘从 Dock 取消固定当前网址。 */
@@ -183,16 +190,7 @@ function DockLinkItem({
       className={cn(
         "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
         "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
-        isDragging && "opacity-35",
-        isOver && !isDragging && "bg-white/10",
-        isOver &&
-          !isDragging &&
-          !isAfterTarget &&
-          "before:absolute before:-left-0.5 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-blue-100",
-        isOver &&
-          !isDragging &&
-          isAfterTarget &&
-          "after:absolute after:-right-0.5 after:top-2 after:bottom-2 after:w-0.5 after:rounded-full after:bg-blue-100"
+        isDragging && "opacity-50"
       )}
     >
       <Tooltip>
@@ -206,20 +204,7 @@ function DockLinkItem({
             aria-keyshortcuts="Delete Backspace"
           >
             <span className="flex size-7 items-center justify-center transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
-              {shouldShowImageIcon ? (
-                <img
-                  src={link.icon}
-                  alt=""
-                  className="size-6 rounded-md object-contain"
-                  onError={handleImageIconError}
-                />
-              ) : (
-                <Icon
-                  name={hasImageIcon ? "link" : link.icon || "link"}
-                  size={22}
-                  className="text-white/75"
-                />
-              )}
+              <DockLinkIcon link={link} />
             </span>
           </button>
         </TooltipTrigger>
@@ -249,6 +234,12 @@ export default function Dock({
 }: DockProps) {
   // Dock 文案的本地化工具
   const { t } = useTranslation();
+  // Dock 拖拽期间展示的临时网址顺序
+  const [previewDockLinks, setPreviewDockLinks] = useState(dockLinks);
+  // Dock 当前是否正在预览排序位置
+  const [isDockSorting, setIsDockSorting] = useState(false);
+  // 当前应渲染的 Dock 网址顺序
+  const displayedDockLinks = isDockSorting ? previewDockLinks : dockLinks;
   // 固定网址横向滚动区域
   const pinAreaRef = useRef<HTMLDivElement>(null);
   // 上一次渲染时的固定网址数量
@@ -306,6 +297,50 @@ export default function Dock({
       };
     },
   });
+
+  /** 开始 Dock 排序并暂缓外部顺序覆盖临时预览。 */
+  function startDockLinkDrag() {
+    setPreviewDockLinks(dockLinks);
+    setIsDockSorting(true);
+  }
+
+  /** 按目标索引更新 Dock 的临时预览顺序。 */
+  function previewDockLinkMove(linkId: string, targetIndex: number) {
+    setPreviewDockLinks((currentLinks) => {
+      // 被拖网址在当前预览顺序中的索引
+      const sourceIndex = currentLinks.findIndex((link) => link.id === linkId);
+      // 限制后的目标索引
+      const boundedTargetIndex = Math.max(
+        0,
+        Math.min(targetIndex, currentLinks.length - 1)
+      );
+      if (sourceIndex < 0 || sourceIndex === boundedTargetIndex) {
+        return currentLinks;
+      }
+
+      // 移除被拖网址后的预览顺序
+      const reorderedLinks = currentLinks.filter((link) => link.id !== linkId);
+      // 当前被拖动的网址
+      const draggedLink = currentLinks[sourceIndex];
+      reorderedLinks.splice(boundedTargetIndex, 0, draggedLink);
+      return reorderedLinks;
+    });
+  }
+
+  /** 保存 Dock 拖拽预览中的最终顺序。 */
+  function commitDockLinkMove(linkId: string, targetIndex: number) {
+    void onMoveDockLink(linkId, targetIndex);
+  }
+
+  /** 取消 Dock 排序时恢复持久化顺序。 */
+  function cancelDockLinkDrag() {
+    setPreviewDockLinks(dockLinks);
+  }
+
+  /** 结束 Dock 排序并允许继续同步外部顺序。 */
+  function endDockLinkDrag() {
+    setIsDockSorting(false);
+  }
 
   /** 将固定网址区域注册为投放目标。 */
   const connectPinDropRef = useCallback(
@@ -401,7 +436,7 @@ export default function Dock({
         )}
         aria-label={t("dock.pinnedLinks")}
       >
-        {dockLinks.length === 0 ? (
+        {displayedDockLinks.length === 0 ? (
           <div
             className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
             title={t("dock.emptyHint")}
@@ -411,12 +446,16 @@ export default function Dock({
           </div>
         ) : (
           <div className="flex min-w-max items-center gap-1 px-0.5">
-            {dockLinks.map((link, index) => (
+            {displayedDockLinks.map((link, index) => (
               <DockLinkItem
                 key={link.id}
                 index={index}
                 link={link}
-                onMove={onMoveDockLink}
+                onPreviewMove={previewDockLinkMove}
+                onDrop={commitDockLinkMove}
+                onDragStart={startDockLinkDrag}
+                onDragCancel={cancelDockLinkDrag}
+                onDragEnd={endDockLinkDrag}
                 onOpen={onOpenLink}
                 onUnpin={onUnpinDockLink}
               />

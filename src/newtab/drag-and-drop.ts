@@ -52,6 +52,9 @@ export interface LinkGroupDragItem {
 export interface DockLinkDragItem {
   type: typeof DRAG_ITEM_TYPE.DOCK_LINK;
   linkId: string;
+  link: Link;
+  previewWidth: number;
+  previewHeight: number;
   index: number;
 }
 
