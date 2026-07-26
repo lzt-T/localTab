@@ -96,15 +96,15 @@ export default function AddEditLink(props: AddEditLinkProps) {
     <Sheet open={props.open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="border-white/15 bg-[rgba(32,34,38,0.94)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl [&>button]:rounded-md [&>button]:bg-transparent [&>button]:p-1.5 [&>button]:text-white/70 [&>button]:hover:bg-white/10 [&>button]:hover:text-white"
+        className="overflow-hidden border-white/15 bg-[rgba(32,34,38,0.94)] text-white shadow-2xl shadow-black/40 backdrop-blur-2xl [&>button]:size-9 [&>button]:rounded-lg [&>button]:bg-transparent [&>button]:p-0 [&>button]:text-white/70 [&>button]:hover:bg-white/10 [&>button]:hover:text-white"
       >
-        <SheetHeader className="border-b border-white/10 bg-black/10">
+        <SheetHeader className="shrink-0 border-b border-white/10 bg-black/10">
           <SheetTitle className="text-white">{sheetTitle}</SheetTitle>
           <SheetDescription className="text-white/60">
             {sheetDescription}
           </SheetDescription>
         </SheetHeader>
-        <div className="grid gap-4 py-4 px-4">
+        <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto px-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="category" className="text-white/80">
               {t("link.category")}
@@ -319,7 +319,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
             )}
           </div>
         </div>
-        <SheetFooter className="border-t border-white/10 bg-black/10">
+        <SheetFooter className="shrink-0 border-t border-white/10 bg-black/10">
           <Button
             variant="outline"
             className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"

@@ -5,28 +5,33 @@ import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
+/** 渲染 Sheet 根节点。 */
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
+/** 渲染 Sheet 触发器。 */
 function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
+/** 渲染外部可组合的 Sheet 关闭控件。 */
 function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
 
+/** 将 Sheet 内容渲染到 Portal。 */
 function SheetPortal({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
+/** 渲染 Sheet 背景遮罩。 */
 function SheetOverlay({
   className,
   ...props
@@ -35,7 +40,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 duration-200 motion-reduce:animate-none",
         className
       )}
       {...props}
@@ -43,6 +48,7 @@ function SheetOverlay({
   )
 }
 
+/** 渲染指定方向的 Sheet 内容容器。 */
 function SheetContent({
   className,
   children,
@@ -51,6 +57,7 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
 }) {
+  // Sheet 关闭按钮使用的本地化文案
   const { t } = useTranslation()
 
   return (
@@ -59,7 +66,7 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-out data-[state=closed]:duration-200 data-[state=open]:duration-[240ms] motion-reduce:animate-none motion-reduce:transition-none",
           side === "right" &&
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
           side === "left" &&
@@ -73,7 +80,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+        <SheetPrimitive.Close className="ring-offset-background focus-visible:ring-ring data-[state=open]:bg-secondary absolute top-3 right-3 flex size-9 items-center justify-center rounded-lg opacity-70 outline-none transition-[background-color,color,opacity] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none">
           <XIcon className="size-4" />
           <span className="sr-only">{t("common.close")}</span>
         </SheetPrimitive.Close>
@@ -82,6 +89,7 @@ function SheetContent({
   )
 }
 
+/** 渲染 Sheet 标题区域。 */
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -92,6 +100,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/** 渲染 Sheet 底部操作区域。 */
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -102,6 +111,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/** 渲染 Sheet 标题。 */
 function SheetTitle({
   className,
   ...props
@@ -115,6 +125,7 @@ function SheetTitle({
   )
 }
 
+/** 渲染 Sheet 辅助说明。 */
 function SheetDescription({
   className,
   ...props

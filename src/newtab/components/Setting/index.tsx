@@ -80,22 +80,22 @@ const Setting: React.FC<SettingProps> = ({ triggerClassName }) => {
           type="button"
           className={cn(
             triggerClassName ??
-              "flex size-12 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-1 hover:bg-white/12 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none"
+              "flex size-11 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/12 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none"
           )}
           title={t("settings.trigger")}
           aria-label={t("settings.trigger")}
         >
-          <Settings size={22} />
+          <Settings size={20} />
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto border-none bg-transparent p-0 shadow-none"
+        className="w-auto border-none bg-transparent p-0 shadow-none duration-200 motion-reduce:animate-none"
         align="center"
         side="top"
         sideOffset={12}
       >
         <div
-          className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[rgba(15,20,26,0.96)] text-white shadow-2xl shadow-black/50 backdrop-blur-2xl sm:flex-row"
+          className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[rgba(15,20,26,0.96)] text-white shadow-[0_18px_46px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:flex-row"
           style={{
             width: "min(860px, calc(100vw - 2rem))",
             height: "min(560px, calc(100vh - 7rem))",
