@@ -64,6 +64,9 @@ interface DockLinkItemProps {
 const DOCK_ACTION_CLASS =
   "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
 
+// Dock 添加菜单离开后的关闭缓冲时间
+const DOCK_CREATE_MENU_CLOSE_DELAY_MS = 150;
+
 /** 渲染可打开并支持拖拽排序的 Dock 网址。 */
 function DockLinkItem({
   index,
@@ -238,8 +241,14 @@ export default function Dock({
   const [previewDockLinks, setPreviewDockLinks] = useState(dockLinks);
   // Dock 当前是否正在预览排序位置
   const [isDockSorting, setIsDockSorting] = useState(false);
+  // Dock 添加菜单是否打开
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   // 当前应渲染的 Dock 网址顺序
   const displayedDockLinks = isDockSorting ? previewDockLinks : dockLinks;
+  // Dock 添加菜单待执行的关闭计时器
+  const createMenuCloseTimerRef = useRef<number | null>(null);
+  // Dock 添加菜单是否由鼠标悬停打开
+  const isCreateMenuHoverOpenedRef = useRef(false);
   // 固定网址横向滚动区域
   const pinAreaRef = useRef<HTMLDivElement>(null);
   // 上一次渲染时的固定网址数量
@@ -342,6 +351,63 @@ export default function Dock({
     setIsDockSorting(false);
   }
 
+  /** 取消 Dock 添加菜单待执行的关闭操作。 */
+  function cancelCreateMenuClose() {
+    if (createMenuCloseTimerRef.current === null) {
+      return;
+    }
+    window.clearTimeout(createMenuCloseTimerRef.current);
+    createMenuCloseTimerRef.current = null;
+  }
+
+  /** 关闭 Dock 添加菜单并清理关闭计时器。 */
+  function closeCreateMenu() {
+    setIsCreateMenuOpen(false);
+    createMenuCloseTimerRef.current = null;
+  }
+
+  /** 鼠标进入按钮或菜单时立即打开 Dock 添加菜单。 */
+  function openCreateMenu() {
+    cancelCreateMenuClose();
+    if (isCreateMenuOpen) {
+      return;
+    }
+    isCreateMenuHoverOpenedRef.current = true;
+    setIsCreateMenuOpen(true);
+  }
+
+  /** 鼠标离开按钮或菜单后延迟关闭 Dock 添加菜单。 */
+  function scheduleCreateMenuClose() {
+    cancelCreateMenuClose();
+    createMenuCloseTimerRef.current = window.setTimeout(
+      closeCreateMenu,
+      DOCK_CREATE_MENU_CLOSE_DELAY_MS
+    );
+  }
+
+  /** 同步点击、键盘及外部交互产生的菜单开关状态。 */
+  function handleCreateMenuOpenChange(open: boolean) {
+    cancelCreateMenuClose();
+    if (open) {
+      isCreateMenuHoverOpenedRef.current = false;
+    }
+    setIsCreateMenuOpen(open);
+  }
+
+  /** 将菜单交互来源切换为键盘。 */
+  function handleCreateMenuKeyDown() {
+    isCreateMenuHoverOpenedRef.current = false;
+  }
+
+  /** 仅阻止悬停菜单关闭后自动聚焦加号按钮。 */
+  function handleCreateMenuCloseAutoFocus(event: Event) {
+    if (!isCreateMenuHoverOpenedRef.current) {
+      return;
+    }
+    event.preventDefault();
+    isCreateMenuHoverOpenedRef.current = false;
+  }
+
   /** 将固定网址区域注册为投放目标。 */
   const connectPinDropRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -368,38 +434,46 @@ export default function Dock({
     previousDockLinkCountRef.current = dockLinks.length;
   }, [dockLinks.length]);
 
+  useEffect(() => {
+    /** 清理组件卸载时仍未执行的 Dock 添加菜单关闭计时器。 */
+    return () => {
+      if (createMenuCloseTimerRef.current !== null) {
+        window.clearTimeout(createMenuCloseTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <nav
       className="glass-style-floating fixed bottom-4 left-1/2 z-40 flex w-fit max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-2xl p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.28)] md:bottom-5"
       aria-label={t("dock.navigation")}
     >
-      <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={DOCK_ACTION_CLASS}
-                aria-label={t("dock.createContent")}
-              >
-                <Plus size={21} />
-              </button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            sideOffset={8}
-            className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
-            arrowClassName="bg-[#202328] fill-[#202328]"
+      <DropdownMenu
+        modal={false}
+        open={isCreateMenuOpen}
+        onOpenChange={handleCreateMenuOpenChange}
+      >
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={DOCK_ACTION_CLASS}
+            aria-label={t("dock.createContent")}
+            onMouseEnter={openCreateMenu}
+            onMouseLeave={scheduleCreateMenuClose}
+            onKeyDown={handleCreateMenuKeyDown}
           >
-            {t("dock.createContent")}
-          </TooltipContent>
-        </Tooltip>
+            <Plus size={21} />
+          </button>
+        </DropdownMenuTrigger>
         <DropdownMenuContent
           side="top"
           align="start"
           sideOffset={10}
           className="glass-style-overlay min-w-40 rounded-xl border-white/10 p-1.5 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] motion-reduce:animate-none"
+          onMouseEnter={openCreateMenu}
+          onMouseLeave={scheduleCreateMenuClose}
+          onKeyDown={handleCreateMenuKeyDown}
+          onCloseAutoFocus={handleCreateMenuCloseAutoFocus}
         >
           <DropdownMenuItem
             className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"

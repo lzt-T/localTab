@@ -84,7 +84,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const [isProcessingCustomIcon, setIsProcessingCustomIcon] = useState(false);
   // 当前图标来源类型
   const [iconType, setIconType] = useState<LinkIconType>(
-    LINK_ICON_TYPE.LUCIDE
+    LINK_ICON_TYPE.FAVICON
   );
 
   // 当前模式对应的抽屉标题
@@ -338,8 +338,8 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         setTitle("");
         setDescription("");
         setUrl("");
-        setIcon("link");
-        setIconType(LINK_ICON_TYPE.LUCIDE);
+        setIcon("");
+        setIconType(LINK_ICON_TYPE.FAVICON);
         // 默认父级对应的网址分组
         const defaultLinkGroup = categories
           .flatMap((category) => category.linkGroups)
