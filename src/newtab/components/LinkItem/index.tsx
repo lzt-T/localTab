@@ -10,8 +10,9 @@ type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 // 不同展示模式对应的网址卡片视觉样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "glass-style-border shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.62)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
-  "drag-placeholder": "glass-style-border shadow-md shadow-black/10",
+    "glass-style-border glass-style-card shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.58)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
+  "drag-placeholder":
+    "glass-style-border glass-style-card shadow-md shadow-black/10",
   "drag-preview":
     "border border-white/20 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/30",
 };
@@ -87,7 +88,7 @@ export default function Index({
   return (
     <div
       className={cn(
-        "group/item relative flex h-24 rounded-xl",
+        "group/item relative flex h-22 rounded-xl",
         LINK_ITEM_CLASS_BY_VARIANT[variant]
       )}
     >
@@ -104,7 +105,7 @@ export default function Index({
       )}
       <button
         type="button"
-        className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
+        className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
         onClick={onSkipClick}
         aria-label={`${link.title}, ${linkHostname}`}
       >

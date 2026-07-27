@@ -283,7 +283,7 @@ export default function LinkList({
           type="button"
           ref={addLinkRef}
           className={cn(
-            "flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
+            "flex h-22 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
             !showAddLinkCard && "col-span-full h-20",
             isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
           )}

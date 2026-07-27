@@ -70,6 +70,11 @@ body {
   border-top-color: rgba(255, 255, 255, 0.22);
 }
 
+/* 在基础玻璃材质上降低内容卡片的不透明度 */
+.glass-style-card {
+  background: rgba(58, 60, 64, 0.52);
+}
+
 /* 与基础玻璃同色相、层级稍深的浮动工具表面 */
 .glass-style-floating {
   background: rgba(46, 48, 52, 0.76);

@@ -298,7 +298,7 @@ export default function CategoryGrid({
   return (
     <div
       ref={connectGridRef}
-      className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
+      className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
     >
       {localItems.length === 0 && (
         <EmptyCategoryDropZone
