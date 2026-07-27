@@ -238,7 +238,7 @@ const NewTabApp: React.FC = () => {
           aria-hidden="true"
         />
 
-        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:left-0 md:right-auto md:top-1/2 md:h-auto md:w-[220px] md:-translate-y-1/2">
+        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:left-0 md:right-auto md:top-1/2 md:h-auto md:w-44 md:-translate-y-1/2">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}

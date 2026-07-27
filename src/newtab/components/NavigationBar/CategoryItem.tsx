@@ -213,7 +213,7 @@ export default function CategoryItem({
       />
       <button
         type="button"
-        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-xl px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:px-3"
+        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-xl px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:px-3 md:transition-[padding] md:duration-200 md:group-hover/item:pr-12"
         onClick={() => onChangeCurrentCategory(category.id)}
         aria-current={isActive ? "page" : undefined}
         aria-label={`${category.name}, ${t("workspace.websiteCount", {
@@ -247,7 +247,7 @@ export default function CategoryItem({
 
       <button
         type="button"
-        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white/45 outline-none transition-[background-color,color,opacity] hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 md:mr-2 md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-within/item:opacity-100"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white/45 outline-none transition-[background-color,color,opacity] hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:pointer-events-none md:absolute md:right-2 md:opacity-0 md:group-hover/item:pointer-events-auto md:group-hover/item:opacity-100 md:focus-visible:pointer-events-auto md:focus-visible:opacity-100"
         onClick={onEditCategoryClick}
         title={t("common.edit")}
         aria-label={t("common.edit")}
