@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-27T11:22:11.7316957+08:00",
+  "title": "Design System: LocalTab",
+  "extensions": {
+    "colorMeta": {
+      "canvas-night": {
+        "role": "neutral",
+        "displayName": "夜色画布",
+        "canonical": "#090c10",
+        "tonalRamp": ["#050709", "#090c10", "#121820", "#202a36", "#3b4653", "#687380", "#a7afb7", "#edf0f3"]
+      },
+      "surface-card": {
+        "role": "neutral",
+        "displayName": "卡片玻璃",
+        "canonical": "rgba(58, 60, 64, 0.58)",
+        "tonalRamp": ["#17181a", "#25272a", "#3a3c40", "#51545a", "#6d7178", "#92969d", "#bec1c6", "#f0f1f2"]
+      },
+      "surface-floating": {
+        "role": "neutral",
+        "displayName": "悬浮玻璃",
+        "canonical": "rgba(46, 48, 52, 0.76)",
+        "tonalRamp": ["#151619", "#232529", "#2e3034", "#474a50", "#666a71", "#8d9198", "#bbc0c5", "#eff1f2"]
+      },
+      "surface-overlay": {
+        "role": "neutral",
+        "displayName": "覆盖玻璃",
+        "canonical": "rgba(38, 40, 44, 0.94)",
+        "tonalRamp": ["#121316", "#1c1e21", "#26282c", "#404349", "#60646b", "#898d94", "#b8bcc1", "#eef0f2"]
+      },
+      "mist-blue": {
+        "role": "primary",
+        "displayName": "雾蓝",
+        "canonical": "#60a5fa",
+        "tonalRamp": ["#071b35", "#0b3263", "#0e4f98", "#176fd0", "#3b8eef", "#60a5fa", "#9ac8fd", "#eaf4ff"]
+      },
+      "mist-blue-strong": {
+        "role": "primary",
+        "displayName": "深雾蓝",
+        "canonical": "rgba(59, 130, 246, 0.85)",
+        "tonalRamp": ["#07172f", "#0a2c5d", "#0c478f", "#1463c0", "#277ee7", "#3b82f6", "#8bb9fb", "#e8f1ff"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "主文字白",
+        "canonical": "rgba(255, 255, 255, 0.90)",
+        "tonalRamp": ["#262626", "#404040", "#595959", "#737373", "#999999", "#bfbfbf", "#e0e0e0", "#ffffff"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "弱文字白",
+        "canonical": "rgba(255, 255, 255, 0.55)",
+        "tonalRamp": ["#1f1f1f", "#363636", "#4d4d4d", "#666666", "#858585", "#ababab", "#d1d1d1", "#f5f5f5"]
+      },
+      "border-soft": {
+        "role": "neutral",
+        "displayName": "柔和白边",
+        "canonical": "rgba(255, 255, 255, 0.14)",
+        "tonalRamp": ["#1c1c1c", "#303030", "#474747", "#606060", "#808080", "#a6a6a6", "#cccccc", "#f2f2f2"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "危险红",
+        "canonical": "rgba(239, 68, 68, 0.70)",
+        "tonalRamp": ["#330909", "#621111", "#951b1b", "#c82a2a", "#ef4444", "#f47777", "#f9abab", "#feecec"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "设置面板和弹窗的最高级标题。"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "分类、卡片和区块标题。"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "菜单、说明和表单正文。"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "状态、数量、提示和键盘标记。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "dock-ambient",
+        "value": "0 14px 36px rgba(0, 0, 0, 0.28)",
+        "purpose": "持续悬浮的底部 Dock。"
+      },
+      {
+        "name": "overlay-ambient",
+        "value": "0 18px 46px rgba(0, 0, 0, 0.36)",
+        "purpose": "设置等大型覆盖面板。"
+      },
+      {
+        "name": "accent-lift",
+        "value": "0 8px 24px rgba(59, 130, 246, 0.20)",
+        "purpose": "主要蓝色行动和明确拖放状态。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-feedback",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "颜色、边框、轻微位移和缩放的默认状态反馈。"
+      },
+      {
+        "name": "overlay-entry",
+        "value": "240ms ease-out",
+        "purpose": "抽屉和覆盖层进入。"
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "prefers-reduced-motion 下近乎即时地完成动画与过渡。"
+      }
+    ],
+    "breakpoints": [
+      { "name": "compact-grid", "value": "420px" },
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "当前流程唯一的主要行动。",
+      "html": "<button class=\"ds-btn-primary\">确认</button>",
+      "css": ".ds-btn-primary { height: 44px; padding: 0 16px; border: 1px solid rgba(147, 197, 253, 0.20); border-radius: 16px; background: rgba(59, 130, 246, 0.85); color: #fff; font: 500 14px/1.5 \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; cursor: pointer; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.20); transition: background-color 200ms, transform 200ms, box-shadow 200ms; } .ds-btn-primary:hover { background: #60a5fa; } .ds-btn-primary:focus-visible { outline: 3px solid rgba(147, 197, 253, 0.40); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Secondary Glass Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "取消、辅助入口和低优先级行动。",
+      "html": "<button class=\"ds-btn-secondary\">取消</button>",
+      "css": ".ds-btn-secondary { height: 44px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 16px; background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.85); font: 500 14px/1.5 \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 200ms, color 200ms; } .ds-btn-secondary:hover { background: rgba(255, 255, 255, 0.09); color: #fff; } .ds-btn-secondary:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.20); outline-offset: 2px; }"
+    },
+    {
+      "name": "Glass Search Field",
+      "kind": "input",
+      "refersTo": "input-glass",
+      "description": "顶部搜索与网址直达的组合输入。",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.35-4.35\"></path></svg><input placeholder=\"搜索或输入网址\" /></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 10px; width: 420px; max-width: 100%; height: 44px; padding: 0 14px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px; background: rgba(46, 48, 52, 0.76); color: rgba(255, 255, 255, 0.65); backdrop-filter: blur(24px) brightness(85%) saturate(120%); } .ds-search svg { width: 18px; fill: none; stroke: #bfdbfe; stroke-width: 2; } .ds-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #fff; font: 500 15px/1.5 \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; } .ds-search input::placeholder { color: rgba(255, 255, 255, 0.45); } .ds-search:focus-within { border-color: rgba(147, 197, 253, 0.60); box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.20); }"
+    },
+    {
+      "name": "Category Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-item",
+      "description": "侧栏与移动顶部栏共享的分类入口。",
+      "html": "<button class=\"ds-nav-item\" aria-current=\"page\"><span class=\"ds-nav-icon\">L</span><span>工作</span></button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; min-width: 44px; height: 44px; padding: 0 12px; border: 0; border-radius: 16px; background: rgba(147, 197, 253, 0.10); color: #dbeafe; font: 600 12px/1.333 \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 200ms, color 200ms, transform 200ms; } .ds-nav-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgba(255, 255, 255, 0.055); } .ds-nav-item:hover { background: rgba(255, 255, 255, 0.10); color: #fff; transform: translateY(-2px); } .ds-nav-item:focus-visible { outline: 2px solid rgba(191, 219, 254, 0.70); outline-offset: 2px; }"
+    },
+    {
+      "name": "Link Card",
+      "kind": "card",
+      "refersTo": "card-link",
+      "description": "分类网格中的网址快捷入口。",
+      "html": "<button class=\"ds-link-card\"><span class=\"ds-link-icon\">L</span><span class=\"ds-link-title\">LocalTab</span><span class=\"ds-link-meta\">localtab.app</span></button>",
+      "css": ".ds-link-card { display: flex; height: 96px; width: 160px; flex-direction: column; align-items: center; justify-content: center; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, 0.14); border-top-color: rgba(255, 255, 255, 0.22); border-radius: 12px; background: rgba(58, 60, 64, 0.58); color: rgba(255, 255, 255, 0.90); backdrop-filter: blur(24px) brightness(85%) saturate(120%); cursor: pointer; transition: transform 200ms, background-color 200ms, border-color 200ms, box-shadow 200ms; } .ds-link-icon { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 4px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: #dbeafe; font-weight: 700; } .ds-link-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14px/20px \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; } .ds-link-meta { color: rgba(255, 255, 255, 0.50); font: 400 12px/16px \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; } .ds-link-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.20); background: rgba(68, 70, 74, 0.62); box-shadow: 0 10px 18px rgba(0, 0, 0, 0.20); } .ds-link-card:focus-visible { outline: 2px solid rgba(191, 219, 254, 0.75); outline-offset: 2px; }"
+    },
+    {
+      "name": "Floating Dock",
+      "kind": "nav",
+      "refersTo": "dock-surface",
+      "description": "固定网址与拖放操作的底部功能岛。",
+      "html": "<nav class=\"ds-dock\" aria-label=\"Dock\"><button aria-label=\"新增\">+</button><span class=\"ds-dock-divider\"></span><button aria-label=\"LocalTab\">L</button><button aria-label=\"GitHub\">G</button></nav>",
+      "css": ".ds-dock { display: inline-flex; align-items: center; gap: 4px; height: 56px; padding: 6px; border: 1px solid rgba(255, 255, 255, 0.14); border-top-color: rgba(255, 255, 255, 0.22); border-radius: 16px; background: rgba(46, 48, 52, 0.76); color: #fff; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28); backdrop-filter: blur(24px) brightness(85%) saturate(120%); } .ds-dock button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: rgba(255, 255, 255, 0.72); font: 600 14px/1 \"Manrope Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 200ms, color 200ms, transform 200ms; } .ds-dock button:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.10); color: #fff; } .ds-dock button:focus-visible { outline: 2px solid rgba(191, 219, 254, 0.75); outline-offset: -2px; } .ds-dock-divider { width: 1px; height: 28px; background: rgba(255, 255, 255, 0.10); }"
+    },
+    {
+      "name": "Glass Dialog",
+      "kind": "custom",
+      "refersTo": "dialog-surface",
+      "description": "编辑、确认与临时任务的最高层表面。",
+      "html": "<section class=\"ds-dialog\" role=\"dialog\" aria-labelledby=\"ds-dialog-title\"><h2 id=\"ds-dialog-title\">编辑分类</h2><p>更新分类名称与图标。</p><div class=\"ds-dialog-field\">分类名称</div><div class=\"ds-dialog-actions\"><button>取消</button><button class=\"ds-dialog-confirm\">确认</button></div></section>",
+      "css": ".ds-dialog { width: 380px; max-width: calc(100vw - 32px); padding: 24px; border: 1px solid rgba(255, 255, 255, 0.14); border-top-color: rgba(255, 255, 255, 0.22); border-radius: 12px; background: rgba(38, 40, 44, 0.94); color: #fff; box-shadow: 0 18px 46px rgba(0, 0, 0, 0.36); backdrop-filter: blur(24px) brightness(85%) saturate(120%); font-family: \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; } .ds-dialog h2 { margin: 0; font-size: 18px; line-height: 1.4; } .ds-dialog p { margin: 8px 0 20px; color: rgba(255, 255, 255, 0.60); font-size: 14px; } .ds-dialog-field { height: 36px; padding: 8px 12px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.50); font-size: 14px; } .ds-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; } .ds-dialog button { height: 36px; padding: 0 14px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; background: transparent; color: rgba(255, 255, 255, 0.85); cursor: pointer; } .ds-dialog button:hover { background: rgba(255, 255, 255, 0.10); } .ds-dialog button:focus-visible { outline: 2px solid rgba(147, 197, 253, 0.60); outline-offset: 2px; } .ds-dialog .ds-dialog-confirm { border-color: transparent; background: rgba(59, 130, 246, 0.80); color: #fff; } .ds-dialog .ds-dialog-confirm:hover { background: #60a5fa; }"
+    },
+    {
+      "name": "File Drop Zone",
+      "kind": "custom",
+      "refersTo": "drop-zone",
+      "description": "背景图和自定义图标的文件选择区域。",
+      "html": "<button class=\"ds-drop-zone\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v12m0-12 4 4m-4-4-4 4\"></path><path d=\"M5 14v5h14v-5\"></path></svg><strong>选择或拖入图片</strong><span>PNG、JPEG 或 WebP</span></button>",
+      "css": ".ds-drop-zone { display: flex; min-height: 96px; width: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px 24px; border: 1px dashed rgba(255, 255, 255, 0.20); border-radius: 12px; background: rgba(255, 255, 255, 0.035); color: rgba(255, 255, 255, 0.85); font: 500 14px/1.4 \"Manrope Variable\", \"Noto Sans SC Variable\", system-ui, sans-serif; cursor: pointer; transition: background-color 200ms, border-color 200ms, color 200ms; } .ds-drop-zone svg { width: 22px; fill: none; stroke: #bfdbfe; stroke-width: 2; } .ds-drop-zone span { color: rgba(255, 255, 255, 0.55); font-size: 12px; font-weight: 400; } .ds-drop-zone:hover { background: rgba(255, 255, 255, 0.06); } .ds-drop-zone:focus-visible { outline: 2px solid rgba(147, 197, 253, 0.70); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "悬浮书签台",
+    "overview": "LocalTab 像一张悬浮在个人壁纸前的书签工作台：界面不遮蔽用户选择的背景，而是用深色半透明表面稳定文字和操作。视觉重心始终落在用户的分类、网址和搜索任务上，品牌通过克制的雾蓝提示、精确的间距和安静的层次表达。\n\n系统气质是克制、通透、安静、高效。密度偏紧凑，但交互目标保持宽松；装饰只服务于结构、状态和可读性，不使用高饱和多彩、厚重不透明、营销式装饰或夸张动效。",
+    "keyCharacteristics": [
+      "深色壁纸画布上的分层玻璃表面",
+      "雾蓝承担选择、聚焦和主要行动",
+      "紧凑的信息密度与清晰的 44px 高频操作目标",
+      "柔和环境阴影、细边框与短促状态反馈",
+      "中文与英文共享同一套排版节奏"
+    ],
+    "rules": [
+      {
+        "name": "The Atmosphere-First Rule",
+        "body": "背景图是体验的一部分；玻璃表面必须改善可读性，但不能把页面变成不透明深色仪表盘。",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Accent Rule",
+        "body": "雾蓝只标示行动、选择和聚焦；普通容器与大面积背景保持中性。",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Family Rule",
+        "body": "不为装饰引入额外字体；层级变化优先使用既有字号、字重、透明度和间距。",
+        "section": "typography"
+      },
+      {
+        "name": "The Layered Glass Rule",
+        "body": "卡片、悬浮工具和覆盖层使用不同不透明度；不要用同一块玻璃值覆盖全部层级。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** 使用卡片、悬浮工具、覆盖层三级玻璃透明度表达层级。",
+      "**Do** 为高频图标按钮和 Dock 项目保留 44px 操作目标。",
+      "**Do** 用雾蓝表达主要行动、当前选择、聚焦和有效拖放状态。",
+      "**Do** 在所有动画中尊重 `prefers-reduced-motion`。",
+      "**Do** 让中文和英文共用 Manrope 与 Noto Sans SC 的回退关系和信息层级。"
+    ],
+    "donts": [
+      "**Don't** 用高饱和多彩色块争夺壁纸和内容的注意力。",
+      "**Don't** 把玻璃层替换为覆盖大部分壁纸的厚重不透明面板。",
+      "**Don't** 添加营销式装饰、无功能意义的光效或夸张动效。",
+      "**Don't** 在普通内容上滥用雾蓝、危险红或高强度阴影。",
+      "**Don't** 为相同层级随意引入新的圆角、阴影或玻璃透明度。"
+    ]
+  }
+}
