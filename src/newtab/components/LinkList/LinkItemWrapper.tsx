@@ -1,13 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { useDrag, useDrop } from "react-dnd";
-import { getEmptyImage } from "react-dnd-html5-backend";
 import LinkItem from "@/newtab/components/LinkItem";
 import { cn } from "@/lib/utils";
 import type { Link } from "@/type/db";
 import {
   DRAG_ITEM_TYPE,
+  DROP_TARGET_TYPE,
+  CARD_DROP_REGION,
   LINK_DROP_INTENT,
+  STATIC_DROPPABLE_RESIZE_OBSERVER_CONFIG,
+  createDndId,
+  getHorizontalDropRegion,
+  isCardCenterDropRegion,
+  type DndSourceData,
+  type DndTargetData,
   type LinkDragItem,
 } from "@/newtab/drag-and-drop";
 
@@ -51,161 +58,167 @@ export default function LinkItemWrapper({
   const elementRef = useRef<HTMLDivElement>(null);
   // 当前卡片是否作为合并目标
   const [isMergeTarget, setIsMergeTarget] = useState(false);
-  // 网址卡片拖动状态与连接器
-  const [{ isDragging }, drag, preview] = useDrag<
-    LinkDragItem,
-    void,
-    { isDragging: boolean }
-  >({
-    type: DRAG_ITEM_TYPE.LINK,
-    item: () => {
-      // 自定义拖拽预览尺寸
-      const { width, height } = elementRef.current!.getBoundingClientRect();
-
-      return {
-        type: DRAG_ITEM_TYPE.LINK,
-        link,
-        previewWidth: width,
-        previewHeight: height,
-        sourceParentId: link.parentId,
-        currentParentId: link.parentId,
-        index,
-        originalIndex: index,
-        dropIntent: LINK_DROP_INTENT.MOVE,
-      };
-    },
-    /** 按网址标识保持重排后拖动源的视觉状态。 */
-    isDragging(monitor) {
-      return monitor.getItem().link.id === link.id;
-    },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    end: (_item, monitor) => {
-      // 取消拖拽时从数据库状态恢复所有分类的临时预览。
-      if (!monitor.didDrop()) {
+  // 网址卡片携带的拖拽源数据
+  const sourceData = useMemo<DndSourceData>(
+    () => ({
+      itemType: DRAG_ITEM_TYPE.LINK,
+      /** 创建网址拖拽开始时的稳定会话数据。 */
+      createDragItem() {
+        // 自定义拖拽预览尺寸
+        const { width, height } = elementRef.current!.getBoundingClientRect();
+        return {
+          type: DRAG_ITEM_TYPE.LINK,
+          link,
+          previewWidth: width,
+          previewHeight: height,
+          sourceParentId: link.parentId,
+          currentParentId: link.parentId,
+          index,
+          originalIndex: index,
+          dropIntent: LINK_DROP_INTENT.MOVE,
+        };
+      },
+      /** 取消拖拽时从数据库状态恢复临时预览。 */
+      onCancel() {
         void onCancelDrag();
-      }
-    },
+      },
+    }),
+    [index, link, onCancelDrag]
+  );
+  // 网址卡片拖动状态与连接器
+  const {
+    attributes,
+    isDragging,
+    listeners,
+    setNodeRef: setDragNodeRef,
+  } = useDraggable({
+    id: createDndId("page-link", link.id),
+    data: sourceData,
   });
-
-  // 卡片投放状态与连接器
-  const [{ handlerId, isOver }, drop] = useDrop<
-    LinkDragItem,
-    void,
-    { handlerId: string | symbol | null; isOver: boolean }
-  >({
-    accept: DRAG_ITEM_TYPE.LINK,
-    /** 收集当前卡片投放状态。 */
-    collect(monitor) {
-      return {
-        handlerId: monitor.getHandlerId(),
-        isOver: monitor.isOver({ shallow: true }),
-      };
-    },
-    /** 根据鼠标区域更新排序或合并意图。 */
-    hover(item, monitor) {
-      if (item.link.id === link.id) {
+  // 网址卡片携带的投放目标数据
+  const targetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.LINK_CARD,
+      accepts: [DRAG_ITEM_TYPE.LINK],
+      scopeId: parentId,
+      priority: allowMerge ? 80 : 90,
+      /** 标识网址卡片当前对应的自身、排序或合并区域。 */
+      getDragMoveKey(dragItem, context) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        if (item.link.id === link.id) {
+          return "self";
+        }
+        // 当前卡片中心是否允许合并网址
+        const canMergeLinks =
+          allowMerge &&
+          link.parentId === parentId &&
+          isCardCenterDropRegion(context);
+        return canMergeLinks
+          ? CARD_DROP_REGION.CENTER
+          : getHorizontalDropRegion(context);
+      },
+      /** 根据指针区域更新排序或合并意图。 */
+      onDragMove(dragItem, context) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        if (item.link.id === link.id) {
+          item.dropIntent = LINK_DROP_INTENT.MOVE;
+          item.mergeTargetLinkId = undefined;
+          item.targetLinkGroupId = undefined;
+          setIsMergeTarget(false);
+          onHover(item, index);
+          return;
+        }
+        // 当前两个网址是否允许创建新文件夹
+        const canMergeLinks =
+          allowMerge &&
+          link.parentId === parentId &&
+          isCardCenterDropRegion(context);
+        if (canMergeLinks) {
+          item.dropIntent = LINK_DROP_INTENT.MERGE;
+          item.mergeTargetLinkId = link.id;
+          item.targetLinkGroupId = undefined;
+          onEnterMergeTarget?.();
+          setIsMergeTarget(true);
+          return;
+        }
         item.dropIntent = LINK_DROP_INTENT.MOVE;
         item.mergeTargetLinkId = undefined;
         item.targetLinkGroupId = undefined;
         setIsMergeTarget(false);
-        onHover(item, index);
-        return;
-      }
-
-      // 当前鼠标位置
-      const clientOffset = monitor.getClientOffset();
-      // 当前网址卡片边界
-      const cardRect = elementRef.current?.getBoundingClientRect();
-      if (!clientOffset || !cardRect) {
-        return;
-      }
-      // 鼠标在卡片内的横向比例
-      const horizontalRatio =
-        (clientOffset.x - cardRect.left) / cardRect.width;
-      // 鼠标在卡片内的纵向比例
-      const verticalRatio = (clientOffset.y - cardRect.top) / cardRect.height;
-      // 卡片中心是否满足合并投放范围
-      const isCenterTarget =
-        horizontalRatio >= 0.25 &&
-        horizontalRatio <= 0.75 &&
-        verticalRatio >= 0.2 &&
-        verticalRatio <= 0.8;
-      // 当前两个网址是否允许创建新文件夹
-      const canMergeLinks =
-        allowMerge &&
-        link.parentId === parentId &&
-        isCenterTarget;
-
-      if (canMergeLinks) {
-        item.dropIntent = LINK_DROP_INTENT.MERGE;
-        item.mergeTargetLinkId = link.id;
-        item.targetLinkGroupId = undefined;
-        onEnterMergeTarget?.();
-        setIsMergeTarget(true);
-        return;
-      }
-
-      item.dropIntent = LINK_DROP_INTENT.MOVE;
-      item.mergeTargetLinkId = undefined;
-      item.targetLinkGroupId = undefined;
-      setIsMergeTarget(false);
-      // 卡片左半侧插入其前方，右半侧插入其后方
-      const targetIndex = horizontalRatio < 0.5 ? index : index + 1;
-      onHover(item, targetIndex);
-    },
-    /** 按当前意图分发网址排序或合并操作。 */
-    drop(item) {
-      // 不同投放意图对应的处理策略
-      const dropStrategies = {
-        [LINK_DROP_INTENT.MOVE]: () => onDrop(item, item.index),
-        [LINK_DROP_INTENT.MERGE]: () => {
-          if (item.mergeTargetLinkId) {
-            void onMergeLinks(
-              categoryId,
-              item.mergeTargetLinkId,
-              item.link.id
-            );
-          }
-        },
-      };
-      dropStrategies[item.dropIntent]();
-    },
+        // 卡片左半侧插入前方，右半侧插入后方
+        const targetIndex =
+          getHorizontalDropRegion(context) === CARD_DROP_REGION.BEFORE
+            ? index
+            : index + 1;
+        onHover(item, targetIndex);
+      },
+      /** 按当前意图分发网址排序或合并操作。 */
+      onDrop(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        // 不同投放意图对应的处理策略
+        const dropStrategies = {
+          [LINK_DROP_INTENT.MOVE]: () => onDrop(item, item.index),
+          [LINK_DROP_INTENT.MERGE]: () => {
+            if (item.mergeTargetLinkId) {
+              void onMergeLinks(
+                categoryId,
+                item.mergeTargetLinkId,
+                item.link.id
+              );
+            }
+          },
+        };
+        dropStrategies[item.dropIntent]();
+      },
+    }),
+    [
+      allowMerge,
+      categoryId,
+      index,
+      link,
+      onDrop,
+      onEnterMergeTarget,
+      onHover,
+      onMergeLinks,
+      parentId,
+    ]
+  );
+  // 卡片投放状态与连接器
+  const { isOver, setNodeRef: setDropNodeRef } = useDroppable({
+    id: createDndId("link-card", parentId, link.id),
+    data: targetData,
+    resizeObserverConfig: STATIC_DROPPABLE_RESIZE_OBSERVER_CONFIG,
   });
+  // 当前卡片是否展示为有效合并目标
+  const shouldShowMergeTarget = isOver && isMergeTarget;
 
   // 同时连接网址卡片的拖动与投放能力
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       elementRef.current = node;
-      drag(drop(node));
+      setDragNodeRef(node);
+      setDropNodeRef(node);
     },
-    [drag, drop]
+    [setDragNodeRef, setDropNodeRef]
   );
-
-  useEffect(() => {
-    // 玻璃态卡片的浏览器原生拖拽快照会产生矩形角块，改由自定义预览层渲染。
-    preview(getEmptyImage(), { captureDraggingState: true });
-  }, [preview]);
-
-  useEffect(() => {
-    if (!isOver) {
-      setIsMergeTarget(false);
-    }
-  }, [isOver]);
 
   return (
     <div
       ref={ref}
+      {...attributes}
+      {...listeners}
       className={cn(
         "relative rounded-2xl transition-shadow",
-        isMergeTarget && "ring-2 ring-amber-300/90 shadow-lg shadow-amber-300/20",
+        shouldShowMergeTarget &&
+          "ring-2 ring-amber-300/90 shadow-lg shadow-amber-300/20",
         isOver &&
-          !isMergeTarget &&
+          !shouldShowMergeTarget &&
           !isDragging &&
           "ring-2 ring-blue-200/70 shadow-lg shadow-blue-200/10"
       )}
-      data-handler-id={handlerId}
     >
       <LinkItem
         link={link}
@@ -213,7 +226,7 @@ export default function LinkItemWrapper({
         handleSkipClick={onSkipClick}
         variant={isDragging ? "drag-placeholder" : "default"}
       />
-      {isMergeTarget && (
+      {shouldShowMergeTarget && (
         <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-amber-300/10 pb-2">
           <span className="rounded-full border border-amber-200/40 bg-black/70 px-2.5 py-1 text-xs font-medium text-amber-100 backdrop-blur-xl">
             {t("linkGroup.mergeHint")}

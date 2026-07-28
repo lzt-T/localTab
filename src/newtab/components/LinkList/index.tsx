@@ -5,14 +5,19 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { useDrop } from "react-dnd";
 import { Plus } from "lucide-react";
 import type { Link } from "@/type/db";
 import { cn } from "@/lib/utils";
 import {
   DRAG_ITEM_TYPE,
+  DROP_TARGET_TYPE,
   LINK_DROP_INTENT,
+  createDndId,
+  isDndSourceData,
+  isDndTargetData,
+  type DndTargetData,
   type LinkDragItem,
 } from "@/newtab/drag-and-drop";
 import LinkDropPreview from "@/newtab/components/LinkDropPreview";
@@ -165,81 +170,91 @@ export default function LinkList({
     [parentId, onMoveLink]
   );
 
-  // 文件夹网格整体的投放状态与连接器
-  const [{ isLinkOverList }, dropList] = useDrop<
-    LinkDragItem,
-    void,
-    { isLinkOverList: boolean }
-  >({
-    accept: DRAG_ITEM_TYPE.LINK,
+  // 文件夹网格整体携带的投放目标数据
+  const listTargetData: DndTargetData = {
+    type: DROP_TARGET_TYPE.LINK_LIST,
+    accepts: [DRAG_ITEM_TYPE.LINK],
+    scopeId: parentId,
+    priority: 85,
     /** 将网格空白区域作为列表末尾投放位置。 */
-    hover(item, monitor) {
-      if (!monitor.isOver({ shallow: true })) {
-        return;
-      }
+    onDragMove(dragItem) {
+      // 当前网址拖拽数据
+      const item = dragItem as LinkDragItem;
       item.dropIntent = LINK_DROP_INTENT.MOVE;
       item.mergeTargetLinkId = undefined;
       item.targetLinkGroupId = undefined;
       onHover(item, localLinks.length);
     },
     /** 保存直接投放到网格空白区域的网址。 */
-    drop(item, monitor) {
-      if (!monitor.didDrop()) {
-        onDrop(item, item.index);
-      }
+    onDrop(dragItem) {
+      // 当前网址拖拽数据
+      const item = dragItem as LinkDragItem;
+      onDrop(item, item.index);
     },
-    collect: (monitor) => ({
-      isLinkOverList: monitor.isOver(),
-    }),
+  };
+  // 文件夹网格整体的投放状态与连接器
+  const { setNodeRef: setListNodeRef } = useDroppable({
+    id: createDndId("link-list", parentId),
+    data: listTargetData,
   });
 
-  // 列表末尾的投放状态和连接器
-  const [{ isOverEnd }, dropAtEnd] = useDrop<
-    LinkDragItem,
-    void,
-    { isOverEnd: boolean }
-  >({
-    accept: DRAG_ITEM_TYPE.LINK,
+  // 列表末尾携带的投放目标数据
+  const endTargetData: DndTargetData = {
+    type: DROP_TARGET_TYPE.LINK_LIST_END,
+    accepts: [DRAG_ITEM_TYPE.LINK],
+    scopeId: parentId,
+    priority: 90,
     /** 在列表末尾显示网址移动预览。 */
-    hover(item) {
+    onDragMove(dragItem) {
+      // 当前网址拖拽数据
+      const item = dragItem as LinkDragItem;
       item.dropIntent = LINK_DROP_INTENT.MOVE;
       item.mergeTargetLinkId = undefined;
       item.targetLinkGroupId = undefined;
       onHover(item, localLinks.length);
     },
     /** 将网址保存到列表末尾。 */
-    drop(item) {
+    onDrop(dragItem) {
+      // 当前网址拖拽数据
+      const item = dragItem as LinkDragItem;
       onDrop(item, item.index);
     },
-    collect: (monitor) => ({
-      isOverEnd: monitor.isOver({ shallow: true }),
-    }),
+  };
+  // 列表末尾的投放状态和连接器
+  const { isOver: isOverEnd, setNodeRef: setEndNodeRef } = useDroppable({
+    id: createDndId("link-list-end", parentId),
+    data: endTargetData,
   });
 
-  /** 将添加按钮注册为列表末尾的拖放目标。 */
-  const addLinkRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      dropAtEnd(node);
+  useDndMonitor({
+    /** 离开当前文件夹范围时清除跨父级网址预览。 */
+    onDragMove(event) {
+      // 当前拖拽源携带的数据
+      const sourceData = event.active.data.current;
+      if (!isDndSourceData(sourceData) || sourceData.itemType !== DRAG_ITEM_TYPE.LINK) {
+        return;
+      }
+      // 当前投放目标携带的数据
+      const targetData = event.over?.data.current;
+      if (
+        linkDropPreview !== null &&
+        (!isDndTargetData(targetData) || targetData.scopeId !== parentId)
+      ) {
+        setLinkDropPreview(null);
+      }
     },
-    [dropAtEnd]
-  );
-
-  /** 连接文件夹网格与网址投放区域。 */
-  const connectListRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      dropList(node);
-    },
-    [dropList]
-  );
-
-  useEffect(() => {
-    if (!isLinkOverList) {
+    /** 结束拖拽时清除文件夹内的临时预览。 */
+    onDragEnd() {
       setLinkDropPreview(null);
-    }
-  }, [isLinkOverList]);
+    },
+    /** 取消拖拽时清除文件夹内的临时预览。 */
+    onDragCancel() {
+      setLinkDropPreview(null);
+    },
+  });
 
   return (
-    <div ref={connectListRef} className="grid min-h-20 grid-cols-3 gap-3">
+    <div ref={setListNodeRef} className="grid min-h-20 grid-cols-3 gap-3">
       {localLinks.map((link, index) => {
         return (
           <Fragment key={link.id}>
@@ -247,6 +262,7 @@ export default function LinkList({
               <LinkDropPreview
                 link={linkDropPreview.link}
                 index={index}
+                scopeId={parentId}
                 onHover={onHover}
                 onDrop={onDrop}
               />
@@ -272,6 +288,7 @@ export default function LinkList({
         <LinkDropPreview
           link={linkDropPreview.link}
           index={localLinks.length}
+          scopeId={parentId}
           onHover={onHover}
           onDrop={onDrop}
         />
@@ -281,7 +298,7 @@ export default function LinkList({
         (localLinks.length === 0 && linkDropPreview === null)) && (
         <button
           type="button"
-          ref={addLinkRef}
+          ref={setEndNodeRef}
           className={cn(
             "flex h-22 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
             !showAddLinkCard && "col-span-full h-20",

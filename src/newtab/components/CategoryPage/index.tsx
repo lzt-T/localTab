@@ -120,7 +120,7 @@ export default function CategoryPage({
           ref={linkListRef}
           className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1 pt-1"
         >
-          <div className="pb-8">
+          <div className="h-full pb-8">
             <CategoryGrid
               categoryInfo={categoryInfo}
               onOpenEditLink={onOpenEditLink}

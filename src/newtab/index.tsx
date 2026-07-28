@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import NavigationBar from "@/newtab/components/NavigationBar";
 import { useData } from "@/newtab/useData";
 import { useCategoryAction } from "@/hooks/useCategoryAction";
@@ -12,7 +10,7 @@ import AddEditLink from "@/newtab/components/AddEditLink";
 import { useLinkAction } from "@/hooks/useLinkAction";
 import SearchInput from "@/newtab/components/SearchInput";
 import CategoryPage from "@/newtab/components/CategoryPage";
-import LinkDragPreview from "@/newtab/components/LinkList/LinkDragPreview";
+import PageDndProvider from "@/newtab/components/PageDndProvider";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 import EditLinkGroup from "@/newtab/components/EditLinkGroup";
 import Dock from "@/newtab/components/Dock";
@@ -226,10 +224,9 @@ const NewTabApp: React.FC = () => {
   }, [t]);
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <LinkDragPreview />
-
+    <PageDndProvider>
       <div
+        data-category-page-scroll=""
         className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-y-scroll bg-[#090c10] text-white"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}
       >
@@ -358,7 +355,7 @@ const NewTabApp: React.FC = () => {
         />
         <Toaster position="top-right" />
       </div>
-    </DndProvider>
+    </PageDndProvider>
   );
 };
 

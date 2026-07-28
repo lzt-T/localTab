@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDragLayer } from "react-dnd";
-import { DRAG_ITEM_TYPE } from "@/newtab/drag-and-drop";
+import { useDndMonitor } from "@dnd-kit/core";
 
 // 网址在文件夹中心悬停后自动展开的延迟
 const AUTO_OPEN_FOLDER_DELAY_MS = 400;
@@ -15,11 +14,6 @@ export default function useAutoOpenFolder() {
   const pendingFolderIdRef = useRef<string | null>(null);
   // 文件夹延迟展开计时器
   const autoOpenTimerRef = useRef<number | null>(null);
-  // 当前是否正在拖拽网址
-  const isLinkDragging = useDragLayer(
-    (monitor) =>
-      monitor.isDragging() && monitor.getItemType() === DRAG_ITEM_TYPE.LINK
-  );
 
   /** 清除尚未执行的文件夹展开任务。 */
   const clearPendingAutoOpen = useCallback(() => {
@@ -71,11 +65,16 @@ export default function useAutoOpenFolder() {
     [clearPendingAutoOpen]
   );
 
-  useEffect(() => {
-    if (!isLinkDragging) {
+  useDndMonitor({
+    /** 结束网址拖拽时关闭自动展开的文件夹。 */
+    onDragEnd() {
       closeAutoOpenFolder();
-    }
-  }, [closeAutoOpenFolder, isLinkDragging]);
+    },
+    /** 取消网址拖拽时关闭自动展开的文件夹。 */
+    onDragCancel() {
+      closeAutoOpenFolder();
+    },
+  });
 
   useEffect(() => clearPendingAutoOpen, [clearPendingAutoOpen]);
 

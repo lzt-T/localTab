@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ function getLinkHostname(url: string): string {
 }
 
 /** 渲染可访问和编辑的网址卡片。 */
-export default function Index({
+function Index({
   link,
   handleEditClick,
   handleSkipClick,
@@ -164,3 +164,6 @@ export default function Index({
     </div>
   );
 }
+
+// 避免拖拽坐标更新时重复构建稳定的网址卡片内容
+export default memo(Index);

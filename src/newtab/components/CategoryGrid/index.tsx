@@ -4,17 +4,23 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useDrop } from "react-dnd";
+import { useDndMonitor, useDroppable } from "@dnd-kit/core";
 import LinkFolderCard from "@/newtab/components/LinkFolderCard";
 import LinkDropPreview from "@/newtab/components/LinkDropPreview";
 import useAutoOpenFolder from "@/newtab/components/CategoryGrid/useAutoOpenFolder";
 import {
   CategoryGridItemSlot,
-  EmptyCategoryDropZone,
+  EmptyCategoryPlaceholder,
 } from "@/newtab/components/CategoryGrid/CategoryGridCards";
 import LinkItemWrapper from "@/newtab/components/LinkList/LinkItemWrapper";
 import {
   DRAG_ITEM_TYPE,
+  DROP_TARGET_TYPE,
+  LINK_DROP_INTENT,
+  createDndId,
+  isDndSourceData,
+  isDndTargetData,
+  type DndTargetData,
   type LinkDragItem,
   type LinkGroupDragItem,
 } from "@/newtab/drag-and-drop";
@@ -84,27 +90,6 @@ export default function CategoryGrid({
     cancelPendingAutoOpen,
     closeAutoOpenFolder,
   } = useAutoOpenFolder();
-  // 网址是否位于当前主网格的投放范围
-  const [{ isLinkOverGrid }, dropLinkGrid] = useDrop<
-    LinkDragItem,
-    void,
-    { isLinkOverGrid: boolean }
-  >({
-    accept: DRAG_ITEM_TYPE.LINK,
-    /** 收集网址是否位于当前主网格范围内。 */
-    collect: (monitor) => ({
-      isLinkOverGrid: monitor.isOver(),
-    }),
-  });
-
-  /** 连接分类主网格与网址悬停监测区域。 */
-  const connectGridRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      dropLinkGrid(node);
-    },
-    [dropLinkGrid]
-  );
-
   /** 清除跨父级网址在主网格中的原卡片预览。 */
   const onClearLinkDropPreview = useCallback(() => {
     setLinkDropPreview(null);
@@ -160,11 +145,33 @@ export default function CategoryGrid({
     setHiddenSourceLinkId(null);
   }, [categoryInfo.items]);
 
-  useEffect(() => {
-    if (!isLinkOverGrid) {
+  useDndMonitor({
+    /** 网址离开当前分类范围时清除跨父级预览。 */
+    onDragMove(event) {
+      // 当前拖拽源携带的数据
+      const sourceData = event.active.data.current;
+      if (!isDndSourceData(sourceData) || sourceData.itemType !== DRAG_ITEM_TYPE.LINK) {
+        return;
+      }
+      // 当前投放目标携带的数据
+      const targetData = event.over?.data.current;
+      if (
+        linkDropPreview !== null &&
+        (!isDndTargetData(targetData) ||
+          targetData.scopeId !== categoryInfo.id)
+      ) {
+        setLinkDropPreview(null);
+      }
+    },
+    /** 结束拖拽时清除主网格临时预览。 */
+    onDragEnd() {
       setLinkDropPreview(null);
-    }
-  }, [isLinkOverGrid]);
+    },
+    /** 取消拖拽时清除主网格临时预览。 */
+    onDragCancel() {
+      setLinkDropPreview(null);
+    },
+  });
 
   useEffect(() => {
     if (autoOpenFolderId) {
@@ -294,96 +301,142 @@ export default function CategoryGrid({
     },
     [categoryInfo.id, onMoveCategoryItem]
   );
+  // 分类网格空白区域携带的末尾投放策略
+  const gridTargetData: DndTargetData = {
+    type: DROP_TARGET_TYPE.CATEGORY_GRID,
+    accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
+    scopeId: categoryInfo.id,
+    /** 将空白区域内的拖拽项目预览到分类末尾。 */
+    onDragMove(item) {
+      // 不同拖拽项目对应的末尾悬停策略
+      const hoverStrategies = {
+        [DRAG_ITEM_TYPE.LINK]: () => {
+          // 当前网址拖拽数据
+          const linkItem = item as LinkDragItem;
+          linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
+          linkItem.mergeTargetLinkId = undefined;
+          linkItem.targetLinkGroupId = undefined;
+          onHoverLink(linkItem, localItems.length);
+        },
+        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+          onHoverFolder(item as LinkGroupDragItem, localItems.length),
+        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+      };
+      hoverStrategies[item.type]();
+    },
+    /** 保存投放到分类网格空白区域的项目。 */
+    onDrop(item) {
+      // 不同拖拽项目对应的末尾投放策略
+      const dropStrategies = {
+        [DRAG_ITEM_TYPE.LINK]: () => {
+          // 当前网址拖拽数据
+          const linkItem = item as LinkDragItem;
+          onDropLink(linkItem, linkItem.index);
+        },
+        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+          onDropFolder(item as LinkGroupDragItem),
+        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+      };
+      dropStrategies[item.type]();
+    },
+  };
+  // 分类网格空白区域的投放状态与连接器
+  const { isOver: isItemOver, setNodeRef } = useDroppable({
+    id: createDndId("category-grid", categoryInfo.id),
+    data: gridTargetData,
+  });
 
   return (
-    <div
-      ref={connectGridRef}
-      className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
-    >
-      {localItems.length === 0 && (
-        <EmptyCategoryDropZone
-          categoryId={categoryInfo.id}
-          onMoveLink={onMoveLink}
-          onMoveCategoryItem={onMoveCategoryItem}
-        />
-      )}
+    <div ref={setNodeRef} className="min-h-full">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8">
+        {localItems.length === 0 && linkDropPreview === null && (
+          <EmptyCategoryPlaceholder isItemOver={isItemOver} />
+        )}
 
-      {localItems.map((item, index) => (
-        <Fragment key={item.id}>
-          {linkDropPreview?.index === index && (
-            <LinkDropPreview
-              link={linkDropPreview.link}
-              index={index}
-              onHover={onHoverLink}
-              onDrop={onDropLink}
-            />
-          )}
-          <CategoryGridItemSlot
-            index={index}
-            isHidden={
-              item.type === LinkType.LINK && item.id === hiddenSourceLinkId
-            }
-            linkDropFolder={
-              item.type === LinkType.LINK_GROUP && item.id === autoOpenFolderId
-                ? item
-                : undefined
-            }
-            onClearLinkDropPreview={onClearLinkDropPreview}
-            onHoverLink={onHoverLink}
-            onDropLink={onDropLink}
-            onHoverFolder={onHoverFolder}
-            onDropFolder={onDropFolder}
-          >
-            {item.type === LinkType.LINK ? (
-              <LinkItemWrapper
-                link={item}
+        {localItems.map((item, index) => (
+          <Fragment key={item.id}>
+            {linkDropPreview?.index === index && (
+              <LinkDropPreview
+                link={linkDropPreview.link}
                 index={index}
-                onEditClick={onOpenEditLink}
-                onSkipClick={onSkipLink}
+                scopeId={categoryInfo.id}
                 onHover={onHoverLink}
                 onDrop={onDropLink}
-                onMergeLinks={onMergeLinks}
-                onCancelDrag={onCancelGridLinkDrag}
-                allowMerge
-                onEnterMergeTarget={onEnterMainGridMergeTarget}
-                categoryId={categoryInfo.id}
-                parentId={categoryInfo.id}
-              />
-            ) : (
-              <LinkFolderCard
-                linkGroup={item}
-                categoryId={categoryInfo.id}
-                index={index}
-                onHoverLink={onHoverLink}
-                onDropLink={onDropLink}
-                onClearLinkDropPreview={onClearLinkDropPreview}
-                onEnterFolderContent={onEnterFolderContent}
-                isManuallyOpen={openFolderId === item.id}
-                autoOpenFolderId={autoOpenFolderId}
-                onManualOpenChange={onManualFolderOpenChange}
-                onRequestAutoOpen={requestAutoOpen}
-                onCancelPendingAutoOpen={cancelPendingAutoOpen}
-                onOpenAddLink={onOpenAddLink}
-                onOpenEditLink={onOpenEditLink}
-                onSkipLink={onSkipLink}
-                onMoveLink={onMoveLink}
-                onMergeLinks={onMergeLinks}
-                onCancelLinkDrag={onCancelGridLinkDrag}
-                onEditFolder={onEditFolder}
               />
             )}
-          </CategoryGridItemSlot>
-        </Fragment>
-      ))}
+            <CategoryGridItemSlot
+              index={index}
+              scopeId={categoryInfo.id}
+              slotId={item.id}
+              isHidden={
+                item.type === LinkType.LINK && item.id === hiddenSourceLinkId
+              }
+              linkDropFolder={
+                item.type === LinkType.LINK_GROUP &&
+                item.id === autoOpenFolderId
+                  ? item
+                  : undefined
+              }
+              onClearLinkDropPreview={onClearLinkDropPreview}
+              onHoverLink={onHoverLink}
+              onDropLink={onDropLink}
+              onHoverFolder={onHoverFolder}
+              onDropFolder={onDropFolder}
+            >
+              {item.type === LinkType.LINK ? (
+                <LinkItemWrapper
+                  link={item}
+                  index={index}
+                  onEditClick={onOpenEditLink}
+                  onSkipClick={onSkipLink}
+                  onHover={onHoverLink}
+                  onDrop={onDropLink}
+                  onMergeLinks={onMergeLinks}
+                  onCancelDrag={onCancelGridLinkDrag}
+                  allowMerge
+                  onEnterMergeTarget={onEnterMainGridMergeTarget}
+                  categoryId={categoryInfo.id}
+                  parentId={categoryInfo.id}
+                />
+              ) : (
+                <LinkFolderCard
+                  linkGroup={item}
+                  categoryId={categoryInfo.id}
+                  index={index}
+                  onHoverLink={onHoverLink}
+                  onDropLink={onDropLink}
+                  onClearLinkDropPreview={onClearLinkDropPreview}
+                  onEnterFolderContent={onEnterFolderContent}
+                  isManuallyOpen={openFolderId === item.id}
+                  autoOpenFolderId={autoOpenFolderId}
+                  onManualOpenChange={onManualFolderOpenChange}
+                  onRequestAutoOpen={requestAutoOpen}
+                  onCancelPendingAutoOpen={cancelPendingAutoOpen}
+                  onOpenAddLink={onOpenAddLink}
+                  onOpenEditLink={onOpenEditLink}
+                  onSkipLink={onSkipLink}
+                  onMoveLink={onMoveLink}
+                  onMergeLinks={onMergeLinks}
+                  onCancelLinkDrag={onCancelGridLinkDrag}
+                  onEditFolder={onEditFolder}
+                />
+              )}
+            </CategoryGridItemSlot>
+          </Fragment>
+        ))}
 
-      {linkDropPreview?.index === localItems.length && (
-        <LinkDropPreview
-          link={linkDropPreview.link}
-          index={localItems.length}
-          onHover={onHoverLink}
-          onDrop={onDropLink}
-        />
-      )}
+        {linkDropPreview?.index === localItems.length && (
+          <LinkDropPreview
+            link={linkDropPreview.link}
+            index={localItems.length}
+            scopeId={categoryInfo.id}
+            onHover={onHoverLink}
+            onDrop={onDropLink}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useTranslation } from "react-i18next";
 import {
   Tooltip,
@@ -10,6 +11,7 @@ import type { CategoryInfo } from "@/type/db";
 import Setting from "@/newtab/components/Setting";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
 import LocalTabMark from "@/newtab/components/LocalTabMark";
+import { createDndId } from "@/newtab/drag-and-drop";
 
 interface NavigationBarProps {
   activeCategoryId: string;
@@ -88,6 +90,16 @@ export default function NavigationBar(props: NavigationBarProps) {
     [onMoveCategory]
   );
 
+  /** 取消分类拖拽时恢复服务端顺序。 */
+  const onCancel = useCallback(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
+  // 当前分类对应的 dnd-kit 排序标识
+  const categoryIds = localCategories.map((category) =>
+    createDndId("category", category.id)
+  );
+
   return (
     <nav
       className="flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(20,22,26,0.58)] p-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:flex-col md:items-stretch md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
@@ -101,20 +113,23 @@ export default function NavigationBar(props: NavigationBarProps) {
         className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:max-h-[62vh] md:flex-col md:items-stretch md:overflow-x-visible md:overflow-y-auto"
         style={{ scrollbarWidth: "none" }}
       >
-        {localCategories.map((category, index) => (
-          <CategoryItem
-            key={category.id}
-            category={category}
-            index={index}
-            isActive={activeCategoryId === category.id}
-            onEditClick={onEditClick}
-            onChangeCurrentCategory={changeCurrentCategory}
-            onMoveLink={onMoveLink}
-            onMoveCategoryItem={onMoveCategoryItem}
-            onHover={onHover}
-            onDrop={onDrop}
-          />
-        ))}
+        <SortableContext items={categoryIds} strategy={rectSortingStrategy}>
+          {localCategories.map((category, index) => (
+            <CategoryItem
+              key={category.id}
+              category={category}
+              index={index}
+              isActive={activeCategoryId === category.id}
+              onEditClick={onEditClick}
+              onChangeCurrentCategory={changeCurrentCategory}
+              onMoveLink={onMoveLink}
+              onMoveCategoryItem={onMoveCategoryItem}
+              onHover={onHover}
+              onDrop={onDrop}
+              onCancel={onCancel}
+            />
+          ))}
+        </SortableContext>
       </div>
 
       {/* 分类与全局设置入口 */}

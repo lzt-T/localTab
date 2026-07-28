@@ -1,12 +1,18 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import { useDrag, useDrop } from "react-dnd";
 import Icon from "@/newtab/components/Icon";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePageDnd } from "@/newtab/components/PageDndProvider";
 import type { CategoryInfo } from "@/type/db";
 import {
   DRAG_ITEM_TYPE,
+  DROP_TARGET_TYPE,
+  createDndId,
+  type DndSourceData,
+  type DndTargetData,
   type CategoryDragItem,
   type DragItem,
   type LinkDragItem,
@@ -34,6 +40,7 @@ interface CategoryItemProps {
   ) => Promise<void>;
   onHover: (dragIndex: number, hoverIndex: number) => void;
   onDrop: (dragIndex: number, hoverIndex: number) => void;
+  onCancel: () => void;
 }
 
 /** 渲染支持分类排序和网格项目跨区切换的侧栏分类项。 */
@@ -47,9 +54,12 @@ export default function CategoryItem({
   onMoveCategoryItem,
   onHover,
   onDrop,
+  onCancel,
 }: CategoryItemProps) {
   // 分类操作的本地化文案
   const { t } = useTranslation();
+  // 分类拖拽预览读取实际尺寸的来源元素
+  const elementRef = useRef<HTMLDivElement>(null);
   // 分类内包含文件夹子项的全部网址数量
   const linkCount =
     category.links.length +
@@ -57,111 +67,132 @@ export default function CategoryItem({
       (totalCount, linkGroup) => totalCount + linkGroup.links.length,
       0
     );
-  // 分类拖动状态与连接器
-  const [{ isDragging }, drag] = useDrag<
-    CategoryDragItem,
-    void,
-    { isDragging: boolean }
-  >({
-    type: DRAG_ITEM_TYPE.CATEGORY,
-    item: () => ({
-      type: DRAG_ITEM_TYPE.CATEGORY,
+  // 当前页面拖拽会话
+  const { activeItem } = usePageDnd();
+  // 分类同时携带的拖拽源和投放目标数据
+  const dndData = useMemo<DndSourceData & DndTargetData>(
+    () => ({
+      itemType: DRAG_ITEM_TYPE.CATEGORY,
+      /** 创建分类拖拽开始时的稳定会话数据。 */
+      createDragItem() {
+        // 分类来源行的实际预览尺寸
+        const { width, height } = elementRef.current!.getBoundingClientRect();
+        return {
+          type: DRAG_ITEM_TYPE.CATEGORY,
+          index,
+          id: category.id,
+          categoryName: category.name,
+          categoryIcon: category.icon,
+          previewWidth: width,
+          previewHeight: height,
+          originalIndex: index,
+        };
+      },
+      /** 取消分类拖拽时恢复本地排序。 */
+      onCancel,
+      type: DROP_TARGET_TYPE.CATEGORY,
+      accepts: [
+        DRAG_ITEM_TYPE.CATEGORY,
+        DRAG_ITEM_TYPE.LINK,
+        DRAG_ITEM_TYPE.LINK_GROUP,
+      ],
+      scopeId: category.id,
+      /** 按拖拽项目类型分发悬停行为。 */
+      onDragMove(dragItem) {
+        // 不同拖拽项目的悬停处理策略
+        const hoverStrategies: Record<DragItem["type"], () => void> = {
+          [DRAG_ITEM_TYPE.CATEGORY]: () => {
+            // 当前拖动的分类数据
+            const categoryItem = dragItem as CategoryDragItem;
+            if (categoryItem.index === index) {
+              return;
+            }
+            onHover(categoryItem.index, index);
+            categoryItem.index = index;
+          },
+          [DRAG_ITEM_TYPE.LINK]: () => undefined,
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () => undefined,
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        hoverStrategies[dragItem.type]();
+      },
+      /** 按拖拽项目类型分发投放行为。 */
+      onDrop(dragItem) {
+        // 不同拖拽项目的投放处理策略
+        const dropStrategies: Record<DragItem["type"], () => void> = {
+          [DRAG_ITEM_TYPE.CATEGORY]: () => {
+            // 当前投放的分类数据
+            const categoryItem = dragItem as CategoryDragItem;
+            if (categoryItem.originalIndex !== index) {
+              onDrop(categoryItem.originalIndex, index);
+            }
+          },
+          [DRAG_ITEM_TYPE.LINK]: () => {
+            // 当前投放的网址数据
+            const linkItem = dragItem as LinkDragItem;
+            onChangeCurrentCategory(category.id);
+            void onMoveLink(
+              linkItem.link.id,
+              category.id,
+              category.items.length
+            );
+          },
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () => {
+            // 当前投放的分组数据
+            const linkGroupItem = dragItem as LinkGroupDragItem;
+            onChangeCurrentCategory(category.id);
+            void onMoveCategoryItem(
+              category.id,
+              linkGroupItem.id,
+              category.items.length
+            );
+          },
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        dropStrategies[dragItem.type]();
+      },
+    }),
+    [
+      category,
       index,
-      id: category.id,
-      originalIndex: index,
-    }),
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    end: (_item, monitor) => {
-      // 如果拖拽被取消或没有成功放置，不执行任何操作
-      if (!monitor.didDrop()) {
-        return;
-      }
-    },
+      onCancel,
+      onChangeCurrentCategory,
+      onDrop,
+      onHover,
+      onMoveCategoryItem,
+      onMoveLink,
+    ]
+  );
+  // 分类排序和投放状态
+  const {
+    attributes,
+    isDragging,
+    isOver,
+    listeners,
+    setNodeRef,
+    transform,
+  } = useSortable({
+    id: createDndId("category", category.id),
+    data: dndData,
+    transition: null,
   });
-
-  // 不同拖拽项目的悬停处理策略
-  const hoverStrategies: Record<
-    DragItem["type"],
-    (dragItem: DragItem) => void
-  > = {
-    [DRAG_ITEM_TYPE.CATEGORY]: (dragItem) => {
-      // 当前拖动的分类数据
-      const categoryItem = dragItem as CategoryDragItem;
-      if (categoryItem.index === index) {
-        return;
-      }
-
-      onHover(categoryItem.index, index);
-      categoryItem.index = index;
+  /** 同时保存分类来源元素并连接 dnd-kit 排序节点。 */
+  const connectCategoryRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      elementRef.current = node;
+      setNodeRef(node);
     },
-    [DRAG_ITEM_TYPE.LINK]: () => undefined,
-    [DRAG_ITEM_TYPE.LINK_GROUP]: () => undefined,
+    [setNodeRef]
+  );
+  // 当前是否有网格项目经过分类
+  const isGridItemOver =
+    isOver &&
+    (activeItem?.type === DRAG_ITEM_TYPE.LINK ||
+      activeItem?.type === DRAG_ITEM_TYPE.LINK_GROUP);
+  // 分类拖拽排序期间的位移样式
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
   };
-
-  // 不同拖拽项目的投放处理策略
-  const dropStrategies: Record<
-    DragItem["type"],
-    (dragItem: DragItem) => void
-  > = {
-    [DRAG_ITEM_TYPE.CATEGORY]: (dragItem) => {
-      // 当前投放的分类数据
-      const categoryItem = dragItem as CategoryDragItem;
-      if (categoryItem.originalIndex !== index) {
-        onDrop(categoryItem.originalIndex, index);
-      }
-    },
-    [DRAG_ITEM_TYPE.LINK]: (dragItem) => {
-      // 当前投放的网址数据
-      const linkItem = dragItem as LinkDragItem;
-      onChangeCurrentCategory(category.id);
-      void onMoveLink(linkItem.link.id, category.id, category.items.length);
-    },
-    [DRAG_ITEM_TYPE.LINK_GROUP]: (dragItem) => {
-      // 当前投放的分组数据
-      const linkGroupItem = dragItem as LinkGroupDragItem;
-      onChangeCurrentCategory(category.id);
-      void onMoveCategoryItem(
-        category.id,
-        linkGroupItem.id,
-        category.items.length
-      );
-    },
-  };
-
-  // 分类投放状态与连接器
-  const [{ handlerId, isGridItemOver }, drop] = useDrop<
-    DragItem,
-    void,
-    { handlerId: string | symbol | null; isGridItemOver: boolean }
-  >({
-    accept: [
-      DRAG_ITEM_TYPE.CATEGORY,
-      DRAG_ITEM_TYPE.LINK,
-      DRAG_ITEM_TYPE.LINK_GROUP,
-    ],
-    /** 收集分类和网格项目经过侧栏时的状态。 */
-    collect(monitor) {
-      // 当前经过分类的拖拽项目
-      const item = monitor.getItem<DragItem>();
-      return {
-        handlerId: monitor.getHandlerId(),
-        isGridItemOver:
-          monitor.isOver({ shallow: true }) &&
-          (item?.type === DRAG_ITEM_TYPE.LINK ||
-            item?.type === DRAG_ITEM_TYPE.LINK_GROUP),
-      };
-    },
-    /** 按拖拽项目类型分发悬停行为。 */
-    hover(item) {
-      hoverStrategies[item.type](item);
-    },
-    /** 按拖拽项目类型分发投放行为。 */
-    drop(item) {
-      dropStrategies[item.type](item);
-    },
-  });
 
   useEffect(() => {
     if (!isGridItemOver || isActive) {
@@ -176,14 +207,6 @@ export default function CategoryItem({
     return () => window.clearTimeout(timer);
   }, [category.id, isActive, isGridItemOver, onChangeCurrentCategory]);
 
-  // 同时连接分类的拖动与投放能力
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      drag(drop(node));
-    },
-    [drag, drop]
-  );
-
   /** 打开当前分类的编辑界面。 */
   function onEditCategoryClick() {
     onEditClick(category.id);
@@ -191,7 +214,10 @@ export default function CategoryItem({
 
   return (
     <div
-      ref={ref}
+      ref={connectCategoryRef}
+      style={sortableStyle}
+      {...attributes}
+      {...listeners}
       className={cn(
         "group/item relative flex shrink-0 items-center rounded-xl transition-[opacity,background-color,border-color,box-shadow] duration-200 md:mx-4 md:w-[calc(100%-2rem)]",
         isDragging ? "opacity-50" : "opacity-100",
@@ -200,7 +226,6 @@ export default function CategoryItem({
           : "hover:bg-white/[0.07]",
         isGridItemOver && "bg-white/15 ring-1 ring-blue-200/45"
       )}
-      data-handler-id={handlerId}
     >
       <span
         aria-hidden="true"

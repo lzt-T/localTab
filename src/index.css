@@ -81,6 +81,12 @@ html[data-dock-dragging="true"] * {
   background: rgba(58, 60, 64, 0.52);
 }
 
+/* 页面拖拽期间关闭高密度卡片的背景采样，降低图层合成开销 */
+html[data-page-dragging="true"] .glass-style-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* 与基础玻璃同色相、层级稍深的浮动工具表面 */
 .glass-style-floating {
   background: rgba(46, 48, 52, 0.76);
