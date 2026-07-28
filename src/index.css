@@ -56,9 +56,9 @@ body {
   min-height: 100vh;
 }
 
-/* Dock 指针排序期间覆盖所有命中元素的系统光标 */
-html[data-dock-dragging="true"],
-html[data-dock-dragging="true"] * {
+/* 页面拖拽期间覆盖所有命中元素的系统光标 */
+html[data-page-dragging="true"],
+html[data-page-dragging="true"] * {
   cursor: grabbing !important;
 }
 

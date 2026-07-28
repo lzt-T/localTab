@@ -22,7 +22,6 @@ import {
   type PageCollisionTarget,
 } from "@/newtab/components/PageDndProvider/page-collision-detection";
 import {
-  DRAG_ITEM_TYPE,
   createDndId,
   isDndSourceData,
   type DndSourceData,
@@ -221,19 +220,6 @@ export default function PageDndProvider({ children }: PageDndProviderProps) {
   function handleDragCancel() {
     finishDrag(true);
   }
-
-  useEffect(() => {
-    if (activeItem?.type !== DRAG_ITEM_TYPE.DOCK_LINK) {
-      return;
-    }
-    // Dock 排序期间需要强制使用抓取手型的文档根节点
-    const documentElement = document.documentElement;
-    documentElement.dataset.dockDragging = "true";
-    /** 清理 Dock 排序结束或组件卸载后的全局指针状态。 */
-    return () => {
-      delete documentElement.dataset.dockDragging;
-    };
-  }, [activeItem]);
 
   useEffect(() => {
     /** 清理组件卸载时可能残留的页面拖拽性能标识。 */
