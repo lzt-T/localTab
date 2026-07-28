@@ -383,6 +383,7 @@ export default function LinkFolderCard({
               onCancelDrag={onCancelLinkDrag}
               onEnterFolderContent={onEnterFolderContent}
               onOpenAddLink={() => onOpenAddLink(linkGroup.id)}
+              reserveDropPreviewSpace={isAutoOpenTarget}
             />
           </div>
         </FolderPopoverDropZone>

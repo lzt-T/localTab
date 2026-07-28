@@ -2,7 +2,9 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
@@ -29,6 +31,7 @@ interface LinkListProps {
   categoryId: string;
   allowMerge?: boolean;
   showAddLinkCard?: boolean;
+  reserveDropPreviewSpace?: boolean;
   handleEditClick: (linkId: string) => void;
   handleSkipClick: (url: string) => void;
   onMoveLink: (
@@ -53,6 +56,7 @@ export default function LinkList({
   categoryId,
   allowMerge = false,
   showAddLinkCard = false,
+  reserveDropPreviewSpace = false,
   handleEditClick,
   handleSkipClick,
   onMoveLink,
@@ -76,6 +80,16 @@ export default function LinkList({
     index: number;
     link: Link;
   } | null>(null);
+  // 文件夹自动展开时按“现有网址 + 拖入预览”预留的网格行数
+  const reservedPreviewRowCount = Math.max(
+    1,
+    Math.ceil((localLinks.length + 1) / 3)
+  );
+  // 每行卡片高 88px，行间距与网格 gap-3 保持为 12px
+  const reservedPreviewMinHeight =
+    reservedPreviewRowCount * 88 + (reservedPreviewRowCount - 1) * 12;
+  // 在浮层关闭动画完成并卸载前保留预览高度的网格节点
+  const previewLayoutNodeRef = useRef<HTMLDivElement | null>(null);
 
   // 当 categoryLinks 更新时同步本地状态
   useEffect(() => {
@@ -197,6 +211,23 @@ export default function LinkList({
     id: createDndId("link-list", parentId),
     data: listTargetData,
   });
+  /** 同时连接文件夹网格的投放节点与预览布局节点。 */
+  const connectListNodeRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      previewLayoutNodeRef.current = node;
+      setListNodeRef(node);
+    },
+    [setListNodeRef]
+  );
+
+  useLayoutEffect(() => {
+    if (!reserveDropPreviewSpace || !previewLayoutNodeRef.current) {
+      return;
+    }
+    // 关闭阶段不清除此样式，由 Popover Content 卸载节点时自然释放
+    previewLayoutNodeRef.current.style.minHeight =
+      `${reservedPreviewMinHeight}px`;
+  }, [reserveDropPreviewSpace, reservedPreviewMinHeight]);
 
   // 列表末尾携带的投放目标数据
   const endTargetData: DndTargetData = {
@@ -254,7 +285,10 @@ export default function LinkList({
   });
 
   return (
-    <div ref={setListNodeRef} className="grid min-h-20 grid-cols-3 gap-3">
+    <div
+      ref={connectListNodeRef}
+      className="grid min-h-20 grid-cols-3 content-start gap-3"
+    >
       {localLinks.map((link, index) => {
         return (
           <Fragment key={link.id}>
