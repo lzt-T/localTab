@@ -141,13 +141,16 @@ export function CategoryGridItemSlot({
     <div
       ref={setNodeRef}
       className={cn(
-        "relative -m-2.5 rounded-[26px] p-2.5 transition-[opacity,box-shadow]",
-        isHidden && "opacity-0",
-        isItemOver &&
-          linkDropFolder &&
-          "ring-2 ring-amber-200/80 shadow-lg shadow-amber-200/10"
+        "relative -my-2.5 py-2.5 transition-opacity",
+        isHidden && "opacity-0"
       )}
     >
+      {isItemOver && linkDropFolder && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-2.5 top-2.5 rounded-xl outline-2 outline-offset-[8px] outline-amber-200/80 shadow-lg shadow-amber-200/10"
+        />
+      )}
       {children}
     </div>
   );

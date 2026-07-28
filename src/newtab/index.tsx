@@ -227,7 +227,7 @@ const NewTabApp: React.FC = () => {
     <PageDndProvider>
       <div
         data-category-page-scroll=""
-        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-y-scroll bg-[#090c10] text-white"
+        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-x-hidden overflow-y-scroll bg-[#090c10] text-white"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}
       >
         <div
