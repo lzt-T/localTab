@@ -5,7 +5,9 @@
 
 const DB_NAME = 'LocalTabDB'
 // 数据库版本 用于升级数据库,当数据库版本号发生变化时,会触发 onupgradeneeded 事件
-const DB_VERSION = 2
+const DB_VERSION = 3
+// v2 及更早版本使用的系统设置表
+const LEGACY_SETTINGS_STORE_NAME = 'settings'
 
 // 对象存储名称常量
 export const STORE_NAMES = {
@@ -16,6 +18,18 @@ export const STORE_NAMES = {
 } as const
 
 export type StoreName = typeof STORE_NAMES[keyof typeof STORE_NAMES]
+
+export type KeyValueEntry = {
+  key: string
+  value: unknown
+}
+
+export type ReplaceAllData = {
+  categories: unknown[]
+  links: unknown[]
+  linkGroups: unknown[]
+  system: KeyValueEntry[]
+}
 
 class LocalTabDB {
   private db: IDBDatabase | null = null
@@ -40,10 +54,18 @@ class LocalTabDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
+        // 当前升级事务
+        const transaction = request.transaction
+        // 升级前是否已存在新版系统设置表
+        const hasSystemStore = db.objectStoreNames.contains(STORE_NAMES.SYSTEM)
+        // 新版系统设置表
+        let systemStore: IDBObjectStore
 
-        // 创建 settings 表（键值对存储）
-        if (!db.objectStoreNames.contains(STORE_NAMES.SYSTEM)) {
-          db.createObjectStore(STORE_NAMES.SYSTEM)
+        // 创建 system 表（键值对存储）
+        if (!hasSystemStore) {
+          systemStore = db.createObjectStore(STORE_NAMES.SYSTEM)
+        } else {
+          systemStore = transaction!.objectStore(STORE_NAMES.SYSTEM)
         }
 
         // 创建 category 表（使用 id 作为主键）
@@ -59,6 +81,24 @@ class LocalTabDB {
         // 创建 linkGroup 表（使用 id 作为主键）
         if (!db.objectStoreNames.contains(STORE_NAMES.LINK_GROUP)) {
           db.createObjectStore(STORE_NAMES.LINK_GROUP, { keyPath: 'id' })
+        }
+
+        // 仅在首次创建 system 表时迁移旧 settings 数据，避免覆盖新版设置
+        if (
+          !hasSystemStore &&
+          transaction &&
+          db.objectStoreNames.contains(LEGACY_SETTINGS_STORE_NAME)
+        ) {
+          const legacyStore = transaction.objectStore(LEGACY_SETTINGS_STORE_NAME)
+          const cursorRequest = legacyStore.openCursor()
+
+          cursorRequest.onsuccess = () => {
+            const cursor = cursorRequest.result
+            if (!cursor) return
+
+            systemStore.put(cursor.value, cursor.key)
+            cursor.continue()
+          }
         }
       }
     })
@@ -224,6 +264,72 @@ class LocalTabDB {
       this.clear(STORE_NAMES.LINK),
       this.clear(STORE_NAMES.LINK_GROUP)
     ])
+  }
+
+  /**
+   * 在单个事务中用导入数据替换全部本地数据。
+   * 任意清空或写入操作失败时，整个事务都会回滚。
+   */
+  async replaceAll(data: ReplaceAllData): Promise<void> {
+    const db = await this.init()
+    const storeNames = [
+      STORE_NAMES.SYSTEM,
+      STORE_NAMES.CATEGORY,
+      STORE_NAMES.LINK,
+      STORE_NAMES.LINK_GROUP
+    ] as const
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeNames, 'readwrite')
+      let isSettled = false
+
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error('替换数据库数据失败'))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve()
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error('替换数据库数据失败，事务已回滚'))
+      }
+
+      try {
+        const systemStore = transaction.objectStore(STORE_NAMES.SYSTEM)
+        const categoryStore = transaction.objectStore(STORE_NAMES.CATEGORY)
+        const linkStore = transaction.objectStore(STORE_NAMES.LINK)
+        const linkGroupStore = transaction.objectStore(STORE_NAMES.LINK_GROUP)
+
+        systemStore.clear()
+        categoryStore.clear()
+        linkStore.clear()
+        linkGroupStore.clear()
+
+        for (const entry of data.system) {
+          systemStore.put(entry.value, entry.key)
+        }
+        for (const category of data.categories) {
+          categoryStore.put(category)
+        }
+        for (const link of data.links) {
+          linkStore.put(link)
+        }
+        for (const linkGroup of data.linkGroups) {
+          linkGroupStore.put(linkGroup)
+        }
+      } catch (error) {
+        try {
+          transaction.abort()
+        } catch {
+          // 事务可能已因同步请求错误而自动进入终止状态
+        }
+        rejectOnce(error)
+      }
+    })
   }
 }
 

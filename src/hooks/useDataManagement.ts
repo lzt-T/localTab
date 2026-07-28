@@ -158,7 +158,15 @@ export function useDataManagement() {
       const importData: ExportData = JSON.parse(text);
 
       // 验证数据格式
-      if (!importData.version || !importData.categories || !importData.links) {
+      if (
+        !importData.version ||
+        !Array.isArray(importData.categories) ||
+        !Array.isArray(importData.links) ||
+        (importData.linkGroups !== undefined &&
+          !Array.isArray(importData.linkGroups)) ||
+        (importData.system?.customSearchEngines !== undefined &&
+          !Array.isArray(importData.system.customSearchEngines))
+      ) {
         toast.error(t("dataManagement.invalidFile"));
         return false;
       }
@@ -186,30 +194,7 @@ export function useDataManagement() {
           )
         : [];
 
-      // 清空现有数据
-      await db.clear(STORE_NAMES.CATEGORY);
-      await db.clear(STORE_NAMES.LINK);
-      await db.clear(STORE_NAMES.LINK_GROUP);
-      await db.clear(STORE_NAMES.SYSTEM);
-
-      // 导入分类
-      for (const category of importData.categories) {
-        await db.put(STORE_NAMES.CATEGORY, category);
-      }
-
-      // 导入链接
-      for (const link of importData.links) {
-        await db.put(STORE_NAMES.LINK, link);
-      }
-
-      // 导入链接组
-      if (importData.linkGroups) {
-        for (const linkGroup of importData.linkGroups) {
-          await db.put(STORE_NAMES.LINK_GROUP, linkGroup);
-        }
-      }
-
-      // 导入自定义搜索引擎
+      // 导入前准备自定义搜索引擎
       const customSearchEngines = importData.system?.customSearchEngines ?? [];
       // 备份中保存的搜索引擎标识
       const storedSearchEngineId = importData.system?.selectedSearchEngineId;
@@ -229,23 +214,34 @@ export function useDataManagement() {
         isSelectedEngineValid && normalizedSearchEngineId
           ? normalizedSearchEngineId
           : DEFAULT_SEARCH_ENGINE_ID;
-      await Promise.all([
-        systemService.updateCustomSearchEngines(customSearchEngines),
-        systemService.updateSelectedSearchEngineId(selectedSearchEngineId),
-        systemService.updateDockLinkIds(dockLinkIds),
-      ]);
 
-      // 导入背景图片
+      // 在清空现有数据前完成背景图片解码
+      let backgroundImage: { id: string; blob: Blob } | undefined;
       if (importData.system?.backgroundImage) {
         // 备份中的背景图片字段
         const { base64, mimeType, id } = importData.system.backgroundImage;
         // 还原后的背景图片
         const blob = base64ToBlob(base64, mimeType);
-        await db.putWithKey(STORE_NAMES.SYSTEM, "backgroundImage", {
-          id,
-          blob,
-        });
+        backgroundImage = { id, blob };
       }
+
+      // 待原子写入的全部系统设置
+      const system = [
+        { key: "customSearchEngines", value: customSearchEngines },
+        { key: "selectedSearchEngineId", value: selectedSearchEngineId },
+        { key: "dockLinkIds", value: dockLinkIds },
+      ];
+      if (backgroundImage) {
+        system.push({ key: "backgroundImage", value: backgroundImage });
+      }
+
+      // 单个事务内替换全部数据，任意失败都会回滚
+      await db.replaceAll({
+        categories: importData.categories,
+        links: importData.links,
+        linkGroups: importData.linkGroups ?? [],
+        system,
+      });
 
       toast.success(t("dataManagement.importSuccess"));
       return true;
