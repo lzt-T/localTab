@@ -56,6 +56,12 @@ body {
   min-height: 100vh;
 }
 
+/* Dock 指针排序期间覆盖所有命中元素的系统光标 */
+html[data-dock-dragging="true"],
+html[data-dock-dragging="true"] * {
+  cursor: grabbing !important;
+}
+
 /* 自定义样式 */
 
 /* 玻璃态 */

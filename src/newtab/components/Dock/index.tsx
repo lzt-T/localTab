@@ -6,14 +6,33 @@ import {
   type KeyboardEvent,
 } from "react";
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  pointerWithin,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type CollisionDetection,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   FolderPlus,
   Link2,
   Pin,
   Plus,
   Trash2,
 } from "lucide-react";
-import { useDrag, useDrop } from "react-dnd";
-import { getEmptyImage } from "react-dnd-html5-backend";
+import { useDrop } from "react-dnd";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
@@ -30,8 +49,6 @@ import { cn } from "@/lib/utils";
 import DockLinkIcon from "@/newtab/components/Dock/DockLinkIcon";
 import {
   DRAG_ITEM_TYPE,
-  type DockLinkDragItem,
-  type DragItem,
   type LinkDragItem,
   type PageDragItem,
 } from "@/newtab/drag-and-drop";
@@ -49,15 +66,15 @@ interface DockProps {
 }
 
 interface DockLinkItemProps {
-  index: number;
   link: Link;
-  onPreviewMove: (linkId: string, targetIndex: number) => void;
-  onDrop: (linkId: string, targetIndex: number) => void;
-  onDragStart: () => void;
-  onDragCancel: () => void;
-  onDragEnd: () => void;
   onOpen: (url: string) => void;
   onUnpin: (linkId: string) => Promise<void>;
+}
+
+interface DockTrashProps {
+  isOver: boolean;
+  isVisible: boolean;
+  connectReactDndDropRef: (node: HTMLDivElement | null) => void;
 }
 
 // Dock 中可点击操作的统一视觉样式
@@ -67,111 +84,33 @@ const DOCK_ACTION_CLASS =
 // Dock 添加菜单离开后的关闭缓冲时间
 const DOCK_CREATE_MENU_CLOSE_DELAY_MS = 150;
 
+// Dock 指针排序开始前允许的移动距离
+const DOCK_DRAG_ACTIVATION_DISTANCE_PX = 6;
+
+// Dock 在 dnd-kit 中使用的垃圾桶投放标识
+const DOCK_TRASH_DROP_ID = "dock-trash";
+
 /** 渲染可打开并支持拖拽排序的 Dock 网址。 */
 function DockLinkItem({
-  index,
   link,
-  onPreviewMove,
-  onDrop,
-  onDragStart,
-  onDragCancel,
-  onDragEnd,
   onOpen,
   onUnpin,
 }: DockLinkItemProps) {
   // Dock 网址文案的本地化工具
   const { t } = useTranslation();
-  // Dock 网址拖拽目标引用
-  const elementRef = useRef<HTMLDivElement>(null);
-  // Dock 网址的拖动状态与连接器
-  const [{ isDragging }, drag, preview] = useDrag<
-    DockLinkDragItem,
-    void,
-    { isDragging: boolean }
-  >({
-    type: DRAG_ITEM_TYPE.DOCK_LINK,
-    /** 创建 Dock 网址拖拽数据。 */
-    item() {
-      // Dock 网址当前的预览尺寸
-      const { width, height } = elementRef.current!.getBoundingClientRect();
-      onDragStart();
-      return {
-        type: DRAG_ITEM_TYPE.DOCK_LINK,
-        linkId: link.id,
-        link,
-        previewWidth: width,
-        previewHeight: height,
-        index,
-      };
-    },
-    /** 按网址标识保持重排后拖动源的视觉状态。 */
-    isDragging(monitor) {
-      return monitor.getItem().linkId === link.id;
-    },
-    /** 收集 Dock 网址当前是否正在拖动。 */
-    collect(monitor) {
-      return {
-        isDragging: monitor.isDragging(),
-      };
-    },
-    /** 在拖拽结束后恢复取消的预览并清理拖拽状态。 */
-    end(_item, monitor) {
-      if (!monitor.didDrop()) {
-        onDragCancel();
-      }
-      onDragEnd();
-    },
-  });
-  // Dock 网址的排序投放状态与连接器
-  const [, drop] = useDrop<DockLinkDragItem, void>({
-    accept: DRAG_ITEM_TYPE.DOCK_LINK,
-    /** 越过目标网址中线后更新 Dock 的临时预览顺序。 */
-    hover(item, monitor) {
-      if (item.index === index) {
-        return;
-      }
-
-      // 目标网址边界
-      const targetRect = elementRef.current?.getBoundingClientRect();
-      // 当前指针位置
-      const clientOffset = monitor.getClientOffset();
-      if (!targetRect || !clientOffset) {
-        return;
-      }
-
-      // 目标网址横向中点
-      const targetMiddleX = targetRect.width / 2;
-      // 指针在目标网址中的横向位置
-      const pointerX = clientOffset.x - targetRect.left;
-      if (
-        (item.index < index && pointerX < targetMiddleX) ||
-        (item.index > index && pointerX > targetMiddleX)
-      ) {
-        return;
-      }
-
-      onPreviewMove(item.linkId, index);
-      item.index = index;
-    },
-    /** 在 Dock 网址上松开时保存最终预览位置。 */
-    drop(item) {
-      onDrop(item.linkId, item.index);
-    },
-  });
-
-  /** 同时连接 Dock 网址的拖动和排序投放能力。 */
-  const connectDockLinkRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      elementRef.current = node;
-      drag(drop(node));
-    },
-    [drag, drop]
-  );
-
-  useEffect(() => {
-    // 隐藏浏览器原生拖拽快照，改由页面自定义预览层渲染。
-    preview(getEmptyImage(), { captureDraggingState: true });
-  }, [preview]);
+  // Dock 网址的指针排序状态与连接器
+  const {
+    attributes,
+    isDragging,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+  } = useSortable({ id: link.id, transition: null });
+  // Dock 网址排序期间的位移样式
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+  };
 
   /** 打开当前 Dock 网址。 */
   function openDockLink() {
@@ -189,7 +128,8 @@ function DockLinkItem({
 
   return (
     <div
-      ref={connectDockLinkRef}
+      ref={setNodeRef}
+      style={sortableStyle}
       className={cn(
         "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
         "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
@@ -199,12 +139,15 @@ function DockLinkItem({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
+            ref={setActivatorNodeRef}
             type="button"
-            className="flex h-full w-full cursor-grab items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
             onClick={openDockLink}
             onKeyDown={handleDockLinkKeyDown}
             aria-label={t("dock.openLink", { title: link.title })}
             aria-keyshortcuts="Delete Backspace"
+            {...attributes}
+            {...listeners}
           >
             <span className="flex size-7 items-center justify-center transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
               <DockLinkIcon link={link} />
@@ -224,6 +167,67 @@ function DockLinkItem({
   );
 }
 
+/** 渲染同时支持 React DnD 与 dnd-kit 的 Dock 垃圾桶。 */
+function DockTrash({
+  isOver,
+  isVisible,
+  connectReactDndDropRef,
+}: DockTrashProps) {
+  // Dock 垃圾桶文案的本地化工具
+  const { t } = useTranslation();
+  // Dock 网址指针拖拽的垃圾桶投放连接器
+  const { setNodeRef: setPointerDropRef } = useDroppable({
+    id: DOCK_TRASH_DROP_ID,
+  });
+
+  /** 同时连接两套拖拽后端的垃圾桶投放能力。 */
+  const connectTrashRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      setPointerDropRef(node);
+      connectReactDndDropRef(node);
+    },
+    [connectReactDndDropRef, setPointerDropRef]
+  );
+
+  return (
+    <>
+      <span
+        className={cn(
+          "h-7 shrink-0 bg-white/10 transition-[width,opacity] duration-200 motion-reduce:transition-none",
+          isVisible ? "w-px opacity-100" : "w-0 opacity-0"
+        )}
+        aria-hidden="true"
+      />
+
+      <div
+        className={cn(
+          "flex shrink-0 items-center overflow-hidden transition-[width,opacity] duration-200 motion-reduce:transition-none",
+          isVisible ? "w-11 opacity-100" : "w-0 opacity-0",
+          isOver && "overflow-visible"
+        )}
+      >
+        <div
+          ref={connectTrashRef}
+          className={cn(
+            "flex size-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-white/55 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+            isVisible && "border-white/15 bg-white/[0.07] text-white/80",
+            isOver &&
+              "scale-105 border-red-300/45 bg-red-400/15 text-red-200 shadow-[0_8px_22px_rgba(248,113,113,0.14)]"
+          )}
+          role="img"
+          title={isOver ? t("dock.releaseToRemove") : t("dock.trash")}
+          aria-label={
+            isOver ? t("dock.releaseToRemove") : t("dock.trash")
+          }
+          aria-hidden={!isVisible}
+        >
+          <Trash2 size={20} />
+        </div>
+      </div>
+    </>
+  );
+}
+
 /** 渲染页面底部的玻璃功能岛与拖拽垃圾桶。 */
 export default function Dock({
   dockLinks,
@@ -237,14 +241,24 @@ export default function Dock({
 }: DockProps) {
   // Dock 文案的本地化工具
   const { t } = useTranslation();
-  // Dock 拖拽期间展示的临时网址顺序
-  const [previewDockLinks, setPreviewDockLinks] = useState(dockLinks);
-  // Dock 当前是否正在预览排序位置
-  const [isDockSorting, setIsDockSorting] = useState(false);
   // Dock 添加菜单是否打开
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  // 当前应渲染的 Dock 网址顺序
-  const displayedDockLinks = isDockSorting ? previewDockLinks : dockLinks;
+  // 当前通过指针排序的 Dock 网址标识
+  const [activeDockLinkId, setActiveDockLinkId] = useState<string | null>(null);
+  // Dock 网址是否正悬停在垃圾桶上
+  const [isDockTrashOver, setIsDockTrashOver] = useState(false);
+  // Dock 指针排序传感器
+  const dockSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: DOCK_DRAG_ACTIVATION_DISTANCE_PX },
+    })
+  );
+  // Dock 当前的可排序网址标识
+  const dockLinkIds = dockLinks.map((link) => link.id);
+  // 当前正在拖动的 Dock 网址
+  const activeDockLink = dockLinks.find(
+    (link) => link.id === activeDockLinkId
+  );
   // Dock 添加菜单待执行的关闭计时器
   const createMenuCloseTimerRef = useRef<number | null>(null);
   // Dock 添加菜单是否由鼠标悬停打开
@@ -271,9 +285,10 @@ export default function Dock({
       };
     },
   });
-  // 垃圾桶的拖拽状态与投放连接器
-  const [{ canDrop, isOver: isTrashOver }, trashDrop] = useDrop<
-    DragItem,
+  // 页面项目对应的垃圾桶拖拽状态与投放连接器
+  const [{ canDrop: canDropPageItem, isOver: isPageTrashOver }, trashDrop] =
+    useDrop<
+    PageDragItem,
     void,
     { canDrop: boolean; isOver: boolean }
   >({
@@ -281,22 +296,10 @@ export default function Dock({
       DRAG_ITEM_TYPE.CATEGORY,
       DRAG_ITEM_TYPE.LINK,
       DRAG_ITEM_TYPE.LINK_GROUP,
-      DRAG_ITEM_TYPE.DOCK_LINK,
     ],
-    /** 按拖拽项目类型分发删除或取消固定操作。 */
+    /** 删除投放到垃圾桶的页面项目。 */
     drop(item) {
-      // 不同拖拽项目对应的移除策略
-      const removeStrategies: Record<DragItem["type"], () => void> = {
-        [DRAG_ITEM_TYPE.CATEGORY]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.LINK]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () =>
-          void onUnpinDockLink((item as DockLinkDragItem).linkId),
-      };
-      removeStrategies[item.type]();
+      void onDropToTrash(item);
     },
     /** 收集垃圾桶当前是否可接收或命中拖拽对象。 */
     collect(monitor) {
@@ -306,49 +309,92 @@ export default function Dock({
       };
     },
   });
+  // 垃圾桶当前是否需要展示
+  const isTrashVisible = canDropPageItem || activeDockLinkId !== null;
+  // 两套拖拽后端合并后的垃圾桶命中状态
+  const isTrashOver = isPageTrashOver || isDockTrashOver;
 
-  /** 开始 Dock 排序并暂缓外部顺序覆盖临时预览。 */
-  function startDockLinkDrag() {
-    setPreviewDockLinks(dockLinks);
-    setIsDockSorting(true);
-  }
+  /** 优先命中垃圾桶，并将 Dock 排序限制在固定网址区域内。 */
+  function detectDockCollision(args: Parameters<CollisionDetection>[0]) {
+    // 指针当前直接覆盖的投放目标
+    const pointerCollisions = pointerWithin(args);
+    // 指针当前覆盖的垃圾桶目标
+    const trashCollision = pointerCollisions.find(
+      (collision) => collision.id === DOCK_TRASH_DROP_ID
+    );
+    if (trashCollision) {
+      return [trashCollision];
+    }
 
-  /** 按目标索引更新 Dock 的临时预览顺序。 */
-  function previewDockLinkMove(linkId: string, targetIndex: number) {
-    setPreviewDockLinks((currentLinks) => {
-      // 被拖网址在当前预览顺序中的索引
-      const sourceIndex = currentLinks.findIndex((link) => link.id === linkId);
-      // 限制后的目标索引
-      const boundedTargetIndex = Math.max(
-        0,
-        Math.min(targetIndex, currentLinks.length - 1)
-      );
-      if (sourceIndex < 0 || sourceIndex === boundedTargetIndex) {
-        return currentLinks;
-      }
+    // Dock 固定网址区域的当前边界
+    const pinAreaBounds = pinAreaRef.current?.getBoundingClientRect();
+    // dnd-kit 当前记录的指针位置
+    const pointerCoordinates = args.pointerCoordinates;
+    if (!pinAreaBounds || !pointerCoordinates) {
+      return [];
+    }
 
-      // 移除被拖网址后的预览顺序
-      const reorderedLinks = currentLinks.filter((link) => link.id !== linkId);
-      // 当前被拖动的网址
-      const draggedLink = currentLinks[sourceIndex];
-      reorderedLinks.splice(boundedTargetIndex, 0, draggedLink);
-      return reorderedLinks;
+    // 指针当前是否位于 Dock 固定网址区域
+    const isWithinPinArea =
+      pointerCoordinates.x >= pinAreaBounds.left &&
+      pointerCoordinates.x <= pinAreaBounds.right &&
+      pointerCoordinates.y >= pinAreaBounds.top &&
+      pointerCoordinates.y <= pinAreaBounds.bottom;
+    if (!isWithinPinArea) {
+      return [];
+    }
+
+    return closestCenter({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        (container) => container.id !== DOCK_TRASH_DROP_ID
+      ),
     });
   }
 
-  /** 保存 Dock 拖拽预览中的最终顺序。 */
-  function commitDockLinkMove(linkId: string, targetIndex: number) {
-    void onMoveDockLink(linkId, targetIndex);
+  /** 开始 Dock 指针排序。 */
+  function handleDockDragStart(event: DragStartEvent) {
+    setActiveDockLinkId(String(event.active.id));
+    setIsDockTrashOver(false);
   }
 
-  /** 取消 Dock 排序时恢复持久化顺序。 */
-  function cancelDockLinkDrag() {
-    setPreviewDockLinks(dockLinks);
+  /** 同步 Dock 网址是否经过垃圾桶。 */
+  function handleDockDragOver(event: DragOverEvent) {
+    setIsDockTrashOver(event.over?.id === DOCK_TRASH_DROP_ID);
   }
 
-  /** 结束 Dock 排序并允许继续同步外部顺序。 */
-  function endDockLinkDrag() {
-    setIsDockSorting(false);
+  /** 清理 Dock 指针排序的界面状态。 */
+  function finishDockDrag() {
+    setActiveDockLinkId(null);
+    setIsDockTrashOver(false);
+  }
+
+  /** 保存 Dock 指针排序或执行取消固定。 */
+  function handleDockDragEnd(event: DragEndEvent) {
+    // 当前拖动的网址标识
+    const activeLinkId = String(event.active.id);
+    // 当前命中的投放目标标识
+    const overId = event.over?.id;
+    finishDockDrag();
+    if (!overId) {
+      return;
+    }
+    if (overId === DOCK_TRASH_DROP_ID) {
+      void onUnpinDockLink(activeLinkId);
+      return;
+    }
+
+    // 当前投放目标在持久化顺序中的索引
+    const targetIndex = dockLinks.findIndex((link) => link.id === overId);
+    if (targetIndex < 0) {
+      return;
+    }
+    void onMoveDockLink(activeLinkId, targetIndex);
+  }
+
+  /** 取消 Dock 指针排序并清理界面状态。 */
+  function handleDockDragCancel() {
+    finishDockDrag();
   }
 
   /** 取消 Dock 添加菜单待执行的关闭操作。 */
@@ -417,8 +463,8 @@ export default function Dock({
     [pinDrop]
   );
 
-  /** 将垃圾桶元素注册为投放目标。 */
-  const connectTrashRef = useCallback(
+  /** 将垃圾桶元素注册为 React DnD 投放目标。 */
+  const connectReactDndTrashRef = useCallback(
     (node: HTMLDivElement | null) => {
       trashDrop(node);
     },
@@ -435,6 +481,20 @@ export default function Dock({
   }, [dockLinks.length]);
 
   useEffect(() => {
+    if (!activeDockLinkId) {
+      return;
+    }
+
+    // Dock 排序期间需要强制使用抓取手型的文档根节点
+    const documentElement = document.documentElement;
+    documentElement.dataset.dockDragging = "true";
+    /** 清理 Dock 排序结束或组件卸载后的全局指针状态。 */
+    return () => {
+      delete documentElement.dataset.dockDragging;
+    };
+  }, [activeDockLinkId]);
+
+  useEffect(() => {
     /** 清理组件卸载时仍未执行的 Dock 添加菜单关闭计时器。 */
     return () => {
       if (createMenuCloseTimerRef.current !== null) {
@@ -444,144 +504,131 @@ export default function Dock({
   }, []);
 
   return (
-    <nav
-      className="glass-style-floating fixed bottom-6 left-1/2 z-40 flex w-fit max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-2xl p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.28)] md:bottom-8"
-      aria-label={t("dock.navigation")}
+    <DndContext
+      sensors={dockSensors}
+      collisionDetection={detectDockCollision}
+      onDragStart={handleDockDragStart}
+      onDragOver={handleDockDragOver}
+      onDragEnd={handleDockDragEnd}
+      onDragCancel={handleDockDragCancel}
     >
-      <DropdownMenu
-        modal={false}
-        open={isCreateMenuOpen}
-        onOpenChange={handleCreateMenuOpenChange}
+      <nav
+        className="glass-style-floating fixed bottom-6 left-1/2 z-40 flex w-fit max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-2xl p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.28)] md:bottom-8"
+        aria-label={t("dock.navigation")}
       >
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className={DOCK_ACTION_CLASS}
-            aria-label={t("dock.createContent")}
+        <DropdownMenu
+          modal={false}
+          open={isCreateMenuOpen}
+          onOpenChange={handleCreateMenuOpenChange}
+        >
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className={DOCK_ACTION_CLASS}
+              aria-label={t("dock.createContent")}
+              onMouseEnter={openCreateMenu}
+              onMouseLeave={scheduleCreateMenuClose}
+              onKeyDown={handleCreateMenuKeyDown}
+            >
+              <Plus size={21} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            sideOffset={10}
+            className="glass-style-overlay min-w-40 rounded-xl border-white/10 p-1.5 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] motion-reduce:animate-none"
             onMouseEnter={openCreateMenu}
             onMouseLeave={scheduleCreateMenuClose}
             onKeyDown={handleCreateMenuKeyDown}
+            onCloseAutoFocus={handleCreateMenuCloseAutoFocus}
           >
-            <Plus size={21} />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          side="top"
-          align="start"
-          sideOffset={10}
-          className="glass-style-overlay min-w-40 rounded-xl border-white/10 p-1.5 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] motion-reduce:animate-none"
-          onMouseEnter={openCreateMenu}
-          onMouseLeave={scheduleCreateMenuClose}
-          onKeyDown={handleCreateMenuKeyDown}
-          onCloseAutoFocus={handleCreateMenuCloseAutoFocus}
-        >
-          <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
-            onSelect={onAddLink}
-          >
-            <Link2 />
-            {t("link.addAction")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
-            onSelect={onCreateFolder}
-          >
-            <FolderPlus />
-            {t("linkGroup.createAction")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem
+              className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+              onSelect={onAddLink}
+            >
+              <Link2 />
+              {t("link.addAction")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+              onSelect={onCreateFolder}
+            >
+              <FolderPlus />
+              {t("linkGroup.createAction")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <span
-        className="h-7 w-px shrink-0 bg-white/10"
-        aria-hidden="true"
-      />
+        <span
+          className="h-7 w-px shrink-0 bg-white/10"
+          aria-hidden="true"
+        />
 
-      <div
-        ref={connectPinDropRef}
-        className={cn(
-          "relative flex h-11 max-w-[560px] items-center overflow-x-auto overflow-y-hidden rounded-xl",
-          dockLinks.length === 0 ? "min-w-[110px]" : "w-fit min-w-0",
-          "[scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin]",
-          "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-track]:bg-transparent",
-          "transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none",
-          isPinOver &&
-            "bg-blue-100/10 shadow-[0_8px_24px_rgba(191,219,254,0.12)]"
-        )}
-        aria-label={t("dock.pinnedLinks")}
-      >
-        {displayedDockLinks.length === 0 ? (
-          <div
-            className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
-            title={t("dock.emptyHint")}
-          >
-            <Pin size={16} />
-            <span className="text-xs font-medium">{t("dock.emptyHint")}</span>
-          </div>
-        ) : (
-          <div className="flex min-w-max items-center gap-1 px-0.5">
-            {displayedDockLinks.map((link, index) => (
-              <DockLinkItem
-                key={link.id}
-                index={index}
-                link={link}
-                onPreviewMove={previewDockLinkMove}
-                onDrop={commitDockLinkMove}
-                onDragStart={startDockLinkDrag}
-                onDragCancel={cancelDockLinkDrag}
-                onDragEnd={endDockLinkDrag}
-                onOpen={onOpenLink}
-                onUnpin={onUnpinDockLink}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <span
-        className={cn(
-          "h-7 shrink-0 bg-white/10 transition-[width,opacity] duration-200 motion-reduce:transition-none",
-          canDrop ? "w-px opacity-100" : "w-0 opacity-0"
-        )}
-        aria-hidden="true"
-      />
-
-      <div
-        className={cn(
-          "flex shrink-0 items-center overflow-hidden transition-[width,opacity] duration-200 motion-reduce:transition-none",
-          canDrop ? "w-11 opacity-100" : "w-0 opacity-0",
-          isTrashOver && "overflow-visible"
-        )}
-      >
         <div
-          ref={connectTrashRef}
+          ref={connectPinDropRef}
           className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-white/55 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-            canDrop &&
-              "border-white/15 bg-white/[0.07] text-white/80",
-            isTrashOver &&
-              "scale-105 border-red-300/45 bg-red-400/15 text-red-200 shadow-[0_8px_22px_rgba(248,113,113,0.14)]"
+            "relative flex h-11 max-w-[560px] items-center overflow-x-auto overflow-y-hidden rounded-xl",
+            dockLinks.length === 0 ? "min-w-[110px]" : "w-fit min-w-0",
+            "[scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin]",
+            "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-track]:bg-transparent",
+            "transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none",
+            isPinOver &&
+              "bg-blue-100/10 shadow-[0_8px_24px_rgba(191,219,254,0.12)]"
           )}
-          role="img"
-          title={
-            isTrashOver ? t("dock.releaseToRemove") : t("dock.trash")
-          }
-          aria-label={
-            isTrashOver ? t("dock.releaseToRemove") : t("dock.trash")
-          }
-          aria-hidden={!canDrop}
+          aria-label={t("dock.pinnedLinks")}
         >
-          <Trash2 size={20} />
+          {dockLinks.length === 0 ? (
+            <div
+              className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
+              title={t("dock.emptyHint")}
+            >
+              <Pin size={16} />
+              <span className="text-xs font-medium">
+                {t("dock.emptyHint")}
+              </span>
+            </div>
+          ) : (
+            <SortableContext
+              items={dockLinkIds}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex min-w-max items-center gap-1 px-0.5">
+                {dockLinks.map((link) => (
+                  <DockLinkItem
+                    key={link.id}
+                    link={link}
+                    onOpen={onOpenLink}
+                    onUnpin={onUnpinDockLink}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          )}
         </div>
-      </div>
 
-      <span className="sr-only" aria-live="polite">
-        {isTrashOver
-          ? t("dock.releaseToRemove")
-          : isPinOver
-          ? t("dock.releaseToPin")
-          : ""}
-      </span>
-    </nav>
+        <DockTrash
+          isOver={isTrashOver}
+          isVisible={isTrashVisible}
+          connectReactDndDropRef={connectReactDndTrashRef}
+        />
+
+        <span className="sr-only" aria-live="polite">
+          {isTrashOver
+            ? t("dock.releaseToRemove")
+            : isPinOver
+            ? t("dock.releaseToPin")
+            : ""}
+        </span>
+      </nav>
+
+      <DragOverlay dropAnimation={null}>
+        {activeDockLink ? (
+          <div className="flex size-11 items-center justify-center rounded-xl border border-white/20 bg-[rgba(58,60,64,0.94)] text-white shadow-lg shadow-black/30">
+            <DockLinkIcon link={activeDockLink} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

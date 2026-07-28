@@ -7,10 +7,10 @@ import { isImageIcon } from "@/utils/icon";
 
 type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 
-// 不同展示模式对应的网址卡片视觉样式
+// 不同展示模式对应的网址卡片前景样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "glass-style-border glass-style-card shadow-md shadow-black/10 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.58)] hover:shadow-lg hover:shadow-black/20 has-[[data-state=open]]:-translate-y-0.5 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
+    "border border-transparent shadow-md shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 group-hover/item:border-white/20 group-hover/item:bg-white/[0.04] group-hover/item:shadow-lg group-hover/item:shadow-black/20 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
   "drag-placeholder":
     "glass-style-border glass-style-card shadow-md shadow-black/10",
   "drag-preview":
@@ -86,65 +86,81 @@ export default function Index({
   };
 
   return (
-    <div
-      className={cn(
-        "group/item relative flex h-22 rounded-xl",
-        LINK_ITEM_CLASS_BY_VARIANT[variant]
-      )}
-    >
-      {link.id && handleEditClick && (
-        <button
-          type="button"
-          className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-0 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
-          onClick={onEditClick}
-          title={t("common.edit")}
-          aria-label={t("common.edit")}
-        >
-          <Edit size={15} />
-        </button>
-      )}
-      <button
-        type="button"
-        className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
-        onClick={onSkipClick}
-        aria-label={`${link.title}, ${linkHostname}`}
+    <div className="group/item relative h-22 rounded-xl">
+      <div
+        className={cn(
+          "relative h-full rounded-xl",
+          variant === "default" &&
+            "transform-gpu transition-transform duration-200 group-hover/item:-translate-y-0.5 motion-reduce:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none"
+        )}
       >
-        <span className="mb-1 flex h-7 shrink-0 items-center justify-center">
-          {shouldShowImageIcon ? (
-            <img
-              src={link.icon}
-              alt=""
-              className="size-6 rounded object-contain"
-              onError={onImageIconError}
-            />
-          ) : (
-            <Icon
-              name={hasImageIcon ? "link" : link.icon || "link"}
-              size={24}
-              className="text-blue-100/90"
-            />
-          )}
-        </span>
-        <span className="w-full min-w-0">
+        {variant === "default" && (
           <span
-            className={cn(
-              "block text-sm font-medium leading-5 text-white/90",
-              hasDescription ? "truncate" : "line-clamp-2"
-            )}
-            title={link.title}
-          >
-            {link.title}
-          </span>
-          {hasDescription && (
-            <span
-              className="block truncate text-xs leading-4 text-white/50"
-              title={link.description}
-            >
-              {link.description}
-            </span>
+            className="glass-style-border glass-style-card pointer-events-none absolute inset-0 z-0 rounded-xl"
+            aria-hidden="true"
+          />
+        )}
+        <div
+          className={cn(
+            "relative z-[1] flex h-full rounded-xl",
+            LINK_ITEM_CLASS_BY_VARIANT[variant]
           )}
-        </span>
-      </button>
+        >
+          {link.id && handleEditClick && (
+            <button
+              type="button"
+              className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-0 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
+              onClick={onEditClick}
+              title={t("common.edit")}
+              aria-label={t("common.edit")}
+            >
+              <Edit size={15} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            onClick={onSkipClick}
+            aria-label={`${link.title}, ${linkHostname}`}
+          >
+            <span className="mb-1 flex h-7 shrink-0 items-center justify-center">
+              {shouldShowImageIcon ? (
+                <img
+                  src={link.icon}
+                  alt=""
+                  className="size-6 rounded object-contain"
+                  onError={onImageIconError}
+                />
+              ) : (
+                <Icon
+                  name={hasImageIcon ? "link" : link.icon || "link"}
+                  size={24}
+                  className="text-blue-100/90"
+                />
+              )}
+            </span>
+            <span className="w-full min-w-0">
+              <span
+                className={cn(
+                  "block text-sm font-medium leading-5 text-white/90",
+                  hasDescription ? "truncate" : "line-clamp-2"
+                )}
+                title={link.title}
+              >
+                {link.title}
+              </span>
+              {hasDescription && (
+                <span
+                  className="block truncate text-xs leading-4 text-white/50"
+                  title={link.description}
+                >
+                  {link.description}
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

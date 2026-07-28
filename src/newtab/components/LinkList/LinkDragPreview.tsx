@@ -1,11 +1,9 @@
 import { memo, type ReactNode } from "react";
 import { useDragLayer } from "react-dnd";
-import DockLinkIcon from "@/newtab/components/Dock/DockLinkIcon";
 import LinkFolderCardContent from "@/newtab/components/LinkFolderCard/LinkFolderCardContent";
 import LinkItem from "@/newtab/components/LinkItem";
 import {
   DRAG_ITEM_TYPE,
-  type DockLinkDragItem,
   type DragItem,
   type LinkDragItem,
   type LinkGroupDragItem,
@@ -18,10 +16,6 @@ interface LinkDragPreviewCardProps {
 
 interface LinkGroupDragPreviewCardProps {
   linkGroup: LinkGroupInfo;
-}
-
-interface DockLinkDragPreviewCardProps {
-  link: Link;
 }
 
 interface DragPreviewLayout {
@@ -54,18 +48,6 @@ function LinkGroupDragPreviewCard({
 // 仅在被拖文件夹变化时重新渲染预览卡片内容
 const MemoizedLinkGroupDragPreviewCard = memo(LinkGroupDragPreviewCard);
 
-/** 渲染无需随拖拽坐标重复更新的静态 Dock 网址预览。 */
-function DockLinkDragPreviewCard({ link }: DockLinkDragPreviewCardProps) {
-  return (
-    <div className="flex size-full items-center justify-center rounded-xl border border-white/20 bg-[rgba(58,60,64,0.94)] text-white shadow-lg shadow-black/30">
-      <DockLinkIcon link={link} />
-    </div>
-  );
-}
-
-// 仅在被拖 Dock 网址变化时重新渲染预览内容
-const MemoizedDockLinkDragPreviewCard = memo(DockLinkDragPreviewCard);
-
 /** 创建网址卡片的拖拽预览布局。 */
 function createLinkDragPreview(item: DragItem): DragPreviewLayout {
   // 当前网址拖拽数据
@@ -90,24 +72,12 @@ function createLinkGroupDragPreview(item: DragItem): DragPreviewLayout {
   };
 }
 
-/** 创建 Dock 网址的拖拽预览布局。 */
-function createDockLinkDragPreview(item: DragItem): DragPreviewLayout {
-  // 当前 Dock 网址拖拽数据
-  const dockLinkItem = item as DockLinkDragItem;
-  return {
-    width: dockLinkItem.previewWidth,
-    height: dockLinkItem.previewHeight,
-    content: <MemoizedDockLinkDragPreviewCard link={dockLinkItem.link} />,
-  };
-}
-
 // 不同拖拽项目对应的预览布局策略
 const DRAG_PREVIEW_STRATEGY_BY_TYPE: Partial<
   Record<DragItem["type"], DragPreviewStrategy>
 > = {
   [DRAG_ITEM_TYPE.LINK]: createLinkDragPreview,
   [DRAG_ITEM_TYPE.LINK_GROUP]: createLinkGroupDragPreview,
-  [DRAG_ITEM_TYPE.DOCK_LINK]: createDockLinkDragPreview,
 };
 
 /** 渲染跟随指针移动的页面拖拽预览层。 */
