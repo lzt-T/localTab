@@ -39,7 +39,7 @@ function LinkGroupDragPreviewCard({
   linkGroup,
 }: LinkGroupDragPreviewCardProps) {
   return (
-    <div className="group/folder relative flex h-22 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/15 border-t-white/25 bg-[rgba(58,60,64,0.94)] p-2 text-white shadow-lg shadow-black/20">
+    <div className="group/folder relative flex h-22 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/20 border-t-white/25 bg-[rgba(58,60,64,0.92)] p-2 text-white">
       <LinkFolderCardContent linkGroup={linkGroup} />
     </div>
   );
@@ -112,7 +112,9 @@ export default function LinkDragPreview() {
           transform: `translate3d(${sourceOffset.x}px, ${sourceOffset.y}px, 0)`,
         }}
       >
-        {dragPreview.content}
+        <div className="h-full w-full origin-center scale-95 rotate-1 rounded-xl opacity-90 shadow-[0_18px_42px_rgba(0,0,0,0.38)] transform-gpu motion-reduce:transform-none">
+          {dragPreview.content}
+        </div>
       </div>
     </div>
   );

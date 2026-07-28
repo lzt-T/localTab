@@ -198,13 +198,12 @@ export default function LinkItemWrapper({
     <div
       ref={ref}
       className={cn(
-        "relative rounded-2xl transition-[opacity,box-shadow]",
+        "relative rounded-2xl transition-shadow",
         isMergeTarget && "ring-2 ring-amber-300/90 shadow-lg shadow-amber-300/20",
         isOver &&
           !isMergeTarget &&
           !isDragging &&
-          "ring-2 ring-blue-200/70 shadow-lg shadow-blue-200/10",
-        isDragging ? "opacity-50" : "opacity-100"
+          "ring-2 ring-blue-200/70 shadow-lg shadow-blue-200/10"
       )}
       data-handler-id={handlerId}
     >

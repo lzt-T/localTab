@@ -224,8 +224,10 @@ export default function LinkFolderCard({
           type="button"
           ref={connectCardRef}
           className={cn(
-            "glass-style-border glass-style-card group/folder relative flex h-22 w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2 text-white shadow-md shadow-black/10 outline-none transition-[transform,opacity,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.58)] hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/75",
-            isDragging && "opacity-50",
+            "group/folder relative flex h-22 w-full flex-col items-center justify-center rounded-xl px-3 py-2 text-white outline-none transition-[transform,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-blue-200/75",
+            isDragging
+              ? "cursor-grabbing border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl"
+              : "glass-style-border glass-style-card cursor-pointer shadow-md shadow-black/10 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.58)] hover:shadow-lg hover:shadow-black/20",
             isLinkOver &&
               isJoinTarget &&
               "border-amber-200/70 bg-amber-200/15 ring-2 ring-amber-200/80",
@@ -235,7 +237,7 @@ export default function LinkFolderCard({
           )}
           aria-label={t("linkGroup.openFolder", { name: linkGroup.name })}
         >
-          <LinkFolderCardContent linkGroup={linkGroup} />
+          {!isDragging && <LinkFolderCardContent linkGroup={linkGroup} />}
         </button>
       </PopoverTrigger>
       <PopoverContent

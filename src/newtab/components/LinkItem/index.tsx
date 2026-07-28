@@ -12,9 +12,9 @@ const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
     "border border-transparent shadow-md shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 group-hover/item:border-white/20 group-hover/item:bg-white/[0.04] group-hover/item:shadow-lg group-hover/item:shadow-black/20 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
   "drag-placeholder":
-    "glass-style-border glass-style-card shadow-md shadow-black/10",
+    "border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl [&>*]:invisible",
   "drag-preview":
-    "border border-white/20 bg-[rgba(58,60,64,0.94)] shadow-lg shadow-black/30",
+    "border border-white/20 border-t-white/25 bg-[rgba(58,60,64,0.92)]",
 };
 
 interface LinkItemProps {
