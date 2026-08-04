@@ -15,20 +15,24 @@ interface DeleteConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   itemName: string;
+  description?: string;
   onConfirm: () => void;
   confirmText?: string;
   cancelText?: string;
 }
 
+/** 渲染可自定义说明的删除确认弹窗。 */
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   isOpen,
   onOpenChange,
   title,
   itemName,
+  description,
   onConfirm,
   confirmText,
   cancelText,
 }) => {
+  // 删除弹窗使用的本地化文案
   const { t } = useTranslation();
 
   return (
@@ -37,7 +41,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="text-white">{title}</DialogTitle>
           <DialogDescription className="text-white/60">
-            {t("deleteDialog.description", { itemName })}
+            {description ?? t("deleteDialog.description", { itemName })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

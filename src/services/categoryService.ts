@@ -124,7 +124,7 @@ export class CategoryService {
   async updateCategoryOrder(dragIndex: number, hoverIndex: number): Promise<void> {
     // 当前排序的全部分类
     const categories = await this.getAllCategories();
-    
+
     if (dragIndex === hoverIndex) {
       return;
     }

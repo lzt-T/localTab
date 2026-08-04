@@ -166,6 +166,8 @@ export const resources = {
         sortSuccess: "分类排序更新成功",
         deleteSuccess: "删除分类成功",
         confirmDelete: "确认删除分类",
+        deleteDescription:
+          "确定要删除“{{itemName}}”吗？分类内的所有网址和文件夹也会被删除，此操作无法撤销。",
         defaultHome: "主页",
       },
       link: {
@@ -434,6 +436,8 @@ export const resources = {
         sortSuccess: "Category order updated",
         deleteSuccess: "Category deleted",
         confirmDelete: "Delete Category",
+        deleteDescription:
+          'Delete "{{itemName}}"? All links and folders in this category will also be deleted. This action cannot be undone.',
         defaultHome: "Home",
       },
       link: {

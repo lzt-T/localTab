@@ -355,6 +355,9 @@ const NewTabApp: React.FC = () => {
           onOpenChange={setIsDeleteCategoryDialogOpen}
           title={t("category.confirmDelete")}
           itemName={categoryToDelete?.name || ""}
+          description={t("category.deleteDescription", {
+            itemName: categoryToDelete?.name || "",
+          })}
           onConfirm={confirmDeleteCategory}
         />
         <Toaster position="top-right" />
