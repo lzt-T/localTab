@@ -87,6 +87,8 @@ export const resources = {
         settingsTitle: "偏好与数据",
         preferences: "设置入口位于分类导航底部，可用于更换壁纸和显示语言。",
         backup: "在数据管理中导出备份；导入前建议先保存当前数据。",
+        browserBookmarkImport:
+          "在数据管理中可一次性读取并追加导入浏览器书签；LocalTab 不会修改浏览器原书签。",
       },
       wallpaper: {
         selectImage: "点击选择或拖入图片",
@@ -130,6 +132,36 @@ export const resources = {
         invalidFile: "无效的数据文件格式",
         importSuccess: "数据导入成功，正在刷新页面",
         importFailed: "数据导入失败，请检查文件格式",
+      },
+      browserBookmarkImport: {
+        title: "从浏览器导入书签",
+        description:
+          "直接读取当前浏览器的书签，并作为新分类追加到 LocalTab。导入前可以先查看数量和分类。",
+        permissionNotice:
+          "仅在你点击后临时申请书签权限；读取完成后立即释放，不会创建、修改或删除浏览器书签。",
+        readAction: "授权并读取书签",
+        reading: "正在读取浏览器书签...",
+        importSuffix: "导入",
+        unnamedCategory: "未命名书签",
+        unnamedFolder: "未命名文件夹",
+        previewTitle: "导入预览",
+        previewSummary:
+          "将创建 {{categoryCount}} 个分类、{{folderCount}} 个文件夹并导入 {{linkCount}} 个网址。",
+        skippedSummary:
+          "已跳过 {{duplicateCount}} 个重复网址和 {{invalidCount}} 个无效网址。",
+        confirmAction: "导入 {{count}} 个网址",
+        importing: "正在导入书签...",
+        completedTitle: "浏览器书签导入完成",
+        completedSummary:
+          "已创建 {{categoryCount}} 个分类、{{folderCount}} 个文件夹并导入 {{linkCount}} 个网址。",
+        importAgain: "再次导入",
+        unsupported: "当前浏览器不支持直接读取书签。",
+        permissionDenied: "未获得书签权限，没有导入任何数据。",
+        readFailed: "读取浏览器书签失败，请重试。",
+        noValidBookmarks: "没有找到可导入的 HTTP 或 HTTPS 书签。",
+        importFailed: "导入失败，本次数据已回滚，请重试。",
+        importSuccess: "已导入 {{count}} 个浏览器书签",
+        retry: "重新尝试",
       },
       search: {
         placeholder: "搜索已保存网址或输入网页搜索...",
@@ -355,6 +387,8 @@ export const resources = {
         settingsTitle: "Preferences and data",
         preferences: "Settings is at the bottom of the workspace navigation and lets you change the wallpaper and display language.",
         backup: "Export a backup in Data Management before importing other data.",
+        browserBookmarkImport:
+          "Data Management can read and append your browser bookmarks once. LocalTab never changes the original browser bookmarks.",
       },
       wallpaper: {
         selectImage: "Click or drop an image here",
@@ -399,6 +433,36 @@ export const resources = {
         invalidFile: "Invalid data file format",
         importSuccess: "Data imported successfully. Refreshing the page",
         importFailed: "Failed to import data. Check the file format",
+      },
+      browserBookmarkImport: {
+        title: "Import browser bookmarks",
+        description:
+          "Read bookmarks from this browser and append them to LocalTab as new categories. You can review the counts and categories first.",
+        permissionNotice:
+          "Bookmark access is requested only after you click, released immediately after reading, and never used to create, change, or delete browser bookmarks.",
+        readAction: "Allow and read bookmarks",
+        reading: "Reading browser bookmarks...",
+        importSuffix: "Imported",
+        unnamedCategory: "Unnamed bookmarks",
+        unnamedFolder: "Unnamed folder",
+        previewTitle: "Import preview",
+        previewSummary:
+          "Create {{categoryCount}} categories and {{folderCount}} folders, then import {{linkCount}} websites.",
+        skippedSummary:
+          "Skipped {{duplicateCount}} duplicate and {{invalidCount}} invalid websites.",
+        confirmAction: "Import {{count}} websites",
+        importing: "Importing bookmarks...",
+        completedTitle: "Browser bookmarks imported",
+        completedSummary:
+          "Created {{categoryCount}} categories and {{folderCount}} folders, and imported {{linkCount}} websites.",
+        importAgain: "Import again",
+        unsupported: "This browser does not support direct bookmark access.",
+        permissionDenied: "Bookmark access was not granted. No data was imported.",
+        readFailed: "Could not read browser bookmarks. Try again.",
+        noValidBookmarks: "No HTTP or HTTPS bookmarks are available to import.",
+        importFailed: "Import failed and this import was rolled back. Try again.",
+        importSuccess: "Imported {{count}} browser bookmarks",
+        retry: "Try again",
       },
       search: {
         placeholder: "Search saved sites or the web...",

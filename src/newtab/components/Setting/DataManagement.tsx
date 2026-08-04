@@ -12,9 +12,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useDataManagement } from "@/hooks/useDataManagement";
+import BrowserBookmarkImport from "@/newtab/components/Setting/BrowserBookmarkImport";
 import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 
-export default function DataManagement() {
+/** 数据管理区域参数。 */
+interface DataManagementProps {
+  onDataChanged: () => Promise<void>;
+}
+
+/** 渲染浏览器书签导入和 LocalTab 备份管理。 */
+export default function DataManagement({ onDataChanged }: DataManagementProps) {
   // 数据管理界面的本地化工具
   const { t } = useTranslation();
   // 导入确认弹窗是否打开
@@ -58,6 +65,8 @@ export default function DataManagement() {
 
   return (
     <div className="space-y-6">
+      <BrowserBookmarkImport onDataChanged={onDataChanged} />
+
       {/* 导出数据 */}
       <div className="space-y-4">
         <div>

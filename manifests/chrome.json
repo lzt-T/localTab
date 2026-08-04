@@ -8,6 +8,9 @@
     "search",
     "favicon"
   ],
+  "optional_permissions": [
+    "bookmarks"
+  ],
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

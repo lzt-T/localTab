@@ -245,6 +245,7 @@ const NewTabApp: React.FC = () => {
             onMoveCategory={updateCategoryOrder}
             onMoveLink={moveLink}
             onMoveCategoryItem={moveCategoryItem}
+            onDataChanged={refreshCategoriesData}
           />
         </section>
 

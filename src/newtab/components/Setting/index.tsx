@@ -33,6 +33,7 @@ type SettingSection = "wallpaper" | "guide" | "data" | "language";
 
 interface SettingProps {
   triggerClassName?: string;
+  onDataChanged: () => Promise<void>;
 }
 
 // 设置导航配置
@@ -62,7 +63,10 @@ const SETTING_NAV_ITEMS: SettingNavItem[] = [
 /**
  * 新标签页设置面板。
  */
-const Setting: React.FC<SettingProps> = ({ triggerClassName }) => {
+const Setting: React.FC<SettingProps> = ({
+  triggerClassName,
+  onDataChanged,
+}) => {
   // 国际化工具
   const { t } = useTranslation();
   // 当前设置区域
@@ -74,7 +78,7 @@ const Setting: React.FC<SettingProps> = ({ triggerClassName }) => {
   const contentBySection: Record<SettingSection, React.ReactNode> = {
     wallpaper: <BackgroundImg />,
     guide: <OperationGuide />,
-    data: <DataManagement />,
+    data: <DataManagement onDataChanged={onDataChanged} />,
     language: <LanguageSettings />,
   };
 

@@ -31,6 +31,12 @@ export type ReplaceAllData = {
   system: KeyValueEntry[]
 }
 
+export type AppendAllData = {
+  categories: unknown[]
+  links: unknown[]
+  linkGroups: unknown[]
+}
+
 class LocalTabDB {
   private db: IDBDatabase | null = null
 
@@ -320,6 +326,73 @@ class LocalTabDB {
         }
         for (const linkGroup of data.linkGroups) {
           linkGroupStore.put(linkGroup)
+        }
+      } catch (error) {
+        try {
+          transaction.abort()
+        } catch {
+          // 事务可能已因同步请求错误而自动进入终止状态
+        }
+        rejectOnce(error)
+      }
+    })
+  }
+
+  /**
+   * 在单个事务中追加分类、网址和文件夹。
+   * 任意主键冲突或写入失败时，整个事务都会回滚。
+   */
+  async appendAll(data: AppendAllData): Promise<void> {
+    // 当前数据库连接
+    const db = await this.init()
+    // 浏览器书签导入涉及的业务表
+    const storeNames = [
+      STORE_NAMES.CATEGORY,
+      STORE_NAMES.LINK,
+      STORE_NAMES.LINK_GROUP
+    ] as const
+
+    return new Promise((resolve, reject) => {
+      // 覆盖全部导入记录的单个写事务
+      const transaction = db.transaction(storeNames, 'readwrite')
+      // 当前事务是否已经完成回调
+      let isSettled = false
+
+      /** 只拒绝一次当前事务 Promise。 */
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error('追加数据库数据失败'))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve()
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error('追加数据库数据失败，事务已回滚'))
+      }
+
+      try {
+        // 分类对象表
+        const categoryStore = transaction.objectStore(STORE_NAMES.CATEGORY)
+        // 网址对象表
+        const linkStore = transaction.objectStore(STORE_NAMES.LINK)
+        // 文件夹对象表
+        const linkGroupStore = transaction.objectStore(STORE_NAMES.LINK_GROUP)
+
+        // 以新增语义写入分类，避免覆盖意外重复的主键
+        for (const category of data.categories) {
+          categoryStore.add(category)
+        }
+        // 以新增语义写入网址，避免覆盖意外重复的主键
+        for (const link of data.links) {
+          linkStore.add(link)
+        }
+        // 以新增语义写入文件夹，避免覆盖意外重复的主键
+        for (const linkGroup of data.linkGroups) {
+          linkGroupStore.add(linkGroup)
         }
       } catch (error) {
         try {

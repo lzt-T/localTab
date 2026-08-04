@@ -30,6 +30,7 @@ interface NavigationBarProps {
     itemId: string,
     targetIndex: number
   ) => Promise<void>;
+  onDataChanged: () => Promise<void>;
 }
 
 // 分类导航末尾操作的统一视觉样式
@@ -50,6 +51,7 @@ export default function NavigationBar(props: NavigationBarProps) {
     onMoveCategory,
     onMoveLink,
     onMoveCategoryItem,
+    onDataChanged,
   } = props;
 
   // 本地状态用于拖拽时的 UI 更新
@@ -154,7 +156,10 @@ export default function NavigationBar(props: NavigationBarProps) {
             {t("category.add")}
           </TooltipContent>
         </Tooltip>
-        <Setting triggerClassName={NAVIGATION_ACTION_CLASS} />
+        <Setting
+          triggerClassName={NAVIGATION_ACTION_CLASS}
+          onDataChanged={onDataChanged}
+        />
       </div>
     </nav>
   );

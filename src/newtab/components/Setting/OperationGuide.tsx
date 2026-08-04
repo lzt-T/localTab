@@ -86,6 +86,7 @@ const OPERATION_GUIDE_SECTIONS: OperationGuideSection[] = [
     itemKeys: [
       "operationGuide.preferences",
       "operationGuide.backup",
+      "operationGuide.browserBookmarkImport",
     ],
   },
 ];
