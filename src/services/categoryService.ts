@@ -37,7 +37,7 @@ export class CategoryService {
   /**
    * 创建类别
    */
-  async createCategory(data: Partial<Category>): Promise<void> {
+  async createCategory(data: Partial<Category>): Promise<Category> {
     // 新分类的排序位置
     const sort = await this.getCategoryCount();
     // 待保存的分类数据
@@ -48,6 +48,7 @@ export class CategoryService {
       sort: sort,
     };
     await db.put(STORE_NAMES.CATEGORY, result);
+    return result;
   }
 
   /**

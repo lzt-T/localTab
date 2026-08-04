@@ -71,6 +71,23 @@ export class CategoryItemService {
     return await this.saveCategoryItemOrder(legacyItems, categoryId);
   }
 
+  /** 检查分类直属网址及文件夹内网址是否包含完整地址。 */
+  async hasCategoryLinkUrl(categoryId: string, url: string): Promise<boolean> {
+    // 分类内的网址分组和全部网址
+    const [linkGroups, links] = await Promise.all([
+      linkGroupService.getLinkGroupsByParentId(categoryId),
+      linkService.getAllLinks(),
+    ]);
+    // 当前分类范围内允许的网址父级标识
+    const parentIds = new Set([
+      categoryId,
+      ...linkGroups.map((linkGroup) => linkGroup.id),
+    ]);
+    return links.some(
+      (link) => parentIds.has(link.parentId) && link.url === url
+    );
+  }
+
   /** 将网址或文件夹移动到分类网格的指定位置。 */
   async moveCategoryItem(
     categoryId: string,

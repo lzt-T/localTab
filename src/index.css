@@ -56,6 +56,19 @@ body {
   min-height: 100vh;
 }
 
+/* Popup 高度回落时保持整个扩展视口为同色深色表面 */
+html.popup-surface,
+html.popup-surface body,
+html.popup-surface #root {
+  background-color: #202226;
+}
+
+/* Popup 高度跟随内容变化，不继承主页面的视口最小高度 */
+html.popup-surface body,
+html.popup-surface #root {
+  min-height: 0;
+}
+
 /* 页面拖拽期间覆盖所有命中元素的系统光标 */
 html[data-page-dragging="true"],
 html[data-page-dragging="true"] * {
