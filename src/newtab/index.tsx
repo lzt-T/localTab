@@ -248,8 +248,12 @@ const NewTabApp: React.FC = () => {
           />
         </section>
 
-        <div className="pointer-events-none fixed left-4 right-4 top-[76px] z-20 flex justify-center md:left-1/2 md:right-auto md:top-0 md:h-36 md:w-full md:max-w-[840px] md:-translate-x-1/2 md:items-center md:px-8">
-          <SearchInput className="pointer-events-auto" />
+        <div className="pointer-events-none fixed left-4 right-4 top-[76px] z-40 flex justify-center md:left-1/2 md:right-auto md:top-0 md:h-36 md:w-full md:max-w-[840px] md:-translate-x-1/2 md:items-center md:px-8">
+          <SearchInput
+            className="pointer-events-auto"
+            categories={categories}
+            onOpenLink={handleSkipClick}
+          />
         </div>
 
         {categories.map((category) => {

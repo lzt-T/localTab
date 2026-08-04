@@ -132,8 +132,11 @@ export const resources = {
         importFailed: "数据导入失败，请检查文件格式",
       },
       search: {
-        placeholder: "搜索或输入网址...",
+        placeholder: "搜索已保存网址或输入网页搜索...",
         browserDefault: "浏览器默认搜索",
+        quickResults: "本地网址快速搜索结果",
+        quickResultLabel: "{{title}}，{{hostname}}，位于 {{location}}",
+        searchWithEngine: "使用 {{engine}} 搜索“{{query}}”",
         addEngine: "添加搜索引擎",
         deleteEngine: "删除搜索引擎",
         defaultUnsupported:
@@ -376,8 +379,11 @@ export const resources = {
         importFailed: "Failed to import data. Check the file format",
       },
       search: {
-        placeholder: "Search or enter a URL...",
+        placeholder: "Search saved sites or the web...",
         browserDefault: "Browser default search",
+        quickResults: "Local site quick search results",
+        quickResultLabel: "{{title}}, {{hostname}}, in {{location}}",
+        searchWithEngine: "Search {{engine}} for “{{query}}”",
         addEngine: "Add search engine",
         deleteEngine: "Delete search engine",
         defaultUnsupported:
