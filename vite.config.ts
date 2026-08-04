@@ -17,16 +17,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         newtab: resolve(__dirname, 'newtab.html'),
-        popup: resolve(__dirname, 'popup.html'),
-        background: resolve(__dirname, 'src/background/background.ts')
+        popup: resolve(__dirname, 'popup.html')
       },
       output: {
-        entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'background') {
-            return 'background.js'
-          }
-          return '[name].js'
-        },
+        entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           // HTML 文件直接输出到根目录

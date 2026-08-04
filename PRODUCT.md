@@ -34,8 +34,8 @@ LocalTab 以本地优先、无需账户的方式，把网址分类、文件夹�
 - 支持上传自定义背景图片。
 - 支持简体中文、英文以及跟随浏览器语言。
 - 支持将分类、网址、文件夹、搜索设置、Dock 和背景图片导出为 JSON，并从本地 JSON 恢复。
-- 主要业务数据存储在浏览器 IndexedDB 中；部分设置可能使用浏览器提供的同步存储。
-- 扩展权限限定为核心功能所需的 `storage`、`activeTab`、`contextMenus`、`search` 和 `favicon`。
+- 业务数据和设置存储在浏览器 IndexedDB 中。
+- 扩展权限限定为核心功能所需的 `activeTab`、`search` 和 `favicon`。
 - 搜索和外部网址由用户主动触发，并在目标网站或搜索引擎中打开。
 
 ## Brand Commitments

@@ -4,9 +4,7 @@
   "version": "1.0.6",
   "description": "简洁美观的新标签页工具，支持快捷链接、搜索、主题与个性化布局",
   "permissions": [
-    "storage",
     "activeTab",
-    "contextMenus",
     "search",
     "favicon"
   ],
@@ -26,9 +24,6 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  },
-  "background": {
-    "service_worker": "background.js"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
