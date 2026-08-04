@@ -163,7 +163,7 @@ const PopupApp: React.FC = () => {
             <p className="mt-0.5 text-xs text-white/65">{t("popup.subtitle")}</p>
           </div>
           <span className="rounded-full border border-blue-300/20 bg-blue-400/10 px-2.5 py-1 text-xs font-medium text-blue-100/85">
-            v1.0.1
+            v1.0.6
           </span>
         </header>
 
