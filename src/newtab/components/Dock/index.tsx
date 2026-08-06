@@ -74,6 +74,9 @@ const DOCK_ACTION_CLASS =
 // Dock 添加菜单离开后的关闭缓冲时间
 const DOCK_CREATE_MENU_CLOSE_DELAY_MS = 150;
 
+// 点击 Dock 链接后抑制悬浮提示重新出现的时长
+const DOCK_TOOLTIP_SUPPRESS_MS = 3000;
+
 /** 渲染可打开并支持拖拽排序的 Dock 网址。 */
 function DockLinkItem({
   link,
@@ -84,6 +87,15 @@ function DockLinkItem({
 }: DockLinkItemProps) {
   // Dock 网址文案的本地化工具
   const { t } = useTranslation();
+  // Dock 网址悬浮提示是否显示
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  // 点击 Dock 链接后的悬浮提示门控状态(抑制期内不允许重新打开)
+  const tooltipGateRef = useRef({
+    /** 抑制重新打开截止的时间戳 */
+    suppressUntil: 0,
+    /** 点击后鼠标是否已离开过按钮 */
+    pointerLeft: true,
+  });
   // Dock 网址同时携带的拖拽源和投放目标数据
   const dndData = useMemo<DndSourceData & DndTargetData>(
     () => ({
@@ -138,6 +150,20 @@ function DockLinkItem({
     onOpen(link.url);
   }
 
+  /** 判断悬浮提示是否处于点击后的抑制期。 */
+  function isTooltipSuppressed() {
+    const gate = tooltipGateRef.current;
+    return !gate.pointerLeft || Date.now() < gate.suppressUntil;
+  }
+
+  /** 处理悬浮提示开关,抑制期内忽略重新打开请求。 */
+  function handleTooltipOpenChange(open: boolean) {
+    if (open && isTooltipSuppressed()) {
+      return;
+    }
+    setIsTooltipOpen(open);
+  }
+
   /** 通过键盘从 Dock 取消固定当前网址。 */
   function handleDockLinkKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key !== "Delete" && event.key !== "Backspace") {
@@ -153,17 +179,27 @@ function DockLinkItem({
       style={sortableStyle}
       className={cn(
         "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-        "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
+        "hover:bg-white/[0.07]",
         isDragging && "opacity-50"
       )}
     >
-      <Tooltip>
+      <Tooltip open={isTooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
           <button
             ref={setActivatorNodeRef}
             type="button"
             className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
-            onClick={openDockLink}
+            onClick={(event) => {
+              setIsTooltipOpen(false);
+              tooltipGateRef.current.suppressUntil =
+                Date.now() + DOCK_TOOLTIP_SUPPRESS_MS;
+              tooltipGateRef.current.pointerLeft = false;
+              event.currentTarget.blur();
+              openDockLink();
+            }}
+            onPointerLeave={() => {
+              tooltipGateRef.current.pointerLeft = true;
+            }}
             onKeyDown={handleDockLinkKeyDown}
             aria-label={t("dock.openLink", { title: link.title })}
             aria-keyshortcuts="Delete Backspace"
