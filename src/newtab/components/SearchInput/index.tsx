@@ -184,7 +184,7 @@ export default function SearchInput({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 bg-transparent px-2.5 py-2 text-white/65 outline-none transition-colors duration-200 hover:bg-white/[0.07] hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 sm:min-w-36 sm:justify-start"
+                className="flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 bg-transparent px-2 py-2 text-white/65 outline-none transition-colors duration-200 hover:bg-white/[0.07] hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 sm:min-w-32 sm:justify-start"
                 title={selectedSearchEngineName}
                 aria-label={selectedSearchEngineName}
                 disabled={!isInitializedSearchEngine}
@@ -314,7 +314,7 @@ export default function SearchInput({
             autoFocus
           />
           <kbd className="mr-3 hidden rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-semibold text-white/40 sm:block">
-            ↑↓ ENTER
+            {isQuickSearchOpen ? "↑↓ ENTER" : "ENTER"}
           </kbd>
         </div>
 

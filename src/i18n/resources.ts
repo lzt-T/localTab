@@ -164,8 +164,8 @@ export const resources = {
         retry: "重新尝试",
       },
       search: {
-        placeholder: "搜索已保存网址或输入网页搜索...",
-        browserDefault: "浏览器默认搜索",
+        placeholder: "搜索网址或输入关键词",
+        browserDefault: "浏览器默认",
         quickResults: "本地网址快速搜索结果",
         quickResultLabel: "{{title}}，{{hostname}}，位于 {{location}}",
         searchWithEngine: "使用 {{engine}} 搜索“{{query}}”",
@@ -465,8 +465,8 @@ export const resources = {
         retry: "Try again",
       },
       search: {
-        placeholder: "Search saved sites or the web...",
-        browserDefault: "Browser default search",
+        placeholder: "Search URLs or enter keywords",
+        browserDefault: "Browser default",
         quickResults: "Local site quick search results",
         quickResultLabel: "{{title}}, {{hostname}}, in {{location}}",
         searchWithEngine: "Search {{engine}} for “{{query}}”",
