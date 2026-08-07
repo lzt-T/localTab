@@ -5,6 +5,8 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
 } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -84,6 +86,13 @@ function DockLinkItem({
 }: DockLinkItemProps) {
   // Dock 网址文案的本地化工具
   const { t } = useTranslation();
+  // Dock 网址提示框是否打开
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  // Dock 网址交互反馈是否处于抑制状态
+  const [isDockLinkInteractionSuppressed, setIsDockLinkInteractionSuppressed] =
+    useState(false);
+  // 触发当前交互反馈抑制的 Dock 按钮
+  const suppressedDockLinkButtonRef = useRef<HTMLButtonElement | null>(null);
   // Dock 网址同时携带的拖拽源和投放目标数据
   const dndData = useMemo<DndSourceData & DndTargetData>(
     () => ({
@@ -134,8 +143,26 @@ function DockLinkItem({
   };
 
   /** 打开当前 Dock 网址。 */
-  function openDockLink() {
+  function openDockLink(event: MouseEvent<HTMLButtonElement>) {
+    if (event.detail > 0) {
+      event.currentTarget.blur();
+    }
     onOpen(link.url);
+  }
+
+  /** 同步 Dock 网址提示框的受控状态。 */
+  function handleTooltipOpenChange(open: boolean) {
+    if (open && isDockLinkInteractionSuppressed) {
+      return;
+    }
+    setIsTooltipOpen(open);
+  }
+
+  /** 指针激活 Dock 网址时关闭并暂停提示框。 */
+  function suppressDockLinkTooltip(event: PointerEvent<HTMLButtonElement>) {
+    suppressedDockLinkButtonRef.current = event.currentTarget;
+    setIsDockLinkInteractionSuppressed(true);
+    setIsTooltipOpen(false);
   }
 
   /** 通过键盘从 Dock 取消固定当前网址。 */
@@ -147,17 +174,46 @@ function DockLinkItem({
     void onUnpin(link.id);
   }
 
+  /** 抑制期间在指针真正移动到按钮外时恢复 Dock 网址反馈。 */
+  useEffect(() => {
+    if (!isDockLinkInteractionSuppressed) {
+      return;
+    }
+
+    /** 处理页面内的真实指针移动。 */
+    function handleDocumentPointerMove(event: globalThis.PointerEvent) {
+      // 触发当前抑制状态的 Dock 按钮
+      const button = suppressedDockLinkButtonRef.current;
+      if (
+        document.hidden ||
+        button === null ||
+        button.contains(event.target as Node)
+      ) {
+        return;
+      }
+      suppressedDockLinkButtonRef.current = null;
+      setIsDockLinkInteractionSuppressed(false);
+    }
+
+    document.addEventListener("pointermove", handleDocumentPointerMove);
+    /** 清理当前 Dock 按钮的页面指针监听。 */
+    return () => {
+      document.removeEventListener("pointermove", handleDocumentPointerMove);
+    };
+  }, [isDockLinkInteractionSuppressed]);
+
   return (
     <div
       ref={setNodeRef}
       style={sortableStyle}
       className={cn(
         "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-        "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
+        !isDockLinkInteractionSuppressed &&
+          "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
         isDragging && "opacity-50"
       )}
     >
-      <Tooltip>
+      <Tooltip open={isTooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
           <button
             ref={setActivatorNodeRef}
@@ -169,8 +225,15 @@ function DockLinkItem({
             aria-keyshortcuts="Delete Backspace"
             {...attributes}
             {...listeners}
+            onPointerDownCapture={suppressDockLinkTooltip}
           >
-            <span className="flex size-7 items-center justify-center transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">
+            <span
+              className={cn(
+                "flex size-7 items-center justify-center transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+                !isDockLinkInteractionSuppressed &&
+                  "group-hover:-translate-y-0.5"
+              )}
+            >
               <DockLinkIcon link={link} />
             </span>
           </button>
