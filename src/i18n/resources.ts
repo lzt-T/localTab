@@ -54,41 +54,51 @@ export const resources = {
       },
       operationGuide: {
         introduction:
-          "这里汇总了 LocalTab 的常用操作。单击可以打开内容；排序、跨分类移动和页面内容删除使用鼠标拖拽。",
-        pointerOnly:
-          "要用键盘取消固定，请先按 Tab 聚焦 Dock 图标，再按 Delete 或 Backspace。",
-        searchTitle: "搜索与网址直达",
-        searchEngine: "点击搜索框左侧可以选择或添加搜索引擎。",
-        searchOrVisit: "输入关键词或完整网址后按 Enter，即可搜索或直接访问。",
-        createTitle: "添加内容",
+          "按下面的任务找到所需操作，从收藏和搜索网址，到整理内容与备份数据。",
+        quickBookmarkTitle: "快捷收藏当前网页",
+        quickBookmarkOpen:
+          "浏览网页时，点击浏览器工具栏中的 LocalTab 图标，打开快捷收藏弹窗。",
+        quickBookmarkSave:
+          "确认当前网页，选择已有分类或直接新建分类，然后点击“收藏网址”。",
+        quickBookmarkLimits:
+          "快捷收藏仅支持 HTTP(S) 网页；同一分类中不会重复添加相同网址。",
+        searchTitle: "搜索与快速访问",
+        searchLocal:
+          "输入标题或网址可以匹配 LocalTab 中已有的网址，包括文件夹内的网址。",
+        searchKeyboard:
+          "使用 ↑、↓ 选择结果，按 Enter 打开；按 Esc 可以清空当前输入。",
+        searchOrVisit:
+          "输入完整网址或域名后按 Enter 可直接访问；其他内容会执行网页搜索。",
+        searchEngine:
+          "点击搜索框左侧可以选择浏览器默认或自定义搜索引擎，也可以添加自定义搜索引擎。",
+        createTitle: "创建和编辑",
         createWebsite: "打开底部 Dock 的“+”菜单，选择“添加网址”创建书签。",
         createCategory: "点击分类导航底部的“+”添加分类。",
         createFolder: "打开底部 Dock 的“+”菜单，选择“新建文件夹”整理相关网址。",
-        manageTitle: "编辑内容",
-        manageWebsite: "打开网址卡片右上角菜单可以编辑网址。",
-        manageCategory: "打开分类右侧菜单可以编辑分类。",
-        manageFolder: "打开文件夹后，可在顶部添加网址或重命名文件夹。",
-        dragTitle: "拖拽排序与移动",
-        dragSort: "拖动网址或文件夹，在当前网格中调整顺序。",
-        dragCategory: "拖动左侧分类项目可以调整分类顺序。",
+        editWebsiteAndCategory:
+          "打开网址卡片右上角菜单可以编辑网址；打开分类右侧菜单可以编辑分类。",
+        editFolder: "打开文件夹后，可在顶部添加网址或重命名文件夹。",
+        organizeTitle: "整理内容",
+        dragSort: "拖动网址、文件夹或左侧分类项目，可以调整各自的顺序。",
         dragAcrossCategory: "把网址或文件夹拖到左侧其他分类，即可跨分类移动。",
-        dockTitle: "Dock 与垃圾桶",
+        dragIntoFolder: "把网址拖到文件夹中央，可以将其加入文件夹。",
+        mergeWebsites: "把一个网址拖到另一个网址中央，可以合并并创建文件夹。",
+        dockTitle: "使用 Dock",
+        dockPin:
+          "把网址卡片拖入 Dock 中间区域即可固定；图标较多时可横向滚动查看。",
         dockActions:
-          "单击 Dock 中的固定图标可以打开网址；“+”菜单用于添加网址和新建文件夹。",
-        dockPin: "把网址卡片拖入 Dock 中间区域即可固定；图标较多时可横向滚动查看。",
+          "单击固定图标可以打开网址，拖动图标可以调整 Dock 中的顺序。",
         dockManagePinned:
-          "拖动 Dock 图标可调整顺序；使用 Tab 聚焦后按 Delete 或 Backspace，或把图标拖入垃圾桶，均只会取消固定。",
+          "使用 Tab 聚焦图标后按 Delete 或 Backspace，或把图标拖入垃圾桶，均只会取消固定，不会删除原网址。",
+        deleteTitle: "删除内容",
         dragDelete:
           "开始拖动页面中的网址、文件夹或分类后，Dock 右侧会出现垃圾桶；拖入后将打开删除确认。",
         deleteConfirm: "只有在确认弹窗中再次确认才会删除内容，取消不会删除。",
-        folderTitle: "文件夹与合并",
-        dragIntoFolder: "把网址拖到文件夹中央，可以将其加入文件夹。",
-        mergeWebsites: "把一个网址拖到另一个网址中央，可以合并并创建文件夹。",
         settingsTitle: "偏好与数据",
         preferences: "设置入口位于分类导航底部，可用于更换壁纸和显示语言。",
-        backup: "在数据管理中导出备份；导入前建议先保存当前数据。",
+        backup: "在数据管理中可以导出 JSON 备份或从备份恢复；导入前建议先保存当前数据。",
         browserBookmarkImport:
-          "在数据管理中可一次性读取并追加导入浏览器书签；LocalTab 不会修改浏览器原书签。",
+          "浏览器书签导入会一次性只读并批量追加已有书签，不会修改浏览器原书签；它不同于快捷收藏当前单个网页。",
       },
       wallpaper: {
         selectImage: "点击选择或拖入图片",
@@ -353,42 +363,51 @@ export const resources = {
       },
       operationGuide: {
         introduction:
-          "This guide covers the most common LocalTab actions. Click to open content; use mouse drag and drop to sort, move items across workspaces, and delete page content.",
-        pointerOnly:
-          "To unpin with the keyboard, press Tab to focus a Dock icon, then press Delete or Backspace.",
-        searchTitle: "Search and direct navigation",
-        searchEngine: "Select or add a search engine from the left side of the search box.",
-        searchOrVisit: "Enter keywords or a full URL, then press Enter to search or visit it directly.",
-        createTitle: "Add content",
+          "Use these task-based instructions to bookmark and find websites, organize content, and back up your data.",
+        quickBookmarkTitle: "Quick-bookmark the current page",
+        quickBookmarkOpen:
+          "While browsing, click the LocalTab icon in the browser toolbar to open Quick Bookmark.",
+        quickBookmarkSave:
+          "Confirm the current page, select an existing category or create one, then click “Bookmark website.”",
+        quickBookmarkLimits:
+          "Quick Bookmark supports HTTP(S) pages only and does not add the same URL twice within one category.",
+        searchTitle: "Search and quick access",
+        searchLocal:
+          "Enter a title or URL to match websites saved in LocalTab, including websites inside folders.",
+        searchKeyboard:
+          "Use ↑ and ↓ to select a result, press Enter to open it, or press Esc to clear the query.",
+        searchOrVisit:
+          "Enter a full URL or domain and press Enter to visit it directly; other input starts a web search.",
+        searchEngine:
+          "Use the left side of the search box to select the browser default or a custom search engine, or add a custom engine.",
+        createTitle: "Create and edit",
         createWebsite: "Open the “+” menu in the bottom Dock and choose “Add website” to create a bookmark.",
-        createCategory: "Use the “+” at the bottom of the workspace navigation to add a workspace.",
+        createCategory: "Use the “+” at the bottom of the category navigation to add a category.",
         createFolder: "Open the “+” menu in the bottom Dock and choose “New folder” to organize related websites.",
-        manageTitle: "Edit content",
-        manageWebsite: "Open the menu at the top-right of a website card to edit it.",
-        manageCategory: "Open the menu beside a category to edit it.",
-        manageFolder: "Open a folder to add websites or rename it from the toolbar.",
-        dragTitle: "Drag to sort and move",
-        dragSort: "Drag a website or folder to change its position in the current grid.",
-        dragCategory: "Drag categories in the left navigation to reorder them.",
+        editWebsiteAndCategory:
+          "Use the top-right menu on a website card to edit the website, or the menu beside a category to edit the category.",
+        editFolder: "Open a folder to add websites or rename it from the toolbar.",
+        organizeTitle: "Organize content",
+        dragSort: "Drag a website, folder, or category in the left navigation to reorder it.",
         dragAcrossCategory: "Drop a website or folder onto another category to move it there.",
-        dockTitle: "Dock and Trash",
-        dockActions:
-          "Click a pinned Dock icon to open its website. Use the “+” menu to add websites or folders.",
-        dockPin:
-          "Drag a website card into the middle of the Dock to pin it. Scroll horizontally when more icons are available.",
-        dockManagePinned:
-          "Drag Dock icons to reorder them. Focus one with Tab and press Delete or Backspace, or drag it to the Trash, to unpin it without deleting the website.",
-        dragDelete:
-          "Start dragging a page website, folder, or workspace to reveal the Trash on the right side of the Dock; dropping it opens a deletion confirmation.",
-        deleteConfirm: "Content is deleted only after you confirm again in the dialog; canceling keeps it.",
-        folderTitle: "Folders and merging",
         dragIntoFolder: "Drop a website in the center of a folder to add it.",
         mergeWebsites: "Drop one website in the center of another to merge them into a new folder.",
+        dockTitle: "Use the Dock",
+        dockPin:
+          "Drag a website card into the middle of the Dock to pin it. Scroll horizontally to see more icons.",
+        dockActions:
+          "Click a pinned icon to open its website, or drag Dock icons to reorder them.",
+        dockManagePinned:
+          "Focus an icon with Tab and press Delete or Backspace, or drag it to the Trash, to unpin it without deleting the original website.",
+        deleteTitle: "Delete content",
+        dragDelete:
+          "Start dragging a page website, folder, or category to reveal the Trash on the right side of the Dock; dropping it opens a deletion confirmation.",
+        deleteConfirm: "Content is deleted only after you confirm again in the dialog; canceling keeps it.",
         settingsTitle: "Preferences and data",
-        preferences: "Settings is at the bottom of the workspace navigation and lets you change the wallpaper and display language.",
-        backup: "Export a backup in Data Management before importing other data.",
+        preferences: "Settings is at the bottom of the category navigation and lets you change the wallpaper and display language.",
+        backup: "Use Data Management to export a JSON backup or restore one; save the current data before importing.",
         browserBookmarkImport:
-          "Data Management can read and append your browser bookmarks once. LocalTab never changes the original browser bookmarks.",
+          "Browser bookmark import reads and appends existing bookmarks once without changing the originals; unlike Quick Bookmark, it imports multiple saved bookmarks rather than the current page.",
       },
       wallpaper: {
         selectImage: "Click or drop an image here",

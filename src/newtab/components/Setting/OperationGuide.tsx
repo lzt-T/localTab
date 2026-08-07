@@ -1,9 +1,9 @@
 import {
+  BookmarkPlus,
   DatabaseBackup,
-  FolderInput,
   Grip,
   PencilLine,
-  Plus,
+  Pin,
   Search,
   Trash2,
   type LucideIcon,
@@ -20,63 +20,66 @@ interface OperationGuideSection {
 // 操作指南各分段的图标与国际化文案映射
 const OPERATION_GUIDE_SECTIONS: OperationGuideSection[] = [
   {
+    id: "quick-bookmark",
+    icon: BookmarkPlus,
+    titleKey: "operationGuide.quickBookmarkTitle",
+    itemKeys: [
+      "operationGuide.quickBookmarkOpen",
+      "operationGuide.quickBookmarkSave",
+      "operationGuide.quickBookmarkLimits",
+    ],
+  },
+  {
     id: "search",
     icon: Search,
     titleKey: "operationGuide.searchTitle",
     itemKeys: [
-      "operationGuide.searchEngine",
+      "operationGuide.searchLocal",
+      "operationGuide.searchKeyboard",
       "operationGuide.searchOrVisit",
+      "operationGuide.searchEngine",
     ],
   },
   {
     id: "create",
-    icon: Plus,
+    icon: PencilLine,
     titleKey: "operationGuide.createTitle",
     itemKeys: [
       "operationGuide.createWebsite",
       "operationGuide.createCategory",
       "operationGuide.createFolder",
+      "operationGuide.editWebsiteAndCategory",
+      "operationGuide.editFolder",
     ],
   },
   {
-    id: "manage",
-    icon: PencilLine,
-    titleKey: "operationGuide.manageTitle",
-    itemKeys: [
-      "operationGuide.manageWebsite",
-      "operationGuide.manageCategory",
-      "operationGuide.manageFolder",
-    ],
-  },
-  {
-    id: "drag",
+    id: "organize",
     icon: Grip,
-    titleKey: "operationGuide.dragTitle",
+    titleKey: "operationGuide.organizeTitle",
     itemKeys: [
       "operationGuide.dragSort",
-      "operationGuide.dragCategory",
       "operationGuide.dragAcrossCategory",
+      "operationGuide.dragIntoFolder",
+      "operationGuide.mergeWebsites",
     ],
   },
   {
     id: "dock",
-    icon: Trash2,
+    icon: Pin,
     titleKey: "operationGuide.dockTitle",
     itemKeys: [
-      "operationGuide.dockActions",
       "operationGuide.dockPin",
+      "operationGuide.dockActions",
       "operationGuide.dockManagePinned",
-      "operationGuide.dragDelete",
-      "operationGuide.deleteConfirm",
     ],
   },
   {
-    id: "folder",
-    icon: FolderInput,
-    titleKey: "operationGuide.folderTitle",
+    id: "delete",
+    icon: Trash2,
+    titleKey: "operationGuide.deleteTitle",
     itemKeys: [
-      "operationGuide.dragIntoFolder",
-      "operationGuide.mergeWebsites",
+      "operationGuide.dragDelete",
+      "operationGuide.deleteConfirm",
     ],
   },
   {
@@ -98,11 +101,8 @@ export default function OperationGuide() {
 
   return (
     <div className="max-w-2xl">
-      <p className="mb-2 text-sm leading-6 text-white/65">
+      <p className="mb-6 text-sm leading-6 text-white/65">
         {t("operationGuide.introduction")}
-      </p>
-      <p className="mb-6 text-xs leading-5 text-amber-100/70">
-        {t("operationGuide.pointerOnly")}
       </p>
 
       <div className="divide-y divide-white/10 border-y border-white/10">
