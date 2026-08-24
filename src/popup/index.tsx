@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   BookmarkPlus,
+  Check,
+  ChevronDown,
   FolderPlus,
   Github,
   Globe2,
@@ -11,14 +13,14 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import {
   useQuickBookmark,
@@ -58,6 +60,10 @@ const PopupApp: React.FC = () => {
     createCategory,
     bookmarkCurrentPage,
   } = useQuickBookmark();
+  // 当前所选分类的展示名称
+  const selectedCategoryName =
+    categories.find((category) => category.id === selectedCategoryId)?.name ??
+    t("popup.selectCategory");
 
   /** 打开当前浏览器的新标签页。 */
   function handleOpenNewTab() {
@@ -184,28 +190,51 @@ const PopupApp: React.FC = () => {
                 {t("popup.categoryLabel")}
               </label>
               {categories.length > 0 ? (
-                <Select
-                  value={selectedCategoryId || undefined}
-                  onValueChange={setSelectedCategoryId}
-                >
-                  <SelectTrigger
-                    aria-label={t("popup.categoryLabel")}
-                    className="mt-1.5 h-10 w-full cursor-pointer rounded-[10px] border-white/10 bg-white/[0.06] text-white focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20"
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={t("popup.categoryLabel")}
+                      className="mt-1.5 flex h-10 w-full cursor-pointer items-center justify-between gap-2 rounded-[10px] border border-white/10 bg-white/[0.06] px-3 text-sm text-white outline-none transition-[color,box-shadow] focus-visible:border-blue-300/60 focus-visible:ring-[3px] focus-visible:ring-blue-300/20 data-[state=open]:border-blue-300/60 data-[state=open]:ring-[3px] data-[state=open]:ring-blue-300/20"
+                    >
+                      <span className="truncate">{selectedCategoryName}</span>
+                      <ChevronDown
+                        className="size-4 shrink-0 text-white/50"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={4}
+                    className="z-[100] max-h-52 w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[10px] border-white/15 bg-[#303236] p-1 text-white shadow-xl"
                   >
-                    <SelectValue placeholder={t("popup.selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent className="border-white/10 bg-[#282a2f] text-white">
-                    {categories.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.id}
-                        className="cursor-pointer focus:bg-white/10 focus:text-white"
-                      >
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <DropdownMenuRadioGroup
+                      value={selectedCategoryId}
+                      onValueChange={setSelectedCategoryId}
+                    >
+                      {categories.map((category) => (
+                        <DropdownMenuRadioItem
+                          key={category.id}
+                          value={category.id}
+                          className="h-9 cursor-pointer rounded-md px-2 data-[state=checked]:bg-white/[0.08] focus:bg-white/10 focus:text-white [&>span:first-child]:hidden"
+                        >
+                          <span className="min-w-0 flex-1 truncate">
+                            {category.name}
+                          </span>
+                          <span className="ml-auto flex size-4 shrink-0 items-center justify-center">
+                            {category.id === selectedCategoryId ? (
+                              <Check
+                                className="size-4 text-white/60"
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                          </span>
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <p className="mt-1.5 text-xs leading-5 text-white/55">
                   {t("popup.noCategories")}
