@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Folder } from "lucide-react";
 import Icon from "@/newtab/components/Icon";
+import LinkMonogram, {
+  shouldUseLinkMonogram,
+} from "@/newtab/components/LinkMonogram";
 import type { Link, LinkGroupInfo } from "@/type/db";
 import { isImageIcon } from "@/utils/icon";
 
@@ -35,9 +38,11 @@ function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
           className="size-3 rounded-sm object-contain"
           onError={() => setFailedImageIcon(link.icon)}
         />
+      ) : shouldUseLinkMonogram(link.icon, failedImageIcon) ? (
+        <LinkMonogram title={link.title} url={link.url} size="sm" />
       ) : (
         <Icon
-          name={hasImageIcon ? "link" : link.icon || "link"}
+          name={link.icon}
           size={12}
           className="text-blue-100/90"
         />
@@ -61,9 +66,9 @@ export default function LinkFolderCardContent({
 
   return (
     <>
-      <span className="relative mb-1 grid size-8 shrink-0 grid-cols-2 grid-rows-2 gap-px rounded-md bg-white/[0.06] p-1">
+      <span className="relative mb-1.5 grid size-8 shrink-0 grid-cols-2 grid-rows-2 gap-0.5 rounded-lg border border-white/10 bg-white/[0.08] p-1">
         {linkGroup.links.length === 0 ? (
-          <span className="col-span-2 row-span-2 flex items-center justify-center text-white/30">
+          <span className="col-span-2 row-span-2 flex items-center justify-center text-blue-200/75">
             <Folder size={18} />
           </span>
         ) : (

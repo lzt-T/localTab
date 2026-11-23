@@ -1,5 +1,8 @@
 import { useState } from "react";
 import Icon from "@/newtab/components/Icon";
+import LinkMonogram, {
+  shouldUseLinkMonogram,
+} from "@/newtab/components/LinkMonogram";
 import { isImageIcon } from "@/utils/icon";
 import type { Link } from "@/type/db";
 
@@ -29,9 +32,11 @@ export default function DockLinkIcon({ link }: DockLinkIconProps) {
       className="size-6 rounded-md object-contain"
       onError={handleImageIconError}
     />
+  ) : shouldUseLinkMonogram(link.icon, failedImageIcon) ? (
+    <LinkMonogram title={link.title} url={link.url} size="md" />
   ) : (
     <Icon
-      name={hasImageIcon ? "link" : link.icon || "link"}
+      name={link.icon}
       size={22}
       className="text-white/75"
     />

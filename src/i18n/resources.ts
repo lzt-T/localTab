@@ -18,6 +18,10 @@ export const resources = {
         current: "当前工作区",
         websiteCount: "{{count}} 个网址",
         dropIntoEmptyCategory: "松开以移入此分类",
+        emptyCategoryTitle: "这个分类还没有网址",
+        emptyCategoryDescription:
+          "添加一个常用网址，或从浏览器导入已有书签开始整理。",
+        importBookmarksAction: "导入浏览器书签",
       },
       meta: {
         newTabTitle: "LocalTab - 新标签页",
@@ -77,7 +81,8 @@ export const resources = {
         createFolder: "打开底部 Dock 的“+”菜单，选择“新建文件夹”整理相关网址。",
         editWebsiteAndCategory:
           "打开网址卡片右上角菜单可以编辑网址；打开分类右侧菜单可以编辑分类。",
-        editFolder: "打开文件夹后，可在顶部添加网址或重命名文件夹。",
+        editFolder:
+          "打开文件夹后，点击顶部标题可直接重命名，也可在右上角添加网址或删除文件夹。",
         organizeTitle: "整理内容",
         dragSort: "拖动网址、文件夹或左侧分类项目，可以调整各自的顺序。",
         dragAcrossCategory: "把网址或文件夹拖到左侧其他分类，即可跨分类移动。",
@@ -92,7 +97,7 @@ export const resources = {
           "使用 Tab 聚焦图标后按 Delete 或 Backspace，或把图标拖入垃圾桶，均只会取消固定，不会删除原网址。",
         deleteTitle: "删除内容",
         dragDelete:
-          "开始拖动页面中的网址、文件夹或分类后，Dock 右侧会出现垃圾桶；拖入后将打开删除确认。",
+          "拖动页面中的网址、文件夹或分类到 Dock 右侧垃圾桶，或在编辑面板底部点击删除，都会先打开删除确认。",
         deleteConfirm: "只有在确认弹窗中再次确认才会删除内容，取消不会删除。",
         settingsTitle: "偏好与数据",
         preferences: "设置入口位于分类导航底部，可用于更换壁纸和显示语言。",
@@ -266,7 +271,6 @@ export const resources = {
         createDescription: "创建一个空文件夹来整理相关网址",
         openFolder: "打开文件夹 {{name}}",
         editTitle: "重命名文件夹",
-        editDescription: "修改当前文件夹名称",
         name: "文件夹名称",
         nameRequired: "请输入文件夹名称",
         createSuccess: "文件夹创建成功",
@@ -285,6 +289,9 @@ export const resources = {
       popup: {
         subtitle: "新标签页管理器",
         quickBookmarkTitle: "收藏当前页面",
+        titleLabel: "收藏名称",
+        titlePlaceholder: "输入收藏名称",
+        githubAriaLabel: "打开 GitHub 仓库 lzt-T/localTab",
         loadingPage: "正在读取当前页面...",
         unsupportedPage: "当前页面无法收藏，请打开一个 HTTP 或 HTTPS 网页。",
         loadFailed: "读取当前页面失败，请重试。",
@@ -327,6 +334,10 @@ export const resources = {
         current: "Current workspace",
         websiteCount: "{{count}} websites",
         dropIntoEmptyCategory: "Release to move into this category",
+        emptyCategoryTitle: "No websites in this category yet",
+        emptyCategoryDescription:
+          "Add a website or import your browser bookmarks to get started.",
+        importBookmarksAction: "Import browser bookmarks",
       },
       meta: {
         newTabTitle: "LocalTab - New Tab",
@@ -386,7 +397,8 @@ export const resources = {
         createFolder: "Open the “+” menu in the bottom Dock and choose “New folder” to organize related websites.",
         editWebsiteAndCategory:
           "Use the top-right menu on a website card to edit the website, or the menu beside a category to edit the category.",
-        editFolder: "Open a folder to add websites or rename it from the toolbar.",
+        editFolder:
+          "Open a folder and click its title to rename it inline, or use the top-right actions to add a website or delete the folder.",
         organizeTitle: "Organize content",
         dragSort: "Drag a website, folder, or category in the left navigation to reorder it.",
         dragAcrossCategory: "Drop a website or folder onto another category to move it there.",
@@ -401,7 +413,7 @@ export const resources = {
           "Focus an icon with Tab and press Delete or Backspace, or drag it to the Trash, to unpin it without deleting the original website.",
         deleteTitle: "Delete content",
         dragDelete:
-          "Start dragging a page website, folder, or category to reveal the Trash on the right side of the Dock; dropping it opens a deletion confirmation.",
+          "Drag a website, folder, or category to the Trash in the Dock, or use Delete at the bottom of its edit panel; both ask for confirmation first.",
         deleteConfirm: "Content is deleted only after you confirm again in the dialog; canceling keeps it.",
         settingsTitle: "Preferences and data",
         preferences: "Settings is at the bottom of the category navigation and lets you change the wallpaper and display language.",
@@ -577,7 +589,6 @@ export const resources = {
         createDescription: "Create an empty folder for related websites",
         openFolder: "Open folder {{name}}",
         editTitle: "Rename Folder",
-        editDescription: "Update this folder name",
         name: "Folder name",
         nameRequired: "Enter a folder name",
         createSuccess: "Folder created",
@@ -596,6 +607,9 @@ export const resources = {
       popup: {
         subtitle: "New tab manager",
         quickBookmarkTitle: "Save current page",
+        titleLabel: "Bookmark name",
+        titlePlaceholder: "Enter bookmark name",
+        githubAriaLabel: "Open GitHub repository lzt-T/localTab",
         loadingPage: "Reading current page...",
         unsupportedPage: "This page cannot be saved. Open an HTTP or HTTPS page.",
         loadFailed: "Could not read the current page. Try again.",

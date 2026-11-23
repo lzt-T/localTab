@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryInfo } from "@/type/db";
-import _ from "lodash";
 import { fetchFavicon } from "@/utils/webIcon";
 import { toast } from "sonner";
 import {
@@ -14,6 +13,9 @@ import {
   MAX_CUSTOM_ICON_FILE_SIZE,
   type LinkIconType,
 } from "@/utils/icon";
+
+// 网址输入框变更后延迟获取 favicon 的防抖毫秒数
+const FAVICON_FETCH_DEBOUNCE_MS = 300;
 
 interface UseAddEditLinkProps {
   open: boolean;
@@ -86,6 +88,8 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const [iconType, setIconType] = useState<LinkIconType>(
     LINK_ICON_TYPE.FAVICON
   );
+  // 网址变更触发 favicon 请求的防抖定时器
+  const faviconTimerRef = useRef<number | null>(null);
 
   // 当前模式对应的抽屉标题
   const sheetTitle = t(mode === "add" ? "link.addTitle" : "link.editTitle");
@@ -97,85 +101,81 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const availableLinkGroups =
     categories.find((category) => category.id === categoryId)?.linkGroups ?? [];
 
-  /** 获取并设置指定网址的 favicon。 */
-  const onFetchFavicon = useCallback(async (targetUrl: string = url) => {
-    // 当前需要获取图标的网址
-    const trimmedTargetUrl = targetUrl.trim();
-    if (!trimmedTargetUrl) {
-      return;
+  /** 清理尚未触发的 favicon 防抖定时器。 */
+  const clearPendingFaviconFetch = useCallback(() => {
+    if (faviconTimerRef.current !== null) {
+      window.clearTimeout(faviconTimerRef.current);
+      faviconTimerRef.current = null;
     }
+  }, []);
 
-    setIsLoadingFavicon(true);
+  /** 获取并设置指定网址的 favicon。 */
+  const onFetchFavicon = useCallback(
+    async (targetUrl: string = url) => {
+      // 当前需要获取图标的网址
+      const trimmedTargetUrl = targetUrl.trim();
+      if (!trimmedTargetUrl) {
+        return;
+      }
 
-    try {
-      // 根据网址获取的网站图标地址
-      const faviconUrl = await fetchFavicon(trimmedTargetUrl);
-      if (faviconUrl) {
-        setIcon(faviconUrl);
-      } else {
+      setIsLoadingFavicon(true);
+
+      try {
+        // 根据网址获取的网站图标地址
+        const faviconUrl = await fetchFavicon(trimmedTargetUrl);
+        if (faviconUrl) {
+          setIcon(faviconUrl);
+        } else {
+          setIcon("");
+          toast.warning(t("link.faviconFailed"));
+        }
+      } catch {
         setIcon("");
         toast.warning(t("link.faviconFailed"));
+      } finally {
+        setIsLoadingFavicon(false);
       }
-    } catch {
-      setIcon("");
-      toast.warning(t("link.faviconFailed"));
-    } finally {
-      setIsLoadingFavicon(false);
-    }
-  }, [url, t]);
+    },
+    [url, t]
+  );
 
-  /* 监听标题变化 */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /** 实时更新标题并清除标题校验错误。 */
   const onTitleChange = useCallback(
-    _.debounce((e: React.ChangeEvent<HTMLInputElement>) => {
-      setTitle(e.target.value);
-      setErrors((prev) => {
-        if (prev.title) {
-          return { ...prev, title: undefined };
-        }
-        return prev;
-      });
-    }, 200),
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(event.target.value);
+      setErrors((prev) => (prev.title ? { ...prev, title: undefined } : prev));
+    },
     []
   );
 
-  /* 监听描述变化 */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /** 实时更新描述并清除描述校验错误。 */
   const onDescriptionChange = useCallback(
-    _.debounce((e: React.ChangeEvent<HTMLInputElement>) => {
-      setDescription(e.target.value);
-      setErrors((prev) => {
-        if (prev.description) {
-          return { ...prev, description: undefined };
-        }
-        return prev;
-      });
-    }, 200),
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setDescription(event.target.value);
+      setErrors((prev) =>
+        prev.description ? { ...prev, description: undefined } : prev
+      );
+    },
     []
   );
 
-  /* 监听URL变化 */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /** 实时更新网址，并按防抖周期获取 favicon。 */
   const onUrlChange = useCallback(
-    _.debounce((e: React.ChangeEvent<HTMLInputElement>) => {
-      // 防止状态更新延迟导致图标仍按旧网址获取
-      const nextUrl = e.target.value;
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      // 最新输入的网址
+      const nextUrl = event.target.value;
       setUrl(nextUrl);
-      setErrors((prev) => {
-        if (prev.url) {
-          return { ...prev, url: undefined };
-        }
-        return prev;
-      });
+      setErrors((prev) => (prev.url ? { ...prev, url: undefined } : prev));
 
-      if (
-        iconType === LINK_ICON_TYPE.FAVICON &&
-        nextUrl.trim()
-      ) {
-        onFetchFavicon(nextUrl);
+      clearPendingFaviconFetch();
+      if (iconType === LINK_ICON_TYPE.FAVICON && nextUrl.trim()) {
+        faviconTimerRef.current = window.setTimeout(() => {
+          faviconTimerRef.current = null;
+          void onFetchFavicon(nextUrl);
+        }, FAVICON_FETCH_DEBOUNCE_MS);
       }
-    }, 200),
-    [iconType, onFetchFavicon]
+    },
+    [clearPendingFaviconFetch, iconType, onFetchFavicon]
   );
 
   /* 验证表单 */
@@ -252,8 +252,8 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
   /** 同步抽屉关闭操作。 */
   const onOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
         handleClose();
       }
     },
@@ -271,7 +271,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         nextIconType === LINK_ICON_TYPE.FAVICON &&
         !isFaviconImageIcon(icon)
       ) {
-        onFetchFavicon();
+        void onFetchFavicon();
       }
 
       if (
@@ -325,32 +325,40 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
 
   // 当抽屉状态改变时，重置或初始化表单数据
   useEffect(() => {
-    if (open) {
-      if (mode === "edit" && initialData) {
-        setTitle(initialData.title);
-        setDescription(initialData.description);
-        setUrl(initialData.url);
-        setIcon(initialData.icon);
-        setCategoryId(initialData.categoryId);
-        setLinkGroupId(initialData.linkGroupId || NO_LINK_GROUP_VALUE);
-        setIconType(getLinkIconType(initialData.icon));
-      } else {
-        setTitle("");
-        setDescription("");
-        setUrl("");
-        setIcon("");
-        setIconType(LINK_ICON_TYPE.FAVICON);
-        // 默认父级对应的网址分组
-        const defaultLinkGroup = categories
-          .flatMap((category) => category.linkGroups)
-          .find((linkGroup) => linkGroup.id === defaultParentId);
-        setCategoryId(defaultLinkGroup?.parentId ?? defaultParentId);
-        setLinkGroupId(defaultLinkGroup?.id ?? NO_LINK_GROUP_VALUE);
-      }
-      setErrors({});
+    if (!open) {
+      clearPendingFaviconFetch();
+      return;
     }
+    if (mode === "edit" && initialData) {
+      setTitle(initialData.title);
+      setDescription(initialData.description);
+      setUrl(initialData.url);
+      setIcon(initialData.icon);
+      setCategoryId(initialData.categoryId);
+      setLinkGroupId(initialData.linkGroupId || NO_LINK_GROUP_VALUE);
+      setIconType(getLinkIconType(initialData.icon));
+    } else {
+      setTitle("");
+      setDescription("");
+      setUrl("");
+      setIcon("");
+      setIconType(LINK_ICON_TYPE.FAVICON);
+      // 默认父级对应的网址分组
+      const defaultLinkGroup = categories
+        .flatMap((category) => category.linkGroups)
+        .find((linkGroup) => linkGroup.id === defaultParentId);
+      setCategoryId(defaultLinkGroup?.parentId ?? defaultParentId);
+      setLinkGroupId(defaultLinkGroup?.id ?? NO_LINK_GROUP_VALUE);
+    }
+    setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, clearPendingFaviconFetch]);
+
+  useEffect(() => {
+    return () => {
+      clearPendingFaviconFetch();
+    };
+  }, [clearPendingFaviconFetch]);
 
   return {
     // State
@@ -384,5 +392,3 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     onCategoryChange,
   };
 }
-
-

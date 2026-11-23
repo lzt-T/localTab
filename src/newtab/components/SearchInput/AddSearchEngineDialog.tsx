@@ -185,14 +185,14 @@ export default function AddSearchEngineDialog({
             <Button
               type="button"
               variant="outline"
-              className="border-white/15 bg-white/[0.04] text-white hover:bg-white/10 hover:text-white"
+              className="cursor-pointer border-white/15 bg-white/[0.04] text-white/80 hover:bg-white/10 hover:text-white"
               onClick={() => onOpenChange(false)}
             >
               {t("common.cancel")}
             </Button>
             <Button
               type="submit"
-              className="bg-white text-slate-950 hover:bg-white/90"
+              className="cursor-pointer bg-blue-500/85 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40"
             >
               {t("common.confirm")}
             </Button>

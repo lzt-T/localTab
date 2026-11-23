@@ -79,7 +79,7 @@ export default function DataManagement({ onDataChanged }: DataManagementProps) {
           <Button
             onClick={onExport}
             disabled={isExporting}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 flex items-center gap-2 text-white border border-white/20 cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3 text-white transition-colors hover:bg-white/15"
           >
             <Download size={18} />
             {isExporting
@@ -156,13 +156,14 @@ export default function DataManagement({ onDataChanged }: DataManagementProps) {
             <Button
               onClick={handleCancelImport}
               variant="outline"
-              className="bg-transparent border-white/20 text-white hover:bg-white/10"
+              className="cursor-pointer border-white/15 bg-white/[0.04] text-white/80 hover:bg-white/10 hover:text-white"
             >
               {t("common.cancel")}
             </Button>
             <Button
               onClick={handleConfirmImport}
-              className="bg-red-500/30 hover:bg-red-500/40 text-white border border-red-500/30"
+              variant="destructive"
+              className="cursor-pointer border border-red-400/30 bg-red-500/70 text-white hover:bg-red-500/90 focus-visible:ring-red-300/30 dark:bg-red-500/70 dark:hover:bg-red-500/90"
             >
               {t("dataManagement.confirmImport")}
             </Button>

@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Sheet,
@@ -63,6 +64,7 @@ interface AddEditLinkProps {
     icon: string;
     parentId: string;
   }) => void;
+  onDelete?: () => void;
 }
 
 /** 渲染支持选择所属文件夹的网址浮动编辑侧板。 */
@@ -103,7 +105,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
     <Sheet open={props.open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="h-dvh w-full max-w-none gap-0 overflow-hidden rounded-none shadow-2xl shadow-black/40 sm:w-[clamp(30rem,38vw,33.75rem)] sm:max-w-none [&>button]:right-4 [&>button]:top-4 [&>button]:size-11 [&>button]:rounded-xl [&>button]:bg-transparent [&>button]:p-0 [&>button]:text-white/70 [&>button]:hover:bg-white/10 [&>button]:hover:text-white"
+        className="h-dvh w-full max-w-none gap-0 overflow-hidden rounded-none shadow-2xl shadow-black/40 sm:w-[clamp(30rem,38vw,33.75rem)] sm:max-w-none [&>button]:right-4 [&>button]:top-4 [&>button]:size-11 [&>button]:rounded-xl"
       >
         <SheetHeader className="shrink-0 px-4 pb-4 pt-5 pr-16 sm:px-6 sm:pb-5 sm:pt-6 sm:pr-20">
           <SheetTitle className="text-lg leading-6 text-white">
@@ -223,10 +225,9 @@ export default function AddEditLink(props: AddEditLinkProps) {
                       {t("link.title")}
                     </Label>
                     <Input
-                      key={`title-${props.open}`}
                       id="title"
                       placeholder={t("link.titlePlaceholder")}
-                      defaultValue={title}
+                      value={title}
                       onChange={onTitleChange}
                       aria-invalid={Boolean(errors.title)}
                       aria-describedby={
@@ -253,11 +254,10 @@ export default function AddEditLink(props: AddEditLinkProps) {
                       {t("link.url")}
                     </Label>
                     <Input
-                      key={`url-${props.open}`}
                       id="url"
                       type="url"
                       placeholder="https://example.com"
-                      defaultValue={url}
+                      value={url}
                       onChange={onUrlChange}
                       aria-invalid={Boolean(errors.url)}
                       aria-describedby={
@@ -283,10 +283,9 @@ export default function AddEditLink(props: AddEditLinkProps) {
                       {t("link.description")}
                     </Label>
                     <Input
-                      key={`description-${props.open}`}
                       id="description"
                       placeholder={t("link.descriptionPlaceholder")}
-                      defaultValue={description}
+                      value={description}
                       onChange={onDescriptionChange}
                       aria-invalid={Boolean(errors.description)}
                       aria-describedby={
@@ -325,22 +324,35 @@ export default function AddEditLink(props: AddEditLinkProps) {
               />
             </div>
           </div>
-          <SheetFooter className="shrink-0 flex-row border-t border-white/[0.08] px-4 py-4 sm:justify-end sm:px-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 flex-1 cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white sm:flex-none sm:w-24"
-              onClick={onCancel}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={isProcessingCustomIcon}
-              className="h-11 flex-[1.4] cursor-pointer bg-blue-500/80 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40 sm:flex-none sm:w-28"
-            >
-              {t("common.confirm")}
-            </Button>
+          <SheetFooter className="shrink-0 flex-row flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] px-4 py-4 sm:px-6">
+            {props.mode === "edit" && props.onDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onDelete}
+                className="h-11 cursor-pointer border-red-400/25 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-white"
+              >
+                <Trash2 size={15} />
+                {t("common.delete")}
+              </Button>
+            ) : null}
+            <div className="flex flex-1 justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 flex-1 cursor-pointer border-white/15 bg-white/[0.04] text-white/80 hover:bg-white/10 hover:text-white sm:flex-none sm:w-24"
+                onClick={onCancel}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isProcessingCustomIcon}
+                className="h-11 flex-[1.4] cursor-pointer bg-blue-500/85 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40 sm:flex-none sm:w-28"
+              >
+                {t("common.confirm")}
+              </Button>
+            </div>
           </SheetFooter>
         </form>
       </SheetContent>

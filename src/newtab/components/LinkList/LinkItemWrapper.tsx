@@ -213,7 +213,7 @@ export default function LinkItemWrapper({
       className={cn(
         "relative rounded-2xl transition-shadow",
         shouldShowMergeTarget &&
-          "ring-2 ring-amber-300/90 shadow-lg shadow-amber-300/20",
+          "ring-2 ring-blue-300/90 shadow-[0_8px_24px_rgba(59,130,246,0.22)]",
         isOver &&
           !shouldShowMergeTarget &&
           !isDragging &&
@@ -227,8 +227,8 @@ export default function LinkItemWrapper({
         variant={isDragging ? "drag-placeholder" : "default"}
       />
       {shouldShowMergeTarget && (
-        <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-amber-300/10 pb-2">
-          <span className="rounded-full border border-amber-200/40 bg-black/70 px-2.5 py-1 text-xs font-medium text-amber-100 backdrop-blur-xl">
+        <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-blue-400/15 pb-2">
+          <span className="rounded-full border border-blue-300/40 bg-[#1a2232]/85 px-2.5 py-1 text-xs font-medium text-blue-100 backdrop-blur-xl">
             {t("linkGroup.mergeHint")}
           </span>
         </div>

@@ -77,6 +77,10 @@ export function useQuickBookmark() {
   const [status, setStatus] = useState<QuickBookmarkStatus>("loading");
   // 当前待收藏页面
   const [page, setPage] = useState<QuickBookmarkPage | null>(null);
+  // 可编辑的收藏名称
+  const [bookmarkTitle, setBookmarkTitle] = useState("");
+  // 收藏名称校验错误
+  const [bookmarkTitleError, setBookmarkTitleError] = useState("");
   // 当前全部分类
   const [categories, setCategories] = useState<Category[]>([]);
   // 当前选择的目标分类
@@ -94,6 +98,14 @@ export function useQuickBookmark() {
   // 当前是否允许提交收藏
   const canBookmark =
     status === "ready" && Boolean(selectedCategoryId) && !isSubmitting;
+
+  /** 更新收藏名称并清除旧校验错误。 */
+  function changeBookmarkTitle(value: string) {
+    setBookmarkTitle(value);
+    if (bookmarkTitleError) {
+      setBookmarkTitleError("");
+    }
+  }
 
   /** 展开快速创建分类表单。 */
   function openCategoryForm() {
@@ -152,6 +164,13 @@ export function useQuickBookmark() {
       return;
     }
 
+    // 去除首尾空白后的收藏名称
+    const trimmedTitle = bookmarkTitle.trim();
+    if (!trimmedTitle) {
+      setBookmarkTitleError(t("link.titleRequired"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 目标分类是否已经包含当前完整地址
@@ -166,7 +185,7 @@ export function useQuickBookmark() {
       }
 
       await categoryItemService.createLink({
-        title: page.title,
+        title: trimmedTitle,
         description: "",
         url: page.url,
         icon: page.icon,
@@ -198,6 +217,8 @@ export function useQuickBookmark() {
         setCategories(loadedCategories);
         setSelectedCategoryId(loadedCategories[0]?.id ?? "");
         setPage(activePage);
+        setBookmarkTitle(activePage?.title ?? "");
+        setBookmarkTitleError("");
         setStatus(activePage ? "ready" : "unsupported");
       } catch {
         setStatus("error");
@@ -210,6 +231,8 @@ export function useQuickBookmark() {
   return {
     status,
     page,
+    bookmarkTitle,
+    bookmarkTitleError,
     categories,
     selectedCategoryId,
     setSelectedCategoryId,
@@ -219,6 +242,7 @@ export function useQuickBookmark() {
     isCreatingCategory,
     isSubmitting,
     canBookmark,
+    changeBookmarkTitle,
     openCategoryForm,
     closeCategoryForm,
     changeNewCategoryName,

@@ -179,7 +179,7 @@ export default function SearchInput({
       <div
         className={cn("relative w-full max-w-[680px]", className)}
       >
-        <div className="glass-style-border flex w-full items-center overflow-hidden rounded-xl bg-[rgba(38,40,44,0.52)] shadow-[0_16px_44px_rgba(0,0,0,0.22)] transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(46,48,52,0.66)] focus-within:shadow-[0_20px_52px_rgba(0,0,0,0.28)]">
+        <div className="glass-style-border flex w-full items-center overflow-hidden rounded-xl bg-[rgba(26,28,32,0.58)] shadow-[0_16px_44px_rgba(0,0,0,0.22)] transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(32,34,38,0.74)] focus-within:shadow-[0_20px_52px_rgba(0,0,0,0.28)]">
           <Popover open={isSearchMenuOpen} onOpenChange={setIsSearchMenuOpen}>
             <PopoverTrigger asChild>
               <button
@@ -195,7 +195,7 @@ export default function SearchInput({
                 <span className="hidden min-w-0 flex-1 truncate text-left text-xs font-medium sm:block">
                   {selectedSearchEngineName}
                 </span>
-                <ChevronDown className="hidden size-3.5 shrink-0 text-slate-500 sm:block" />
+                <ChevronDown className="hidden size-3.5 shrink-0 text-white/50 sm:block" />
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -296,7 +296,7 @@ export default function SearchInput({
             type="text"
             value={query}
             role="combobox"
-            className="h-11 min-w-0 flex-1 border-none bg-transparent px-4 text-sm font-medium text-white placeholder:text-white/45 outline-none focus:bg-transparent focus:ring-0 focus-visible:ring-0"
+            className="h-11 min-w-0 flex-1 rounded-none border-none bg-transparent px-4 text-sm font-medium text-white shadow-none placeholder:text-white/45 outline-none focus:bg-transparent focus:ring-0 focus-visible:ring-0"
             placeholder={placeholder ?? t("search.placeholder")}
             aria-label={placeholder ?? t("search.placeholder")}
             aria-autocomplete="list"

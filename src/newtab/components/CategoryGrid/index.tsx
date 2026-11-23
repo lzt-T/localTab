@@ -53,7 +53,9 @@ interface CategoryGridProps {
   ) => Promise<void>;
   onCancelLinkDrag: () => Promise<void>;
   onOpenAddLink: (parentId: string) => void;
-  onEditFolder: (linkGroup: LinkGroupInfo) => void;
+  onOpenBookmarkImport: () => void;
+  onRenameFolder: (linkGroupId: string, name: string) => Promise<void>;
+  onDeleteFolder: (linkGroup: LinkGroupInfo) => void;
 }
 
 /** 渲染分类内网址与文件夹混排的统一网格。 */
@@ -66,7 +68,9 @@ export default function CategoryGrid({
   onMoveCategoryItem,
   onCancelLinkDrag,
   onOpenAddLink,
-  onEditFolder,
+  onOpenBookmarkImport,
+  onRenameFolder,
+  onDeleteFolder,
 }: CategoryGridProps) {
   // 拖拽期间用于即时重排的网格项目
   const [localItems, setLocalItems] = useState<CategoryGridItem[]>(
@@ -350,9 +354,13 @@ export default function CategoryGrid({
 
   return (
     <div ref={setNodeRef} className="min-h-full">
-      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {localItems.length === 0 && linkDropPreview === null && (
-          <EmptyCategoryPlaceholder isItemOver={isItemOver} />
+          <EmptyCategoryPlaceholder
+            isItemOver={isItemOver}
+            onOpenAddLink={() => onOpenAddLink(categoryInfo.id)}
+            onOpenBookmarkImport={onOpenBookmarkImport}
+          />
         )}
 
         {localItems.map((item, index) => (
@@ -420,7 +428,8 @@ export default function CategoryGrid({
                   onMoveLink={onMoveLink}
                   onMergeLinks={onMergeLinks}
                   onCancelLinkDrag={onCancelGridLinkDrag}
-                  onEditFolder={onEditFolder}
+                  onRenameFolder={onRenameFolder}
+                  onDeleteFolder={onDeleteFolder}
                 />
               )}
             </CategoryGridItemSlot>

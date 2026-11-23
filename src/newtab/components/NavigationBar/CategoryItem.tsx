@@ -219,7 +219,7 @@ export default function CategoryItem({
       {...attributes}
       {...listeners}
       className={cn(
-        "group/item relative flex shrink-0 items-center rounded-xl transition-[opacity,background-color,border-color,box-shadow] duration-200 md:mx-4 md:w-[calc(100%-2rem)]",
+        "group/item relative flex shrink-0 items-center rounded-xl transition-[opacity,background-color,border-color,box-shadow] duration-200 md:mx-3 md:w-[calc(100%-1.5rem)]",
         isDragging ? "opacity-50" : "opacity-100",
         isActive
           ? "bg-white/10 md:glass-style-border md:shadow-lg md:shadow-black/10"
@@ -230,13 +230,13 @@ export default function CategoryItem({
       <span
         aria-hidden="true"
         className={cn(
-          "absolute bottom-0 left-3 right-3 h-px rounded-full bg-blue-200 transition-opacity duration-200 md:bottom-2 md:left-1 md:right-auto md:top-2 md:h-auto md:w-px",
+          "absolute bottom-0 left-3 right-3 h-px rounded-full bg-blue-200 transition-opacity duration-200 md:bottom-2.5 md:left-1 md:right-auto md:top-2.5 md:h-auto md:w-0.5 md:bg-blue-300/90",
           isActive || isGridItemOver ? "opacity-100" : "opacity-0"
         )}
       />
       <button
         type="button"
-        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-xl px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:px-3 md:transition-[padding] md:duration-200 md:group-hover/item:pr-12"
+        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:px-3 md:transition-[padding] md:duration-200 md:group-hover/item:pr-10"
         onClick={() => onChangeCurrentCategory(category.id)}
         aria-current={isActive ? "page" : undefined}
         aria-label={`${category.name}, ${t("workspace.websiteCount", {
@@ -245,19 +245,19 @@ export default function CategoryItem({
       >
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+            "flex size-5 shrink-0 items-center justify-center transition-colors duration-200",
             isActive
-              ? "bg-white/12 text-blue-100"
-              : "text-white/55 group-hover/item:bg-white/[0.06] group-hover/item:text-white/85",
-            isGridItemOver && "bg-white/15 text-blue-100"
+              ? "text-blue-200"
+              : "text-white/55 group-hover/item:text-white/85",
+            isGridItemOver && "text-blue-200"
           )}
         >
-          <Icon name={category.icon} size={20} />
+          <Icon name={category.icon} size={18} className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]" />
         </span>
         <span className="min-w-0 flex-1">
           <span
             className={cn(
-              "block truncate text-sm font-medium transition-colors",
+              "block truncate text-sm font-medium transition-colors [text-shadow:0_1px_6px_rgba(0,0,0,0.55)]",
               isActive
                 ? "text-white"
                 : "text-white/65 group-hover/item:text-white"

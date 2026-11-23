@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { CategoryInfo } from "@/type/db";
-import Setting from "@/newtab/components/Setting";
+import Setting, { type SettingSection } from "@/newtab/components/Setting";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
 import LocalTabMark from "@/newtab/components/LocalTabMark";
 import { createDndId } from "@/newtab/drag-and-drop";
@@ -30,12 +30,16 @@ interface NavigationBarProps {
     itemId: string,
     targetIndex: number
   ) => Promise<void>;
+  isSettingsOpen: boolean;
+  settingsSection: SettingSection;
+  onSettingsOpenChange: (open: boolean) => void;
+  onSettingsSectionChange: (section: SettingSection) => void;
   onDataChanged: () => Promise<void>;
 }
 
 // 分类导航末尾操作的统一视觉样式
 const NAVIGATION_ACTION_CLASS =
-  "flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/[0.07] text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
+  "flex size-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-[rgba(28,30,34,0.62)] text-white/65 backdrop-blur-xl outline-none transition-[background-color,border-color,color,transform] duration-200 hover:border-white/18 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-300/60 motion-reduce:transform-none motion-reduce:transition-none";
 
 /** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
 export default function NavigationBar(props: NavigationBarProps) {
@@ -51,6 +55,10 @@ export default function NavigationBar(props: NavigationBarProps) {
     onMoveCategory,
     onMoveLink,
     onMoveCategoryItem,
+    isSettingsOpen,
+    settingsSection,
+    onSettingsOpenChange,
+    onSettingsSectionChange,
     onDataChanged,
   } = props;
 
@@ -104,38 +112,40 @@ export default function NavigationBar(props: NavigationBarProps) {
 
   return (
     <nav
-      className="flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(20,22,26,0.58)] p-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:flex-col md:items-stretch md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
+      className="flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(20,22,26,0.58)] p-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:flex-col md:items-stretch md:gap-0 md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
       aria-label={t("workspace.navigation")}
     >
-      <LocalTabMark
-        className="flex shrink-0 justify-center px-1 md:mb-2 md:justify-start md:pl-5"
-        compact
-      />
-      <div
-        className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:max-h-[62vh] md:flex-col md:items-stretch md:overflow-x-visible md:overflow-y-auto"
-        style={{ scrollbarWidth: "none" }}
-      >
-        <SortableContext items={categoryIds} strategy={rectSortingStrategy}>
-          {localCategories.map((category, index) => (
-            <CategoryItem
-              key={category.id}
-              category={category}
-              index={index}
-              isActive={activeCategoryId === category.id}
-              onEditClick={onEditClick}
-              onChangeCurrentCategory={changeCurrentCategory}
-              onMoveLink={onMoveLink}
-              onMoveCategoryItem={onMoveCategoryItem}
-              onHover={onHover}
-              onDrop={onDrop}
-              onCancel={onCancel}
-            />
-          ))}
-        </SortableContext>
+      <div className="flex shrink-0 items-center px-1 md:pointer-events-auto md:h-36 md:px-6">
+        <LocalTabMark className="flex shrink-0 justify-center" compact />
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-row items-center overflow-hidden md:min-h-0 md:flex-1 md:items-center">
+        <div
+          className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:pointer-events-auto md:max-h-full md:w-full md:flex-col md:items-stretch md:gap-0.5 md:overflow-x-visible md:overflow-y-auto md:py-3 md:[mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <SortableContext items={categoryIds} strategy={rectSortingStrategy}>
+            {localCategories.map((category, index) => (
+              <CategoryItem
+                key={category.id}
+                category={category}
+                index={index}
+                isActive={activeCategoryId === category.id}
+                onEditClick={onEditClick}
+                onChangeCurrentCategory={changeCurrentCategory}
+                onMoveLink={onMoveLink}
+                onMoveCategoryItem={onMoveCategoryItem}
+                onHover={onHover}
+                onDrop={onDrop}
+                onCancel={onCancel}
+              />
+            ))}
+          </SortableContext>
+        </div>
       </div>
 
       {/* 分类与全局设置入口 */}
-      <div className="flex shrink-0 items-center gap-1 md:mt-2 md:pl-5">
+      <div className="flex shrink-0 items-center gap-1.5 md:pointer-events-auto md:mb-8 md:h-14 md:gap-2 md:px-6">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -157,7 +167,11 @@ export default function NavigationBar(props: NavigationBarProps) {
           </TooltipContent>
         </Tooltip>
         <Setting
+          open={isSettingsOpen}
+          activeSection={settingsSection}
           triggerClassName={NAVIGATION_ACTION_CLASS}
+          onOpenChange={onSettingsOpenChange}
+          onSectionChange={onSettingsSectionChange}
           onDataChanged={onDataChanged}
         />
       </div>

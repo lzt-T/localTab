@@ -7,8 +7,8 @@
 :root {
   font-family: "Manrope Variable", "Noto Sans SC Variable", system-ui, sans-serif;
 
-  color: #333;
-  background-color: #fff;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: #090c10;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -83,15 +83,15 @@ html[data-page-dragging="true"] * {
 }
 
 .glass-style-border {
-  background: rgba(58, 60, 64, 0.58);
-  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-top-color: rgba(255, 255, 255, 0.22);
+  background: rgba(26, 28, 32, 0.56);
+  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-color: rgba(255, 255, 255, 0.15);
 }
 
 /* 在基础玻璃材质上降低内容卡片的不透明度 */
 .glass-style-card {
-  background: rgba(58, 60, 64, 0.52);
+  background: rgba(24, 26, 30, 0.46);
 }
 
 /* 页面拖拽期间关闭高密度卡片的背景采样，降低图层合成开销 */
@@ -102,24 +102,24 @@ html[data-page-dragging="true"] .glass-style-card {
 
 /* 与基础玻璃同色相、层级稍深的浮动工具表面 */
 .glass-style-floating {
-  background: rgba(46, 48, 52, 0.76);
-  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-top-color: rgba(255, 255, 255, 0.22);
+  background: rgba(28, 30, 34, 0.72);
+  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-color: rgba(255, 255, 255, 0.15);
 }
 
 /* 用于弹窗、抽屉和临时菜单的高不透明玻璃表面 */
 .glass-style-overlay {
   background: rgba(38, 40, 44, 0.94);
-  backdrop-filter: blur(24px) brightness(85%) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-top-color: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-color: rgba(255, 255, 255, 0.15);
 }
 
 /* 壁纸氛围遮罩 */
 .atmosphere-backdrop {
   background:
-    linear-gradient(90deg, rgba(5, 7, 10, 0.54) 0%, rgba(5, 7, 10, 0.24) 46%, rgba(5, 7, 10, 0.4) 100%),
+    linear-gradient(90deg, rgba(5, 7, 10, 0.62) 0%, rgba(5, 7, 10, 0.24) 46%, rgba(5, 7, 10, 0.4) 100%),
     linear-gradient(180deg, rgba(4, 7, 10, 0.14) 0%, rgba(4, 7, 10, 0.34) 100%);
 }
 
@@ -207,6 +207,12 @@ html[data-page-dragging="true"] .glass-style-card {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 文本选中高亮样式 */
+::selection {
+  background: rgba(96, 165, 250, 0.28);
+  color: #ffffff;
 }
 
 /* 自定义滚动条样式 - 精致玻璃态设计 */

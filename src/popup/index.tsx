@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 import {
   useQuickBookmark,
   type QuickBookmarkStatus,
@@ -32,10 +33,19 @@ declare const chrome: {
   tabs: {
     create: (options?: { url?: string }) => void;
   };
+  runtime?: {
+    getManifest?: () => { version?: string };
+  };
 };
+
+// 构建期由 Vite 注入的应用版本号
+declare const __APP_VERSION__: string;
 
 // GitHub 仓库地址
 const GITHUB_REPOSITORY_URL = "https://github.com/lzt-T/localTab";
+
+// 收藏名称错误提示标识
+const BOOKMARK_TITLE_ERROR_ID = "quick-bookmark-title-error";
 
 /** 扩展弹窗入口。 */
 const PopupApp: React.FC = () => {
@@ -45,6 +55,8 @@ const PopupApp: React.FC = () => {
   const {
     status,
     page,
+    bookmarkTitle,
+    bookmarkTitleError,
     categories,
     selectedCategoryId,
     setSelectedCategoryId,
@@ -54,6 +66,7 @@ const PopupApp: React.FC = () => {
     isCreatingCategory,
     isSubmitting,
     canBookmark,
+    changeBookmarkTitle,
     openCategoryForm,
     closeCategoryForm,
     changeNewCategoryName,
@@ -64,6 +77,11 @@ const PopupApp: React.FC = () => {
   const selectedCategoryName =
     categories.find((category) => category.id === selectedCategoryId)?.name ??
     t("popup.selectCategory");
+  // 当前展示的应用版本号（优先读取扩展 manifest，回退为构建期注入版本）
+  const appVersion =
+    (typeof chrome !== "undefined"
+      ? chrome.runtime?.getManifest?.()?.version
+      : undefined) ?? __APP_VERSION__;
 
   /** 打开当前浏览器的新标签页。 */
   function handleOpenNewTab() {
@@ -82,12 +100,25 @@ const PopupApp: React.FC = () => {
     window.location.reload();
   }
 
+  /** 响应收藏名称输入框回车直接提交收藏。 */
+  function handleBookmarkTitleKeyDown(
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) {
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+    if (event.key === "Enter" && canBookmark) {
+      event.preventDefault();
+      void bookmarkCurrentPage();
+    }
+  }
+
   /** 响应快速分类名称输入的确认和取消键。 */
   function handleCategoryNameKeyDown(
     event: React.KeyboardEvent<HTMLInputElement>
   ) {
     if (event.key === "Enter" && !isCreatingCategory) {
-      createCategory();
+      void createCategory();
     }
     if (event.key === "Escape") {
       closeCategoryForm();
@@ -97,44 +128,39 @@ const PopupApp: React.FC = () => {
   // 活动页面不同加载状态对应的展示内容
   const pageStatusContent: Record<QuickBookmarkStatus, React.ReactNode> = {
     loading: (
-      <div className="flex min-h-20 items-center justify-center gap-2 text-sm text-white/65">
+      <div className="flex min-h-14 items-center justify-center gap-2 text-sm text-white/65">
         <LoaderCircle className="size-4 animate-spin text-blue-200 motion-reduce:animate-none" />
         <span>{t("popup.loadingPage")}</span>
       </div>
     ),
     ready: page ? (
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/[0.07] text-white/55">
-          <Globe2 className="size-5" aria-hidden="true" />
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white/[0.07] text-white/55">
+          <Globe2 className="size-4" aria-hidden="true" />
           {page.icon ? (
             <img
               src={page.icon}
               alt=""
-              className="absolute inset-0 size-full object-contain p-1.5"
+              className="absolute inset-0 size-full object-contain p-1"
               onError={(event) => {
                 event.currentTarget.hidden = true;
               }}
             />
           ) : null}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white/90" title={page.title}>
-            {page.title}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-white/55" title={page.url}>
-            {page.url}
-          </p>
-        </div>
+        <p className="min-w-0 flex-1 truncate text-xs text-white/65" title={page.url}>
+          {page.url}
+        </p>
       </div>
     ) : null,
     unsupported: (
-      <div className="flex min-h-20 items-center gap-3 text-sm text-white/65">
+      <div className="flex min-h-14 items-center gap-3 text-sm text-white/65">
         <Globe2 className="size-5 shrink-0 text-white/45" aria-hidden="true" />
         <p className="leading-5">{t("popup.unsupportedPage")}</p>
       </div>
     ),
     error: (
-      <div className="flex min-h-20 items-center gap-3">
+      <div className="flex min-h-14 items-center gap-3">
         <TriangleAlert className="size-5 shrink-0 text-red-300" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-5 text-white/70">{t("popup.loadFailed")}</p>
@@ -162,33 +188,86 @@ const PopupApp: React.FC = () => {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.16),transparent_44%)]"
       />
 
-      <div className="relative flex flex-col p-5 backdrop-blur-xl">
-        <header className="mb-4 flex items-center justify-between text-left">
+      <div className="relative flex flex-col p-4 backdrop-blur-xl">
+        <header className="mb-3 flex items-center justify-between text-left">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold tracking-tight text-white">LocalTab</h1>
             <p className="mt-0.5 text-xs text-white/65">{t("popup.subtitle")}</p>
           </div>
           <span className="rounded-full border border-blue-300/20 bg-blue-400/10 px-2.5 py-1 text-xs font-medium text-blue-100/85">
-            v1.0.9
+            v{appVersion}
           </span>
         </header>
 
         <main>
-          <section aria-labelledby="quick-bookmark-title">
-            <h2
-              id="quick-bookmark-title"
-              className="text-sm font-semibold text-white/90"
-            >
-              {t("popup.quickBookmarkTitle")}
-            </h2>
-            <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+          <section aria-label={t("popup.quickBookmarkTitle")}>
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
               {pageStatusContent[status]}
             </div>
 
-            <div className="mt-4">
-              <label className="text-xs font-medium text-white/65">
-                {t("popup.categoryLabel")}
-              </label>
+            {status === "ready" ? (
+              <div className="mt-3">
+                <label
+                  htmlFor="quick-bookmark-title-input"
+                  className="block text-xs font-medium text-white/65"
+                >
+                  {t("popup.titleLabel")}
+                </label>
+                <Input
+                  id="quick-bookmark-title-input"
+                  type="text"
+                  value={bookmarkTitle}
+                  maxLength={50}
+                  placeholder={t("popup.titlePlaceholder")}
+                  aria-invalid={Boolean(bookmarkTitleError)}
+                  aria-describedby={
+                    bookmarkTitleError ? BOOKMARK_TITLE_ERROR_ID : undefined
+                  }
+                  onChange={(event) => changeBookmarkTitle(event.target.value)}
+                  onKeyDown={handleBookmarkTitleKeyDown}
+                  className={cn(
+                    "mt-1.5 h-10 rounded-[10px] border-white/10 bg-white/[0.06] px-3 text-sm text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-[3px] focus-visible:ring-blue-300/20",
+                    bookmarkTitleError &&
+                      "border-red-400/70 focus-visible:border-red-400 focus-visible:ring-red-300/20"
+                  )}
+                />
+                {bookmarkTitleError ? (
+                  <p
+                    id={BOOKMARK_TITLE_ERROR_ID}
+                    role="alert"
+                    className="mt-1.5 text-xs text-red-300"
+                  >
+                    {bookmarkTitleError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="mt-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-medium text-white/65">
+                  {t("popup.categoryLabel")}
+                </label>
+                {!isCategoryFormOpen ? (
+                  <button
+                    type="button"
+                    onClick={openCategoryForm}
+                    className="inline-flex h-6 cursor-pointer items-center gap-1 rounded-md px-1.5 text-xs font-medium text-blue-200/85 outline-none transition-colors hover:bg-white/[0.06] hover:text-blue-100 focus-visible:ring-2 focus-visible:ring-blue-300/40"
+                  >
+                    {categories.length > 0 ? (
+                      <Plus className="size-3.5" aria-hidden="true" />
+                    ) : (
+                      <FolderPlus className="size-3.5" aria-hidden="true" />
+                    )}
+                    <span>
+                      {categories.length > 0
+                        ? t("popup.createCategory")
+                        : t("popup.createFirstCategory")}
+                    </span>
+                  </button>
+                ) : null}
+              </div>
+
               {categories.length > 0 ? (
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
@@ -242,7 +321,7 @@ const PopupApp: React.FC = () => {
               )}
 
               {isCategoryFormOpen ? (
-                <div className="mt-2.5 rounded-xl bg-white/[0.035] p-2.5">
+                <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.035] p-2.5">
                   <label htmlFor="quick-category-name" className="sr-only">
                     {t("category.name")}
                   </label>
@@ -253,7 +332,7 @@ const PopupApp: React.FC = () => {
                     aria-invalid={Boolean(categoryNameError)}
                     aria-describedby={categoryNameError ? "quick-category-error" : undefined}
                     placeholder={t("popup.newCategoryPlaceholder")}
-                    className="h-10 rounded-[10px] border-white/10 bg-white/[0.06] text-base text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20"
+                    className="h-9 rounded-[10px] border-white/10 bg-white/[0.06] text-sm text-white placeholder:text-white/40 focus-visible:border-blue-300/60 focus-visible:ring-blue-300/20"
                     onChange={(event) => changeNewCategoryName(event.target.value)}
                     onKeyDown={handleCategoryNameKeyDown}
                   />
@@ -293,24 +372,12 @@ const PopupApp: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="mt-1.5 h-9 w-full cursor-pointer justify-start rounded-[10px] px-2.5 text-xs text-blue-100/80 hover:bg-white/[0.06] hover:text-blue-100"
-                  onClick={openCategoryForm}
-                >
-                  {categories.length > 0 ? <Plus /> : <FolderPlus />}
-                  {categories.length > 0
-                    ? t("popup.createCategory")
-                    : t("popup.createFirstCategory")}
-                </Button>
-              )}
+              ) : null}
             </div>
 
             <Button
               type="button"
-              className="mt-3 h-11 w-full cursor-pointer rounded-xl border border-blue-300/20 bg-blue-500/85 px-4 text-sm text-white shadow-[0_8px_24px_rgba(59,130,246,0.2)] hover:bg-blue-400 focus-visible:border-blue-200/50 focus-visible:ring-blue-300/40"
+              className="mt-3 h-10 w-full cursor-pointer rounded-xl border border-blue-300/20 bg-blue-500/85 px-4 text-sm text-white shadow-[0_8px_24px_rgba(59,130,246,0.2)] hover:bg-blue-400 focus-visible:border-blue-200/50 focus-visible:ring-blue-300/40"
               disabled={!canBookmark}
               onClick={bookmarkCurrentPage}
             >
@@ -323,30 +390,33 @@ const PopupApp: React.FC = () => {
             </Button>
           </section>
 
-          <div className="my-4 h-px bg-white/10" aria-hidden="true" />
+          <div className="my-3 h-px bg-white/10" aria-hidden="true" />
 
-          <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
             <Button
+              type="button"
               variant="ghost"
-              className="group h-10 w-full cursor-pointer justify-start rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white/80 hover:bg-white/[0.09] hover:text-white focus-visible:border-white/20 focus-visible:ring-white/20"
+              className="group h-10 min-w-0 flex-1 cursor-pointer justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-sm text-white/85 hover:bg-white/[0.09] hover:text-white focus-visible:border-white/20 focus-visible:ring-white/20"
               onClick={handleOpenNewTab}
             >
               <Home className="text-blue-200/75 transition-colors group-hover:text-blue-100" />
-              <span className="font-medium">{t("popup.openNewTab")}</span>
+              <span className="truncate font-medium">{t("popup.openNewTab")}</span>
             </Button>
             <Button
+              type="button"
               variant="ghost"
-              className="group h-10 w-full cursor-pointer justify-start rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white/80 hover:bg-white/[0.09] hover:text-white focus-visible:border-white/20 focus-visible:ring-white/20"
+              title="lzt-T/localTab"
+              aria-label={t("popup.githubAriaLabel")}
+              className="group size-10 shrink-0 cursor-pointer rounded-xl border border-white/10 bg-white/[0.04] p-0 text-white/75 hover:bg-white/[0.09] hover:text-white focus-visible:border-white/20 focus-visible:ring-white/20"
               onClick={handleOpenGitHub}
             >
-              <Github className="text-blue-200/75 transition-colors group-hover:text-blue-100" />
-              <span className="truncate font-medium">lzt-T/localTab</span>
+              <Github className="size-4 text-blue-200/75 transition-colors group-hover:text-blue-100" />
             </Button>
           </div>
         </main>
 
-        <footer className="mt-4 border-t border-white/10 pt-3 text-center">
-          <p className="text-xs font-medium text-white/65">{t("popup.tagline")}</p>
+        <footer className="mt-3 border-t border-white/10 pt-2.5 text-center">
+          <p className="text-xs font-medium text-white/55">{t("popup.tagline")}</p>
         </footer>
       </div>
       <Toaster position="top-center" />

@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
+import LinkMonogram, {
+  shouldUseLinkMonogram,
+} from "@/newtab/components/LinkMonogram";
 import { isImageIcon } from "@/utils/icon";
 
 type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
@@ -10,11 +13,11 @@ type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 // 不同展示模式对应的网址卡片前景样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "border border-transparent shadow-md shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 group-hover/item:border-white/20 group-hover/item:bg-white/[0.04] group-hover/item:shadow-lg group-hover/item:shadow-black/20 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
+    "border border-transparent shadow-md shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 group-hover/item:border-white/18 group-hover/item:bg-white/[0.06] group-hover/item:shadow-lg group-hover/item:shadow-black/20 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
   "drag-placeholder":
     "border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl [&>*]:invisible",
   "drag-preview":
-    "border border-white/20 border-t-white/25 bg-[rgba(58,60,64,0.92)]",
+    "border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)]",
 };
 
 interface LinkItemProps {
@@ -86,7 +89,7 @@ function Index({
   };
 
   return (
-    <div className="group/item relative h-22 rounded-xl">
+    <div className="group/item relative h-24 rounded-xl">
       <div
         className={cn(
           "relative h-full rounded-xl",
@@ -119,11 +122,11 @@ function Index({
           )}
           <button
             type="button"
-            className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
             onClick={onSkipClick}
             aria-label={`${link.title}, ${linkHostname}`}
           >
-            <span className="mb-1 flex h-7 shrink-0 items-center justify-center">
+            <span className="mb-1.5 flex h-7 shrink-0 items-center justify-center">
               {shouldShowImageIcon ? (
                 <img
                   src={link.icon}
@@ -131,9 +134,11 @@ function Index({
                   className="size-6 rounded object-contain"
                   onError={onImageIconError}
                 />
+              ) : shouldUseLinkMonogram(link.icon, failedImageIcon) ? (
+                <LinkMonogram title={link.title} url={link.url} size="md" />
               ) : (
                 <Icon
-                  name={hasImageIcon ? "link" : link.icon || "link"}
+                  name={link.icon}
                   size={24}
                   className="text-blue-100/90"
                 />

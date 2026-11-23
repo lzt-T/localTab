@@ -1,6 +1,8 @@
 import { type ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { Bookmark, Link2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   DRAG_ITEM_TYPE,
@@ -32,25 +34,62 @@ interface CategoryGridItemSlotProps {
 
 interface EmptyCategoryPlaceholderProps {
   isItemOver: boolean;
+  onOpenAddLink: () => void;
+  onOpenBookmarkImport: () => void;
 }
 
-/** 渲染没有卡片时的分类投放提示。 */
+/** 渲染空分类引导操作和拖拽投放反馈。 */
 export function EmptyCategoryPlaceholder({
   isItemOver,
+  onOpenAddLink,
+  onOpenBookmarkImport,
 }: EmptyCategoryPlaceholderProps) {
-  // 空分类投放反馈使用的本地化文案
+  // 空分类引导文案的本地化工具
   const { t } = useTranslation();
 
+  if (isItemOver) {
+    return (
+      <div
+        aria-label={t("workspace.dropIntoEmptyCategory")}
+        className="pointer-events-none col-span-full flex min-h-[clamp(12rem,36vh,22rem)] items-center justify-center rounded-2xl border border-dashed border-blue-300/60 bg-blue-400/10 px-4 text-center text-sm font-medium text-blue-100 transition-colors motion-reduce:transition-none"
+      >
+        {t("workspace.dropIntoEmptyCategory")}
+      </div>
+    );
+  }
+
   return (
-    <div
-      aria-label={t("workspace.dropIntoEmptyCategory")}
-      className={cn(
-        "col-span-full flex min-h-[clamp(10rem,35vh,22rem)] items-center justify-center rounded-xl border border-transparent px-4 text-center text-sm font-medium text-transparent transition-[border-color,background-color,color] motion-reduce:transition-none",
-        isItemOver &&
-          "border-sky-400/60 bg-sky-400/10 text-sky-100"
-      )}
-    >
-      {t("workspace.dropIntoEmptyCategory")}
+    <div className="col-span-full flex min-h-[clamp(14rem,40vh,24rem)] items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-dashed border-white/15 bg-[rgba(38,40,44,0.44)] px-6 py-7 text-center shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-blue-200/85">
+          <Link2 size={20} aria-hidden="true" />
+        </div>
+        <h2 className="text-base font-semibold text-white/90">
+          {t("workspace.emptyCategoryTitle")}
+        </h2>
+        <p className="mt-1.5 text-xs leading-5 text-white/55">
+          {t("workspace.emptyCategoryDescription")}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <Button
+            type="button"
+            onClick={onOpenAddLink}
+            className="h-10 cursor-pointer rounded-xl bg-blue-500/85 px-4 text-sm text-white hover:bg-blue-400 focus-visible:ring-blue-300/40"
+          >
+            <Plus size={16} />
+            {t("link.addAction")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onOpenBookmarkImport}
+            className="h-10 cursor-pointer rounded-xl border-white/15 bg-white/[0.04] px-4 text-sm text-white/80 hover:bg-white/10 hover:text-white"
+          >
+            <Bookmark size={15} />
+            {t("workspace.importBookmarksAction")}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -148,7 +187,7 @@ export function CategoryGridItemSlot({
       {isItemOver && linkDropFolder && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-2.5 top-2.5 rounded-xl outline-2 outline-offset-[8px] outline-amber-200/80 shadow-lg shadow-amber-200/10"
+          className="pointer-events-none absolute inset-x-0 bottom-2.5 top-2.5 rounded-xl outline-2 outline-offset-[8px] outline-blue-300/80 shadow-lg shadow-blue-400/15"
         />
       )}
       {children}

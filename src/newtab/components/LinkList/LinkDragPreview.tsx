@@ -45,7 +45,7 @@ function CategoryDragPreviewCard({
   icon,
 }: CategoryDragPreviewCardProps) {
   return (
-    <div className="flex h-full w-full items-center gap-1.5 rounded-xl border border-white/20 border-t-white/25 bg-[rgba(58,60,64,0.92)] px-3 text-white">
+    <div className="flex h-full w-full items-center gap-1.5 rounded-xl border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)] px-3 text-white">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-blue-100">
         <Icon name={icon} size={20} />
       </span>
@@ -72,7 +72,7 @@ function LinkGroupDragPreviewCard({
   linkGroup,
 }: LinkGroupDragPreviewCardProps) {
   return (
-    <div className="group/folder relative flex h-22 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/20 border-t-white/25 bg-[rgba(58,60,64,0.92)] p-2 text-white">
+    <div className="group/folder relative flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)] p-2 text-white">
       <LinkFolderCardContent linkGroup={linkGroup} />
     </div>
   );
@@ -129,7 +129,7 @@ function createDockLinkDragPreview(item: DragItem): DragPreviewLayout {
     width: 44,
     height: 44,
     content: (
-      <div className="flex size-11 items-center justify-center rounded-xl border border-white/20 bg-[rgba(58,60,64,0.94)] text-white shadow-lg shadow-black/30">
+      <div className="flex size-11 items-center justify-center rounded-xl border border-white/18 bg-[rgba(32,34,38,0.94)] text-white shadow-lg shadow-black/30">
         <DockLinkIcon link={dockLinkItem.link} />
       </div>
     ),

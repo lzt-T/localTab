@@ -25,7 +25,9 @@ interface CategoryPageProps {
   ) => Promise<void>;
   onCancelLinkDrag: () => Promise<void>;
   onOpenAddLink: (parentId: string) => void;
-  onEditLinkGroup: (linkGroup: LinkGroupInfo) => void;
+  onOpenBookmarkImport: () => void;
+  onRenameLinkGroup: (linkGroupId: string, name: string) => Promise<void>;
+  onDeleteLinkGroup: (linkGroup: LinkGroupInfo) => void;
   handleCategoryChange: (categoryId: string) => void;
 }
 
@@ -40,7 +42,9 @@ export default function CategoryPage({
   moveCategoryItem,
   onCancelLinkDrag,
   onOpenAddLink,
-  onEditLinkGroup,
+  onOpenBookmarkImport,
+  onRenameLinkGroup,
+  onDeleteLinkGroup,
   handleCategoryChange,
 }: CategoryPageProps) {
   // 分类页操作的本地化文案
@@ -130,7 +134,9 @@ export default function CategoryPage({
               onMoveCategoryItem={moveCategoryItem}
               onCancelLinkDrag={onCancelLinkDrag}
               onOpenAddLink={onOpenAddLink}
-              onEditFolder={onEditLinkGroup}
+              onOpenBookmarkImport={onOpenBookmarkImport}
+              onRenameFolder={onRenameLinkGroup}
+              onDeleteFolder={onDeleteLinkGroup}
             />
           </div>
         </div>

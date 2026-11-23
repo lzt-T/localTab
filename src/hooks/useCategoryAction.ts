@@ -77,6 +77,7 @@ export function useCategoryAction() {
   return {
     isOpen,
     mode: actionState.mode,
+    categoryId: actionState.categoryId,
     initialData: actionState.initialData,
     onOpenAdd,
     onOpenEdit,

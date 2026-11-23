@@ -13,6 +13,7 @@ import CategoryPage from "@/newtab/components/CategoryPage";
 import PageDndProvider from "@/newtab/components/PageDndProvider";
 import DeleteConfirmDialog from "@/newtab/components/DeleteConfirmDialog";
 import EditLinkGroup from "@/newtab/components/EditLinkGroup";
+import { type SettingSection } from "@/newtab/components/Setting";
 import Dock from "@/newtab/components/Dock";
 import { useDockLinks } from "@/newtab/useDockLinks";
 import { useLinkGroupAction } from "@/hooks/useLinkGroupAction";
@@ -52,6 +53,7 @@ const NewTabApp: React.FC = () => {
   const {
     isOpen,
     mode,
+    categoryId: editingCategoryId,
     initialData,
     onOpenAdd,
     onOpenEdit,
@@ -64,6 +66,7 @@ const NewTabApp: React.FC = () => {
   const {
     isOpen: isOpenLink,
     mode: modeLink,
+    linkId: editingLinkId,
     initialData: initialDataLink,
     defaultParentId,
     onOpenAdd: onOpenAddLink,
@@ -73,15 +76,13 @@ const NewTabApp: React.FC = () => {
     onSubmit: onSubmitLink,
   } = useLinkAction();
 
-  // 网址分组编辑和删除操作
+  // 网址分组创建、重命名和删除操作
   const {
-    isOpen: isEditLinkGroupOpen,
-    mode: linkGroupMode,
-    editingLinkGroup,
+    isOpen: isCreateLinkGroupOpen,
     onOpenCreate: onOpenCreateLinkGroup,
-    onOpenEdit: onOpenEditLinkGroup,
-    onClose: onCloseEditLinkGroup,
-    onSubmit: onSubmitLinkGroup,
+    onClose: onCloseCreateLinkGroup,
+    onCreate: onCreateLinkGroup,
+    onRename: onRenameLinkGroup,
     onDelete: onDeleteLinkGroup,
   } = useLinkGroupAction();
 
@@ -151,6 +152,16 @@ const NewTabApp: React.FC = () => {
     setLinkGroupToDelete(null);
   }, [linkGroupToDelete, onDeleteLinkGroup, refreshCategoriesData, t]);
 
+  /** 就地重命名网址分组并刷新分类数据。 */
+  const handleRenameLinkGroup = useCallback(
+    async (linkGroupId: string, name: string) => {
+      await onRenameLinkGroup(linkGroupId, name);
+      await refreshCategoriesData();
+      toast.success(t("linkGroup.editSuccess"));
+    },
+    [onRenameLinkGroup, refreshCategoriesData, t]
+  );
+
   // 删除分类确认弹窗状态
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] = useState(false);
   // 待删除的分类
@@ -209,6 +220,17 @@ const NewTabApp: React.FC = () => {
     await pinDockLink(item.link.id);
   }
 
+  // 设置弹窗开关与当前分栏
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] =
+    useState<SettingSection>("wallpaper");
+
+  /** 从空分类引导打开设置面板的数据管理页。 */
+  function openBookmarkImportInSettings() {
+    setSettingsSection("data");
+    setIsSettingsOpen(true);
+  }
+
   /** 从 Dock 为当前分类打开网址添加表单。 */
   function openAddLinkFromDock() {
     onOpenAddLink(currentCategoryId);
@@ -235,7 +257,7 @@ const NewTabApp: React.FC = () => {
           aria-hidden="true"
         />
 
-        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:left-0 md:right-auto md:top-1/2 md:h-auto md:w-44 md:-translate-y-1/2">
+        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:pointer-events-none md:inset-y-0 md:left-0 md:right-auto md:top-0 md:h-screen md:w-44">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}
@@ -245,6 +267,10 @@ const NewTabApp: React.FC = () => {
             onMoveCategory={updateCategoryOrder}
             onMoveLink={moveLink}
             onMoveCategoryItem={moveCategoryItem}
+            isSettingsOpen={isSettingsOpen}
+            settingsSection={settingsSection}
+            onSettingsOpenChange={setIsSettingsOpen}
+            onSettingsSectionChange={setSettingsSection}
             onDataChanged={refreshCategoriesData}
           />
         </section>
@@ -270,7 +296,9 @@ const NewTabApp: React.FC = () => {
               moveCategoryItem={moveCategoryItem}
               onCancelLinkDrag={refreshCategoriesData}
               onOpenAddLink={onOpenAddLink}
-              onEditLinkGroup={onOpenEditLinkGroup}
+              onOpenBookmarkImport={openBookmarkImportInSettings}
+              onRenameLinkGroup={handleRenameLinkGroup}
+              onDeleteLinkGroup={onDeleteLinkGroupClick}
               handleCategoryChange={changeCurrentCategory}
             />
           );
@@ -292,6 +320,14 @@ const NewTabApp: React.FC = () => {
           mode={mode}
           initialData={initialData}
           handleClose={onClose}
+          canDelete={categories.length > 1}
+          onDelete={() => {
+            if (!editingCategoryId) {
+              return;
+            }
+            onClose();
+            onDeleteCategoryClick(editingCategoryId);
+          }}
           handleSubmit={async (data) => {
             await onSubmit(data);
             //刷新分类列表
@@ -307,6 +343,13 @@ const NewTabApp: React.FC = () => {
           categories={categories}
           defaultParentId={defaultParentId ?? currentCategoryId}
           handleClose={onCloseLink}
+          onDelete={() => {
+            if (!editingLinkId) {
+              return;
+            }
+            onCloseLink();
+            onDeleteLinkClick(editingLinkId);
+          }}
           handleSubmit={async (data) => {
             await onSubmitLink(data);
             //刷新当前分类的链接列表
@@ -314,23 +357,15 @@ const NewTabApp: React.FC = () => {
             toast.success(t("messages.operationSuccess"));
           }}
         />
-        {/* 编辑网址分组 */}
-        {isEditLinkGroupOpen ? (
+        {/* 新建网址分组 */}
+        {isCreateLinkGroupOpen ? (
           <EditLinkGroup
             open
-            mode={linkGroupMode}
-            initialName={editingLinkGroup?.name ?? ""}
-            onClose={onCloseEditLinkGroup}
+            onClose={onCloseCreateLinkGroup}
             onSubmit={async (name) => {
-              await onSubmitLinkGroup(name);
+              await onCreateLinkGroup(name);
               await refreshCategoriesData();
-              toast.success(
-                t(
-                  linkGroupMode === "create"
-                    ? "linkGroup.createSuccess"
-                    : "linkGroup.editSuccess"
-                )
-              );
+              toast.success(t("linkGroup.createSuccess"));
             }}
           />
         ) : null}

@@ -37,7 +37,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="shadow-2xl shadow-black/40 [&_[data-slot=dialog-close]]:bg-transparent [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white">
+      <DialogContent className="shadow-2xl shadow-black/40">
         <DialogHeader>
           <DialogTitle className="text-white">{title}</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -48,7 +48,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="cursor-pointer border-white/20 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
+            className="cursor-pointer border-white/15 bg-white/[0.04] text-white/80 hover:bg-white/10 hover:text-white"
           >
             {cancelText ?? t("common.cancel")}
           </Button>

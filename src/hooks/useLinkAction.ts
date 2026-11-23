@@ -130,6 +130,7 @@ export function useLinkAction() {
   return {
     isOpen,
     mode: actionState.mode,
+    linkId: actionState.linkId,
     initialData: actionState.initialData,
     defaultParentId: actionState.defaultParentId,
     onChangeOpen,

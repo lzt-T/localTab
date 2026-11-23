@@ -8,7 +8,6 @@ import {
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { Edit, Plus } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -16,6 +15,9 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import LinkList from "@/newtab/components/LinkList";
+import FolderPopoverHeader, {
+  type FolderPopoverHeaderHandle,
+} from "@/newtab/components/LinkFolderCard/FolderPopoverHeader";
 import LinkFolderCardContent from "@/newtab/components/LinkFolderCard/LinkFolderCardContent";
 import {
   DRAG_ITEM_TYPE,
@@ -59,7 +61,8 @@ interface LinkFolderCardProps {
     draggedLinkId: string
   ) => Promise<void>;
   onCancelLinkDrag: () => Promise<void>;
-  onEditFolder: (linkGroup: LinkGroupInfo) => void;
+  onRenameFolder: (linkGroupId: string, name: string) => Promise<void>;
+  onDeleteFolder: (linkGroup: LinkGroupInfo) => void;
 }
 
 interface FolderPopoverDropZoneProps {
@@ -136,12 +139,15 @@ export default function LinkFolderCard({
   onMoveLink,
   onMergeLinks,
   onCancelLinkDrag,
-  onEditFolder,
+  onRenameFolder,
+  onDeleteFolder,
 }: LinkFolderCardProps) {
   // 文件夹界面的本地化文案
   const { t } = useTranslation();
   // 文件夹卡片元素引用
   const cardRef = useRef<HTMLButtonElement>(null);
+  // 文件夹浮层头部按键处理引用
+  const headerRef = useRef<FolderPopoverHeaderHandle>(null);
   // 当前拖拽是否应阻止打开浮层
   const didDragRef = useRef(false);
   // 当前网址是否投放到文件夹中心
@@ -319,16 +325,16 @@ export default function LinkFolderCard({
           {...attributes}
           {...listeners}
           className={cn(
-            "group/folder relative flex h-22 w-full flex-col items-center justify-center rounded-xl px-3 py-2 text-white outline-none transition-[transform,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-blue-200/75",
+            "group/folder relative flex h-24 w-full flex-col items-center justify-center rounded-xl px-3 py-2.5 text-white outline-none transition-[transform,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-blue-200/75",
             isDragging
               ? "cursor-grabbing border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl"
-              : "glass-style-border glass-style-card cursor-pointer shadow-md shadow-black/10 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[rgba(68,70,74,0.58)] hover:shadow-lg hover:shadow-black/20",
+              : "glass-style-border glass-style-card cursor-pointer shadow-md shadow-black/10 hover:-translate-y-0.5 hover:border-white/18 hover:bg-[rgba(38,40,46,0.62)] hover:shadow-lg hover:shadow-black/20",
             isLinkOver &&
               isJoinTarget &&
-              "border-amber-200/70 bg-amber-200/15 ring-2 ring-amber-200/80",
+              "border-blue-300/80 bg-blue-400/15 ring-2 ring-blue-300/80 shadow-[0_8px_24px_rgba(59,130,246,0.2)]",
             isLinkOver &&
               !isJoinTarget &&
-              "border-blue-200/70 ring-2 ring-blue-200/70"
+              "border-blue-200/50 ring-1 ring-blue-200/60"
           )}
           aria-label={t("linkGroup.openFolder", { name: linkGroup.name })}
         >
@@ -340,6 +346,11 @@ export default function LinkFolderCard({
         align="center"
         sideOffset={10}
         collisionPadding={16}
+        onEscapeKeyDown={(event) => {
+          if (headerRef.current?.handleEscapeKeyDown()) {
+            event.preventDefault();
+          }
+        }}
         className="glass-style-overlay z-[60] w-[min(420px,calc(100vw-2rem))] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10"
       >
         <FolderPopoverDropZone
@@ -347,30 +358,17 @@ export default function LinkFolderCard({
           onClearLinkDropPreview={onClearLinkDropPreview}
           onMoveLink={onMoveLink}
         >
-          <div className="mb-3 flex h-9 items-center gap-2 border-b border-white/10 pb-3">
-            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-              {linkGroup.name}
-            </span>
-            <span className="text-xs text-white/45">
-              {linkGroup.links.length}
-            </span>
-            <button
-              type="button"
-              className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-200/70"
-              onClick={() => onOpenAddLink(linkGroup.id)}
-              aria-label={t("linkGroup.addLink")}
-            >
-              <Plus size={16} />
-            </button>
-            <button
-              type="button"
-              className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-200/70"
-              onClick={() => onEditFolder(linkGroup)}
-              aria-label={t("common.edit")}
-            >
-              <Edit size={15} />
-            </button>
-          </div>
+          <FolderPopoverHeader
+            name={linkGroup.name}
+            linkCount={linkGroup.links.length}
+            headerRef={headerRef}
+            onRename={(nextName) => onRenameFolder(linkGroup.id, nextName)}
+            onAddLink={() => onOpenAddLink(linkGroup.id)}
+            onDelete={() => {
+              onManualOpenChange(linkGroup.id, false);
+              onDeleteFolder(linkGroup);
+            }}
+          />
           <div className="max-h-[264px] overflow-y-auto px-1 pb-2 pt-2">
             <LinkList
               categoryLinks={linkGroup.links}
