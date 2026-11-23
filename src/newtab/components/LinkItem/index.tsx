@@ -122,7 +122,7 @@ function Index({
           )}
           <button
             type="button"
-            className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
             onClick={onSkipClick}
             aria-label={`${link.title}, ${linkHostname}`}
           >
@@ -147,8 +147,8 @@ function Index({
             <span className="w-full min-w-0">
               <span
                 className={cn(
-                  "block text-sm font-medium leading-5 text-white/90",
-                  hasDescription ? "truncate" : "line-clamp-2"
+                  "text-sm font-medium leading-5 text-white/90",
+                  hasDescription ? "block truncate" : "line-clamp-2 break-words"
                 )}
                 title={link.title}
               >
