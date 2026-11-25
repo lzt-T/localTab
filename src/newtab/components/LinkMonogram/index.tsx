@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { isImageIcon } from "@/utils/icon";
 
-type MonogramSize = "sm" | "md";
+type MonogramSize = "sm" | "md" | "lg";
 
 interface LinkMonogramProps {
   title: string;
@@ -9,20 +9,21 @@ interface LinkMonogramProps {
   size?: MonogramSize;
 }
 
-// 低饱和微雾配色表（同一站点通过哈希稳定命中同一色调）
+// 莫兰迪质感微渐变玻璃配色表（按站点哈希稳定分配）
 const MONOGRAM_TONES = [
-  "border-blue-300/20 bg-blue-400/16 text-blue-100",
-  "border-cyan-300/20 bg-cyan-400/16 text-cyan-100",
-  "border-indigo-300/20 bg-indigo-400/16 text-indigo-100",
-  "border-emerald-300/20 bg-emerald-400/16 text-emerald-100",
-  "border-amber-300/20 bg-amber-400/16 text-amber-100",
-  "border-rose-300/20 bg-rose-400/16 text-rose-100",
+  "border-white/22 bg-gradient-to-br from-slate-500/82 to-slate-700/88 text-white shadow-[0_6px_16px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.28)]",
+  "border-white/22 bg-gradient-to-br from-sky-500/78 to-blue-600/85 text-white shadow-[0_6px_16px_rgba(14,165,233,0.18),inset_0_1px_0_rgba(255,255,255,0.28)]",
+  "border-white/22 bg-gradient-to-br from-emerald-500/76 to-teal-600/84 text-white shadow-[0_6px_16px_rgba(16,185,129,0.16),inset_0_1px_0_rgba(255,255,255,0.28)]",
+  "border-white/22 bg-gradient-to-br from-amber-500/78 to-orange-600/84 text-white shadow-[0_6px_16px_rgba(245,158,11,0.16),inset_0_1px_0_rgba(255,255,255,0.28)]",
+  "border-white/22 bg-gradient-to-br from-violet-500/76 to-indigo-600/84 text-white shadow-[0_6px_16px_rgba(139,92,246,0.18),inset_0_1px_0_rgba(255,255,255,0.28)]",
+  "border-white/22 bg-gradient-to-br from-rose-500/76 to-pink-600/84 text-white shadow-[0_6px_16px_rgba(244,63,94,0.16),inset_0_1px_0_rgba(255,255,255,0.28)]",
 ] as const;
 
 // 不同尺寸对应的徽标容器样式
 const MONOGRAM_SIZE_CLASS: Record<MonogramSize, string> = {
+  lg: "size-[60px] rounded-[18px] text-[22px]",
   md: "size-7 rounded-lg text-xs",
-  sm: "size-full rounded-sm text-[9px]",
+  sm: "size-full rounded-[5px] text-[10px]",
 };
 
 /** 判断网址当前是否应显示首字徽标而非 Lucide 图标或图片。 */
@@ -58,7 +59,7 @@ function getMonogramCharacter(title: string, url: string): string {
   return "?";
 }
 
-/** 根据标题与网址计算稳定的低饱和配色索引。 */
+/** 根据标题与网址计算稳定的莫兰迪配色索引。 */
 function getMonogramToneClass(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {
@@ -67,7 +68,7 @@ function getMonogramToneClass(seed: string): string {
   return MONOGRAM_TONES[hash % MONOGRAM_TONES.length];
 }
 
-/** 渲染克制的低饱和首字徽标作为默认图标与失败回退。 */
+/** 渲染莫兰迪玻璃质感的首字徽标作为默认图标与失败回退。 */
 export default function LinkMonogram({
   title,
   url,
@@ -75,14 +76,14 @@ export default function LinkMonogram({
 }: LinkMonogramProps) {
   // 徽标展示的单个字符
   const character = getMonogramCharacter(title, url);
-  // 徽标对应的稳定低饱和配色
+  // 徽标对应的稳定莫兰迪渐变配色
   const toneClass = getMonogramToneClass(`${title}|${url}`);
 
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "flex shrink-0 items-center justify-center border font-semibold leading-none select-none",
+        "flex shrink-0 items-center justify-center border font-semibold leading-none backdrop-blur-md select-none",
         MONOGRAM_SIZE_CLASS[size],
         toneClass
       )}

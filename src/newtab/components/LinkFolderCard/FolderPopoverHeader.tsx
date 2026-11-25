@@ -115,7 +115,7 @@ export default function FolderPopoverHeader({
   };
 
   return (
-    <div className="mb-3 flex h-9 items-center justify-between gap-2 border-b border-white/10 pb-3">
+    <div className="mb-3 flex h-9 items-center justify-between gap-2 border-b border-[var(--surface-divider)] pb-3">
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         {isEditing ? (
           <input
@@ -135,7 +135,7 @@ export default function FolderPopoverHeader({
             onCompositionEnd={() => {
               isComposingRef.current = false;
             }}
-            className="-ml-1.5 h-7 min-w-0 flex-1 rounded-md border border-blue-300/60 bg-white/[0.08] px-1.5 text-sm font-semibold text-white outline-none ring-2 ring-blue-300/20 placeholder:text-white/35"
+            className="-ml-1.5 h-7 min-w-0 flex-1 rounded-md border border-[var(--surface-border-strong)] bg-[var(--surface-hover)] px-1.5 text-sm font-semibold text-[var(--surface-text)] outline-none ring-2 ring-[var(--surface-ring)] placeholder:text-[var(--surface-text-subtle)]"
           />
         ) : (
           <button
@@ -144,17 +144,17 @@ export default function FolderPopoverHeader({
             onClick={startEditing}
             title={t("linkGroup.editTitle")}
             aria-label={t("linkGroup.editTitle")}
-            className="group/title -ml-1.5 flex h-7 min-w-0 max-w-full cursor-text items-center gap-1.5 rounded-md px-1.5 text-left text-sm font-semibold text-white/95 outline-none transition-colors hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-blue-200/70"
+            className="group/title -ml-1.5 flex h-7 min-w-0 max-w-full cursor-text items-center gap-1.5 rounded-md px-1.5 text-left text-sm font-semibold text-[var(--surface-text)] outline-none transition-colors hover:bg-[var(--surface-hover)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
           >
             <span className="truncate">{name}</span>
             <Pencil
               size={12}
               aria-hidden="true"
-              className="shrink-0 text-white/35 transition-colors group-hover/title:text-white/80 group-focus-visible/title:text-white/80"
+              className="shrink-0 text-[var(--surface-text-subtle)] transition-colors group-hover/title:text-[var(--surface-text)] group-focus-visible/title:text-[var(--surface-text)]"
             />
           </button>
         )}
-        <span className="shrink-0 rounded-full bg-white/[0.07] px-1.5 py-0.5 text-[11px] font-medium leading-none text-white/50 tabular-nums">
+        <span className="shrink-0 rounded-full bg-[var(--surface-hover)] px-1.5 py-0.5 text-[11px] font-medium leading-none text-[var(--surface-text-muted)] tabular-nums">
           {linkCount}
         </span>
       </div>
@@ -163,7 +163,7 @@ export default function FolderPopoverHeader({
         {linkCount > 0 ? (
           <button
             type="button"
-            className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-200/70"
+            className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-[var(--surface-text-muted)] outline-none transition-colors hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
             onClick={onAddLink}
             title={t("linkGroup.addLink")}
             aria-label={t("linkGroup.addLink")}
@@ -173,7 +173,7 @@ export default function FolderPopoverHeader({
         ) : null}
         <button
           type="button"
-          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-white/55 outline-none transition-colors hover:bg-red-500/15 hover:text-red-300 focus-visible:ring-2 focus-visible:ring-red-300/60"
+          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-[var(--surface-text-muted)] outline-none transition-colors hover:bg-red-500/15 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-red-400/60"
           onClick={onDelete}
           title={t("linkGroup.confirmDelete")}
           aria-label={t("linkGroup.confirmDelete")}

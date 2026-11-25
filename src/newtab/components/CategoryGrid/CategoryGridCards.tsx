@@ -60,14 +60,14 @@ export function EmptyCategoryPlaceholder({
 
   return (
     <div className="col-span-full flex min-h-[clamp(14rem,40vh,24rem)] items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-dashed border-white/15 bg-[rgba(38,40,44,0.44)] px-6 py-7 text-center shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-blue-200/85">
+      <div className="glass-style-card w-full max-w-sm rounded-2xl border border-dashed border-[var(--surface-border-strong)] px-6 py-7 text-center backdrop-blur-xl">
+        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--icon-tray-bg)] text-[var(--surface-text-secondary)]">
           <Link2 size={20} aria-hidden="true" />
         </div>
-        <h2 className="text-base font-semibold text-white/90">
+        <h2 className="text-base font-semibold text-[var(--surface-text)]">
           {t("workspace.emptyCategoryTitle")}
         </h2>
-        <p className="mt-1.5 text-xs leading-5 text-white/55">
+        <p className="mt-1.5 text-xs leading-5 text-[var(--surface-text-muted)]">
           {t("workspace.emptyCategoryDescription")}
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -83,7 +83,7 @@ export function EmptyCategoryPlaceholder({
             type="button"
             variant="outline"
             onClick={onOpenBookmarkImport}
-            className="h-10 cursor-pointer rounded-xl border-white/15 bg-white/[0.04] px-4 text-sm text-white/80 hover:bg-white/10 hover:text-white"
+            className="h-10 cursor-pointer rounded-xl border-[var(--surface-border)] bg-[var(--surface-hover)] px-4 text-sm text-[var(--surface-text)] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)]"
           >
             <Bookmark size={15} />
             {t("workspace.importBookmarksAction")}

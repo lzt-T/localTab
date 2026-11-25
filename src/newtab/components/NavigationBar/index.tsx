@@ -2,11 +2,6 @@ import { Plus } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useTranslation } from "react-i18next";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { CategoryInfo } from "@/type/db";
 import Setting, { type SettingSection } from "@/newtab/components/Setting";
 import CategoryItem from "@/newtab/components/NavigationBar/CategoryItem";
@@ -39,7 +34,7 @@ interface NavigationBarProps {
 
 // 分类导航末尾操作的统一视觉样式
 const NAVIGATION_ACTION_CLASS =
-  "flex size-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-[rgba(28,30,34,0.62)] text-white/65 backdrop-blur-xl outline-none transition-[background-color,border-color,color,transform] duration-200 hover:border-white/18 hover:bg-white/15 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-300/60 motion-reduce:transform-none motion-reduce:transition-none";
+  "flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--surface-hover)] text-[var(--surface-text-secondary)] outline-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--surface-border-strong)] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transform-none motion-reduce:transition-none";
 
 /** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
 export default function NavigationBar(props: NavigationBarProps) {
@@ -112,16 +107,16 @@ export default function NavigationBar(props: NavigationBarProps) {
 
   return (
     <nav
-      className="flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(20,22,26,0.58)] p-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:flex-col md:items-stretch md:gap-0 md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
+      className="glass-style-floating flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl p-1.5 md:flex-col md:items-stretch md:gap-0 md:rounded-[22px] md:p-0"
       aria-label={t("workspace.navigation")}
     >
-      <div className="flex shrink-0 items-center px-1 md:pointer-events-auto md:h-36 md:px-6">
-        <LocalTabMark className="flex shrink-0 justify-center" compact />
+      <div className="flex shrink-0 items-center px-1 md:border-b md:border-[var(--surface-divider)] md:px-4 md:py-3.5">
+        <LocalTabMark className="flex min-w-0 items-center gap-2.5" />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-row items-center overflow-hidden md:min-h-0 md:flex-1 md:items-center">
+      <div className="flex min-w-0 flex-1 flex-row items-center overflow-hidden md:min-h-0 md:flex-1 md:items-stretch">
         <div
-          className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:pointer-events-auto md:max-h-full md:w-full md:flex-col md:items-stretch md:gap-0.5 md:overflow-x-visible md:overflow-y-auto md:py-3 md:[mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]"
+          className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overflow-y-hidden md:w-full md:flex-col md:items-stretch md:gap-0.5 md:overflow-x-hidden md:overflow-y-auto md:px-2 md:py-2.5 md:[mask-image:linear-gradient(to_bottom,transparent,black_10px,black_calc(100%-10px),transparent)]"
           style={{ scrollbarWidth: "none" }}
         >
           <SortableContext items={categoryIds} strategy={rectSortingStrategy}>
@@ -145,27 +140,17 @@ export default function NavigationBar(props: NavigationBarProps) {
       </div>
 
       {/* 分类与全局设置入口 */}
-      <div className="flex shrink-0 items-center gap-1.5 md:pointer-events-auto md:mb-8 md:h-14 md:gap-2 md:px-6">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className={NAVIGATION_ACTION_CLASS}
-              aria-label={t("category.add")}
-              onClick={addCategory}
-            >
-              <Plus size={18} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent
-            side="right"
-            sideOffset={8}
-            className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
-            arrowClassName="bg-[#202328] fill-[#202328]"
-          >
-            {t("category.add")}
-          </TooltipContent>
-        </Tooltip>
+      <div className="flex shrink-0 items-center gap-1.5 md:border-t md:border-[var(--surface-divider)] md:p-2.5">
+        <button
+          type="button"
+          className="flex h-9 size-9 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-hover)] text-xs font-medium text-[var(--surface-text-secondary)] outline-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--surface-border-strong)] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transform-none motion-reduce:transition-none md:w-auto md:flex-1 md:px-3"
+          title={t("category.add")}
+          aria-label={t("category.add")}
+          onClick={addCategory}
+        >
+          <Plus size={15} className="shrink-0" />
+          <span className="hidden truncate md:inline">{t("category.add")}</span>
+        </button>
         <Setting
           open={isSettingsOpen}
           activeSection={settingsSection}

@@ -227,7 +227,7 @@ export default function LinkItemWrapper({
         variant={isDragging ? "drag-placeholder" : "default"}
       />
       {shouldShowMergeTarget && (
-        <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-blue-400/15 pb-2">
+        <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-2xl bg-blue-400/18 pb-2">
           <span className="rounded-full border border-blue-300/40 bg-[#1a2232]/85 px-2.5 py-1 text-xs font-medium text-blue-100 backdrop-blur-xl">
             {t("linkGroup.mergeHint")}
           </span>

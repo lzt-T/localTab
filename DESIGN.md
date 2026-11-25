@@ -2,15 +2,15 @@
 name: "LocalTab"
 description: "在浏览器壁纸上悬浮组织常用网站的安静新标签页工作台"
 colors:
-  canvas-night: "#090c10"
-  surface-card: "rgba(58, 60, 64, 0.52)"
-  surface-floating: "rgba(46, 48, 52, 0.76)"
-  surface-overlay: "rgba(38, 40, 44, 0.94)"
+  canvas-night: "#09090b"
+  surface-card: "rgba(12, 12, 14, 0.34)"
+  surface-floating: "rgba(18, 18, 20, 0.68)"
+  surface-overlay: "rgba(20, 20, 22, 0.92)"
   mist-blue: "#60a5fa"
   mist-blue-strong: "rgba(59, 130, 246, 0.85)"
-  text-primary: "rgba(255, 255, 255, 0.90)"
+  text-primary: "rgba(255, 255, 255, 0.92)"
   text-muted: "rgba(255, 255, 255, 0.55)"
-  border-soft: "rgba(255, 255, 255, 0.14)"
+  border-soft: "rgba(255, 255, 255, 0.06)"
   danger: "rgba(239, 68, 68, 0.70)"
 typography:
   headline:
@@ -72,12 +72,12 @@ components:
     padding: "4px 12px"
     height: "36px"
   card-link:
-    backgroundColor: "{colors.surface-card}"
+    backgroundColor: "transparent"
     textColor: "{colors.text-primary}"
     typography: "{typography.body}"
-    rounded: "{rounded.lg}"
-    padding: "8px 12px"
-    height: "88px"
+    rounded: "{rounded.xl}"
+    padding: "8px 6px"
+    height: "104px"
   navigation-item:
     backgroundColor: "transparent"
     textColor: "{colors.text-muted}"
@@ -110,7 +110,7 @@ components:
 
 **Creative North Star: "悬浮书签台"**
 
-LocalTab 像一张悬浮在个人壁纸前的书签工作台：界面不遮蔽用户选择的背景，而是用深色半透明表面稳定文字和操作。视觉重心始终落在用户的分类、网址和搜索任务上，品牌通过克制的雾蓝提示、精确的间距和安静的层次表达。
+LocalTab 像一张悬浮在个人壁纸前的书签工作台：界面不遮蔽用户选择的背景，而是通过深色哑光烟熏玻璃与 60×60 独立圆角毛玻璃图标格稳定任意背景下的文字与操作可读性。视觉重心始终落在用户的分类、网址和搜索任务上，品牌通过克制的语义对比、精确的间距和安静的层次表达。
 
 系统气质是克制、通透、安静、高效。密度偏紧凑，但交互目标保持宽松；装饰只服务于结构、状态和可读性，不使用高饱和多彩、厚重不透明、营销式装饰或夸张动效。
 
@@ -170,13 +170,13 @@ LocalTab 像一张悬浮在个人壁纸前的书签工作台：界面不遮蔽�
 
 ## Layout
 
-新标签页以全视口、纵向吸附的分类页面为主轴。桌面端将分类导航固定在左侧、搜索固定在顶部中央，内容位于两者之间；窄屏将导航移到顶部并保持搜索居中。主内容容器最大宽度为 1500px，并为底部 Dock 留出安全空间。
+新标签页以全视口、纵向吸附的分类页面为主轴。桌面端将分类导航收拢在左侧悬浮毛玻璃岛中，搜索固定在顶部中央，内容位于中间舞台；窄屏将导航移到顶部并保持搜索居中。主内容容器最大宽度为 1280px，并为底部 Dock 留出安全空间。
 
-网址网格从单列逐步扩展为 2、3、4、5、7、8 列；关键断点为 420px、640px、768px、1024px、1280px 和 1536px。基础节奏以 4px 为单位，组件内部最常用 8–16px，面板级留白使用 24px。设置面板在窄屏采用上下结构，在 640px 起切换为侧栏加内容区。
+网址与文件夹采用 60×60px 独立圆角毛玻璃图标块 + 下置居中标题的图标格排布（单格高 104px），网格随视口宽度在 3 至 9 列间响应式扩展；基础节奏以 4px 为单位，组件内部最常用 8–16px，面板级留白使用 24px。设置面板在窄屏采用上下结构，在 640px 起切换为侧栏加内容区。
 
 ## Elevation & Depth
 
-系统采用“透明度分层 + 环境阴影”的混合方式。卡片、持续悬浮工具和临时覆盖层分别使用逐步加深的玻璃表面；阴影用于说明离背景的距离，不用于给每个元素增加装饰轮廓。所有玻璃层共享 24px 模糊、降低亮度和轻度饱和的材料特征。
+系统采用“深色哑光烟熏玻璃 + 独立图标块 + 环境阴影”的混合方式。主网格采用 `60×60` 圆角磨砂图标块（`rgba(30, 30, 36, 0.72)`）配柔和投影白字，减少大面积遮挡；搜索框与 Dock 使用更凝实的浮动磨砂层（`rgba(32, 32, 38, 0.78)`），设置与表单弹窗保持高不透明隔离层，确保全部背景与交互场景的清晰度。
 
 ### Shadow Vocabulary
 

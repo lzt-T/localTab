@@ -249,15 +249,15 @@ const NewTabApp: React.FC = () => {
     <PageDndProvider>
       <div
         data-category-page-scroll=""
-        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-x-hidden overflow-y-scroll bg-[#090c10] text-white"
+        className="relative h-screen min-h-screen w-screen snap-y snap-mandatory overflow-x-hidden overflow-y-scroll bg-[var(--surface-canvas)] text-[var(--surface-text)]"
         style={{ ...backgroundStyle, scrollbarWidth: "none" }}
       >
         <div
-          className="atmosphere-backdrop pointer-events-none fixed inset-0 z-0 backdrop-saturate-[0.82]"
+          className="atmosphere-backdrop pointer-events-none fixed inset-0 z-0"
           aria-hidden="true"
         />
 
-        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:pointer-events-none md:inset-y-0 md:left-0 md:right-auto md:top-0 md:h-screen md:w-44">
+        <section className="fixed left-3 right-3 top-3 z-30 h-14 md:inset-y-5 md:left-5 md:right-auto md:h-auto md:w-48">
           <NavigationBar
             activeCategoryId={currentCategoryId}
             categories={categories}
@@ -275,7 +275,7 @@ const NewTabApp: React.FC = () => {
           />
         </section>
 
-        <div className="pointer-events-none fixed left-4 right-4 top-[76px] z-40 flex justify-center md:left-1/2 md:right-auto md:top-0 md:h-36 md:w-full md:max-w-[840px] md:-translate-x-1/2 md:items-center md:px-8">
+        <div className="pointer-events-none fixed left-4 right-4 top-[76px] z-40 flex justify-center md:left-[232px] md:right-8 md:top-0 md:h-32 md:w-auto md:items-center xl:left-1/2 xl:right-auto xl:w-full xl:max-w-[840px] xl:-translate-x-1/2 xl:px-8">
           <SearchInput
             className="pointer-events-auto"
             categories={categories}

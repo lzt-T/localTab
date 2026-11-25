@@ -85,9 +85,9 @@ export default function LinkList({
     1,
     Math.ceil((localLinks.length + 1) / 3)
   );
-  // 每行卡片高 96px，行间距与网格 gap-3 保持为 12px
+  // 每行图标格高 104px，行间距与网格 gap-y-3 保持为 12px
   const reservedPreviewMinHeight =
-    reservedPreviewRowCount * 96 + (reservedPreviewRowCount - 1) * 12;
+    reservedPreviewRowCount * 104 + (reservedPreviewRowCount - 1) * 12;
   // 在浮层关闭动画完成并卸载前保留预览高度的网格节点
   const previewLayoutNodeRef = useRef<HTMLDivElement | null>(null);
 
@@ -287,7 +287,7 @@ export default function LinkList({
   return (
     <div
       ref={connectListNodeRef}
-      className="grid min-h-20 grid-cols-3 content-start gap-3"
+      className="grid min-h-20 grid-cols-3 content-start gap-x-2 gap-y-3"
     >
       {localLinks.map((link, index) => {
         return (
@@ -334,18 +334,32 @@ export default function LinkList({
           type="button"
           ref={setEndNodeRef}
           className={cn(
-            "flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/20 bg-[rgba(48,50,54,0.38)] p-3 text-white/70 shadow-md shadow-black/10 backdrop-blur-xl outline-none transition-[transform,background-color,border-color,box-shadow,color] duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-[rgba(58,60,64,0.56)] hover:text-white/90 hover:shadow-lg hover:shadow-black/20 focus-visible:ring-2 focus-visible:ring-blue-200/80",
-            !showAddLinkCard && "col-span-full h-20",
-            isOverEnd && "ring-2 ring-blue-200/80 bg-white/20"
+            showAddLinkCard
+              ? "group/add flex h-[104px] cursor-pointer flex-col items-center justify-center rounded-2xl px-1.5 py-2 outline-none transition-[background-color,box-shadow] duration-200 hover:bg-[var(--tile-hover-bg)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
+              : "col-span-full flex h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--surface-border-strong)] bg-[var(--glass-card-bg)] p-3 text-[var(--surface-text-secondary)] outline-none transition-[background-color,border-color,color] duration-200 hover:border-[var(--surface-ring)] hover:bg-[var(--glass-card-hover-bg)] hover:text-[var(--surface-text)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]",
+            isOverEnd && "ring-2 ring-blue-300/80 bg-blue-400/15"
           )}
           onClick={onOpenAddLink}
         >
-          <Plus size={showAddLinkCard ? 24 : 22} />
-          <span className="text-sm font-medium">
-            {showAddLinkCard
-              ? t("link.addAction")
-              : t("linkGroup.emptyHint")}
-          </span>
+          {showAddLinkCard ? (
+            <>
+              <span className="flex size-[60px] shrink-0 items-center justify-center rounded-[18px] border border-dashed border-[var(--surface-border-strong)] bg-[var(--surface-hover)] text-[var(--surface-text-secondary)] transition-colors group-hover/add:border-[var(--surface-ring)] group-hover/add:text-[var(--surface-text)]">
+                <Plus size={24} />
+              </span>
+              <span className="mt-2 w-full min-w-0 px-1 text-center">
+                <span className="block truncate text-[13px] font-medium leading-5 text-[var(--surface-text-muted)] group-hover/add:text-[var(--surface-text)]">
+                  {t("link.addAction")}
+                </span>
+              </span>
+            </>
+          ) : (
+            <>
+              <Plus size={22} />
+              <span className="text-sm font-medium">
+                {t("linkGroup.emptyHint")}
+              </span>
+            </>
+          )}
         </button>
       )}
     </div>

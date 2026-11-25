@@ -13,16 +13,16 @@ export default function LocalTabMark({
       <img
         src="/icons/icon.svg"
         alt=""
-        className="size-10 shrink-0 rounded-[10px] object-contain"
+        className="size-8 shrink-0 rounded-[9px] object-contain"
         draggable={false}
         aria-hidden="true"
       />
       {!compact ? (
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold tracking-[-0.02em] text-white">
+        <span className="hidden min-w-0 md:block">
+          <span className="block truncate text-sm font-semibold tracking-[-0.02em] text-[var(--surface-text)]">
             LocalTab
           </span>
-          <span className="block truncate text-[11px] font-medium text-white/55">
+          <span className="block truncate text-[11px] font-medium text-[var(--surface-text-muted)]">
             Local workspace
           </span>
         </span>

@@ -45,11 +45,11 @@ function CategoryDragPreviewCard({
   icon,
 }: CategoryDragPreviewCardProps) {
   return (
-    <div className="flex h-full w-full items-center gap-1.5 rounded-xl border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)] px-3 text-white">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-blue-100">
+    <div className="flex h-full w-full items-center gap-1.5 rounded-xl border border-[var(--glass-popover-border)] bg-[var(--glass-popover-bg)] px-3 text-[var(--surface-text)]">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-hover)] text-[var(--surface-text)]">
         <Icon name={icon} size={20} />
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white/90">
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--surface-text)]">
         {name}
       </span>
     </div>
@@ -72,7 +72,7 @@ function LinkGroupDragPreviewCard({
   linkGroup,
 }: LinkGroupDragPreviewCardProps) {
   return (
-    <div className="group/folder relative flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)] p-2 text-white">
+    <div className="group/folder relative flex h-[104px] w-full flex-col items-center justify-center px-1.5 py-2 text-[var(--surface-text)]">
       <LinkFolderCardContent linkGroup={linkGroup} />
     </div>
   );
@@ -129,7 +129,7 @@ function createDockLinkDragPreview(item: DragItem): DragPreviewLayout {
     width: 44,
     height: 44,
     content: (
-      <div className="flex size-11 items-center justify-center rounded-xl border border-white/18 bg-[rgba(32,34,38,0.94)] text-white shadow-lg shadow-black/30">
+      <div className="flex size-11 items-center justify-center rounded-xl border border-[var(--glass-popover-border)] bg-[var(--glass-popover-bg)] text-[var(--surface-text)] shadow-lg shadow-black/20">
         <DockLinkIcon link={dockLinkItem.link} />
       </div>
     ),

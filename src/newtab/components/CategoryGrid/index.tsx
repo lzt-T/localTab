@@ -354,7 +354,7 @@ export default function CategoryGrid({
 
   return (
     <div ref={setNodeRef} className="min-h-full">
-      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <div className="grid grid-cols-3 gap-x-2 gap-y-4 min-[480px]:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9">
         {localItems.length === 0 && linkDropPreview === null && (
           <EmptyCategoryPlaceholder
             isItemOver={isItemOver}

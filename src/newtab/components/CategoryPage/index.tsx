@@ -108,15 +108,15 @@ export default function CategoryPage({
   return (
     <div
       ref={categoryPageRef}
-      className="relative z-[1] flex h-screen w-full snap-start flex-col pt-36 md:px-44 md:pt-32"
+      className="relative z-[1] flex h-screen w-full snap-start flex-col pt-36 md:pl-[232px] md:pr-8 md:pt-32 xl:px-[232px]"
     >
-      <section className="mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 flex-col px-4 pb-24 sm:px-6 md:px-4 md:pb-28">
-        <header className="mb-4 flex shrink-0 items-center gap-2 px-1 text-white/70">
-          <h1 className="truncate text-base font-semibold tracking-[-0.015em] text-white/90">
+      <section className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col px-4 pb-24 sm:px-6 md:px-4 md:pb-28">
+        <header className="mb-4 flex shrink-0 items-center gap-2 px-1 text-[var(--surface-text-secondary)]">
+          <h1 className="truncate text-base font-semibold tracking-[-0.015em] text-[var(--surface-text)] [text-shadow:var(--surface-heading-shadow)]">
             {categoryInfo.name}
           </h1>
-          <span className="size-1 rounded-full bg-white/35" aria-hidden="true" />
-          <p className="truncate text-xs font-medium text-white/50">
+          <span className="size-1 rounded-full bg-[var(--surface-text-subtle)]" aria-hidden="true" />
+          <p className="truncate text-xs font-medium text-[var(--surface-text-muted)] [text-shadow:var(--surface-heading-shadow)]">
             {t("workspace.websiteCount", { count: linkCount })}
           </p>
         </header>

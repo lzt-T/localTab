@@ -7,8 +7,8 @@
 :root {
   font-family: "Manrope Variable", "Noto Sans SC Variable", system-ui, sans-serif;
 
-  color: rgba(255, 255, 255, 0.9);
-  background-color: #090c10;
+  color: var(--surface-text);
+  background-color: var(--surface-canvas);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -60,7 +60,7 @@ body {
 html.popup-surface,
 html.popup-surface body,
 html.popup-surface #root {
-  background-color: #202226;
+  background-color: #141416;
 }
 
 /* Popup 高度跟随内容变化，不继承主页面的视口最小高度 */
@@ -82,16 +82,73 @@ html[data-page-dragging="true"] * {
   @apply  bg-white/10  backdrop-blur-xl;
 }
 
-.glass-style-border {
-  background: rgba(26, 28, 32, 0.56);
-  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-top-color: rgba(255, 255, 255, 0.15);
+/* 深色哑光玻璃语义变量 */
+:root {
+  --surface-canvas: #09090b;
+  --surface-text: rgba(255, 255, 255, 0.92);
+  --surface-text-secondary: rgba(255, 255, 255, 0.72);
+  --surface-text-muted: rgba(255, 255, 255, 0.54);
+  --surface-text-subtle: rgba(255, 255, 255, 0.42);
+  --surface-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --surface-heading-shadow: 0 1px 6px rgba(0, 0, 0, 0.48);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-hover-strong: rgba(255, 255, 255, 0.14);
+  --surface-divider: rgba(255, 255, 255, 0.12);
+  --surface-border: rgba(255, 255, 255, 0.10);
+  --surface-border-strong: rgba(255, 255, 255, 0.18);
+  --surface-ring: rgba(255, 255, 255, 0.36);
+  --glass-card-bg: rgba(24, 24, 28, 0.62);
+  --glass-card-hover-bg: rgba(38, 38, 44, 0.72);
+  --glass-card-border: rgba(255, 255, 255, 0.10);
+  --glass-card-hover-border: rgba(255, 255, 255, 0.18);
+  --glass-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-card-hover-shadow: 0 10px 28px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  --glass-floating-bg: rgba(32, 32, 38, 0.78);
+  --glass-floating-focus-bg: rgba(38, 38, 45, 0.88);
+  --glass-floating-border: rgba(255, 255, 255, 0.13);
+  --glass-floating-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-popover-bg: rgba(24, 24, 28, 0.92);
+  --glass-popover-border: rgba(255, 255, 255, 0.12);
+  --glass-popover-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  --tooltip-bg: #1c1c20;
+  --tooltip-border: rgba(255, 255, 255, 0.12);
+  --nav-active-bg: rgba(255, 255, 255, 0.14);
+  --nav-active-border: rgba(255, 255, 255, 0.14);
+  --nav-active-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  --nav-indicator: rgba(255, 255, 255, 0.85);
+  --nav-action-bg: rgba(30, 30, 36, 0.68);
+  --icon-tray-bg: rgba(255, 255, 255, 0.08);
+  --icon-tray-ring: rgba(255, 255, 255, 0.08);
+  --monogram-bg: rgba(255, 255, 255, 0.10);
+  --monogram-border: rgba(255, 255, 255, 0.12);
+  --monogram-text: rgba(255, 255, 255, 0.88);
+  --kbd-bg: rgba(255, 255, 255, 0.06);
+  --atmosphere-mask:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.04) 22%, rgba(0, 0, 0, 0.08) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.16) 100%);
+  --tile-label-color: rgba(255, 255, 255, 0.94);
+  --tile-label-shadow: 0 1px 4px rgba(0, 0, 0, 0.82), 0 0 12px rgba(0, 0, 0, 0.42);
+  --tile-hover-bg: rgba(255, 255, 255, 0.10);
+  --tile-icon-bg: rgba(30, 30, 36, 0.72);
+  --tile-icon-border: rgba(255, 255, 255, 0.14);
+  --tile-icon-shadow: 0 8px 20px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-/* 在基础玻璃材质上降低内容卡片的不透明度 */
+/* 玻璃态：自适应基础磨砂表面 */
+.glass-style-border {
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--glass-card-border);
+  box-shadow: var(--glass-card-shadow);
+}
+
+/* 内容卡片自适应磨砂表面 */
 .glass-style-card {
-  background: rgba(24, 26, 30, 0.46);
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-card-border);
+  box-shadow: var(--glass-card-shadow);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* 页面拖拽期间关闭高密度卡片的背景采样，降低图层合成开销 */
@@ -100,27 +157,54 @@ html[data-page-dragging="true"] .glass-style-card {
   -webkit-backdrop-filter: none;
 }
 
-/* 与基础玻璃同色相、层级稍深的浮动工具表面 */
+/* 60x60 独立圆角毛玻璃图标块 */
+.glass-icon-tile {
+  background: var(--tile-icon-bg);
+  backdrop-filter: blur(20px) saturate(165%);
+  -webkit-backdrop-filter: blur(20px) saturate(165%);
+  border: 1px solid var(--tile-icon-border);
+  box-shadow: var(--tile-icon-shadow);
+  transition: transform 0.2s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* 页面拖拽期间关闭图标块背景采样，降低合成开销 */
+html[data-page-dragging="true"] .glass-icon-tile {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 浮动工具表面（搜索框、Dock 等高优先控件） */
 .glass-style-floating {
-  background: rgba(28, 30, 34, 0.72);
-  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-top-color: rgba(255, 255, 255, 0.15);
+  background: var(--glass-floating-bg);
+  backdrop-filter: blur(26px) saturate(165%);
+  -webkit-backdrop-filter: blur(26px) saturate(165%);
+  border: 1px solid var(--glass-floating-border);
+  box-shadow: var(--glass-floating-shadow);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* 用于弹窗、抽屉和临时菜单的高不透明玻璃表面 */
+/* 主界面轻浮层（快捷搜索、下拉菜单、文件夹浮层） */
+.glass-style-popover {
+  background: var(--glass-popover-bg);
+  color: var(--surface-text);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  border: 1px solid var(--glass-popover-border);
+  box-shadow: var(--glass-popover-shadow);
+}
+
+/* 用于重型弹窗、抽屉的高不透明深色磨砂表面 */
 .glass-style-overlay {
-  background: rgba(38, 40, 44, 0.94);
-  backdrop-filter: blur(20px) brightness(90%) saturate(115%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-top-color: rgba(255, 255, 255, 0.15);
+  background: rgba(22, 22, 26, 0.94);
+  backdrop-filter: blur(24px) saturate(110%);
+  -webkit-backdrop-filter: blur(24px) saturate(110%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
-/* 壁纸氛围遮罩 */
+/* 壁纸氛围遮罩：跟随明暗主题平滑过渡 */
 .atmosphere-backdrop {
-  background:
-    linear-gradient(90deg, rgba(5, 7, 10, 0.62) 0%, rgba(5, 7, 10, 0.24) 46%, rgba(5, 7, 10, 0.4) 100%),
-    linear-gradient(180deg, rgba(4, 7, 10, 0.14) 0%, rgba(4, 7, 10, 0.34) 100%);
+  background: var(--atmosphere-mask);
+  transition: background 0.3s ease;
 }
 
 #root {
@@ -211,7 +295,7 @@ html[data-page-dragging="true"] .glass-style-card {
 
 /* 文本选中高亮样式 */
 ::selection {
-  background: rgba(96, 165, 250, 0.28);
+  background: rgba(255, 255, 255, 0.24);
   color: #ffffff;
 }
 

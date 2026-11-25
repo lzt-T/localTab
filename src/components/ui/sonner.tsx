@@ -23,8 +23,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "backdrop-blur-2xl shadow-xl shadow-black/30",
-          title: "font-medium text-white/90",
-          description: "text-white/60",
+          title: "font-medium text-[var(--surface-text)]",
+          description: "text-[var(--surface-text-muted)]",
           success: "!border-emerald-400/25",
           info: "!border-blue-400/25",
           warning: "!border-amber-400/25",
@@ -33,9 +33,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "rgba(32, 34, 38, 0.92)",
-          "--normal-text": "rgba(255, 255, 255, 0.9)",
-          "--normal-border": "rgba(255, 255, 255, 0.14)",
+          "--normal-bg": "var(--glass-popover-bg)",
+          "--normal-text": "var(--surface-text)",
+          "--normal-border": "var(--glass-popover-border)",
           "--border-radius": "0.75rem",
         } as React.CSSProperties
       }

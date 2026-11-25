@@ -10,14 +10,12 @@ import { isImageIcon } from "@/utils/icon";
 
 type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 
-// 不同展示模式对应的网址卡片前景样式
+// 不同展示模式对应的网址图标格前景样式
 const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   default:
-    "border border-transparent shadow-md shadow-black/10 transition-[background-color,border-color,box-shadow] duration-200 group-hover/item:border-white/18 group-hover/item:bg-white/[0.06] group-hover/item:shadow-lg group-hover/item:shadow-black/20 has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-blue-200/45",
-  "drag-placeholder":
-    "border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl [&>*]:invisible",
-  "drag-preview":
-    "border border-white/18 border-t-white/22 bg-[rgba(32,34,38,0.92)]",
+    "rounded-2xl transition-[background-color,box-shadow] duration-200 group-hover/item:bg-[var(--tile-hover-bg)] has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-[var(--surface-ring)]",
+  "drag-placeholder": "",
+  "drag-preview": "",
 };
 
 interface LinkItemProps {
@@ -61,6 +59,9 @@ function Index({
   // 图片图标可用时优先展示原始图标
   const shouldShowImageIcon =
     hasImageIcon && failedImageIcon !== link.icon;
+  // 当前图标是否回退为首字徽标
+  const isMonogramIcon =
+    !shouldShowImageIcon && shouldUseLinkMonogram(link.icon, failedImageIcon);
   // 当前网址是否包含可展示的详情
   const hasDescription = link.description.trim().length > 0;
   // 卡片无障碍名称使用的站点域名
@@ -89,82 +90,77 @@ function Index({
   };
 
   return (
-    <div className="group/item relative h-24 rounded-xl">
+    <div className="group/item relative h-[104px] rounded-2xl">
       <div
         className={cn(
-          "relative h-full rounded-xl",
-          variant === "default" &&
-            "transform-gpu transition-transform duration-200 group-hover/item:-translate-y-0.5 motion-reduce:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none"
+          "relative flex h-full rounded-2xl",
+          LINK_ITEM_CLASS_BY_VARIANT[variant]
         )}
       >
-        {variant === "default" && (
-          <span
-            className="glass-style-border glass-style-card pointer-events-none absolute inset-0 z-0 rounded-xl"
-            aria-hidden="true"
-          />
-        )}
-        <div
-          className={cn(
-            "relative z-[1] flex h-full rounded-xl",
-            LINK_ITEM_CLASS_BY_VARIANT[variant]
-          )}
-        >
-          {link.id && handleEditClick && (
-            <button
-              type="button"
-              className="absolute right-2 top-2 z-10 flex size-7 cursor-pointer items-center justify-center rounded-md text-white/65 opacity-0 outline-none transition-[background-color,color,opacity] hover:bg-white/15 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 group-hover/item:opacity-100 group-focus-within/item:opacity-100"
-              onClick={onEditClick}
-              title={t("common.edit")}
-              aria-label={t("common.edit")}
-            >
-              <Edit size={15} />
-            </button>
-          )}
+        {variant === "default" && link.id && handleEditClick && (
           <button
             type="button"
-            className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl px-3 py-2.5 text-center outline-none focus-visible:ring-2 focus-visible:ring-blue-200/75"
-            onClick={onSkipClick}
-            aria-label={`${link.title}, ${linkHostname}`}
+            className="absolute right-1 top-1 z-10 flex size-7 cursor-pointer items-center justify-center rounded-lg text-[var(--surface-text-muted)] opacity-0 outline-none transition-[background-color,color,opacity] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] group-hover/item:opacity-100 group-focus-within/item:opacity-100"
+            onClick={onEditClick}
+            title={t("common.edit")}
+            aria-label={t("common.edit")}
           >
-            <span className="mb-1.5 flex h-7 shrink-0 items-center justify-center">
-              {shouldShowImageIcon ? (
-                <img
-                  src={link.icon}
-                  alt=""
-                  className="size-6 rounded object-contain"
-                  onError={onImageIconError}
-                />
-              ) : shouldUseLinkMonogram(link.icon, failedImageIcon) ? (
-                <LinkMonogram title={link.title} url={link.url} size="md" />
-              ) : (
-                <Icon
-                  name={link.icon}
-                  size={24}
-                  className="text-blue-100/90"
-                />
-              )}
-            </span>
-            <span className="w-full min-w-0">
+            <Edit size={14} />
+          </button>
+        )}
+        <button
+          type="button"
+          className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl px-1.5 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
+          onClick={onSkipClick}
+          aria-label={`${link.title}, ${linkHostname}`}
+        >
+          {variant === "drag-placeholder" ? (
+            <>
               <span
-                className={cn(
-                  "text-sm font-medium leading-5 text-white/90",
-                  hasDescription ? "block truncate" : "line-clamp-2 break-words"
-                )}
-                title={link.title}
-              >
-                {link.title}
-              </span>
-              {hasDescription && (
-                <span
-                  className="block truncate text-xs leading-4 text-white/50"
-                  title={link.description}
-                >
-                  {link.description}
+                className="size-[60px] shrink-0 rounded-[18px] border border-dashed border-[var(--surface-border-strong)] bg-[var(--surface-hover)] backdrop-blur-md"
+                aria-hidden="true"
+              />
+              <span className="mt-2 h-5 w-full" aria-hidden="true" />
+            </>
+          ) : (
+            <>
+              {isMonogramIcon ? (
+                <span className="shrink-0 transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
+                  <LinkMonogram title={link.title} url={link.url} size="lg" />
+                </span>
+              ) : (
+                <span className="glass-icon-tile flex size-[60px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
+                  {shouldShowImageIcon ? (
+                    <img
+                      src={link.icon}
+                      alt=""
+                      className="size-8 rounded-lg object-contain"
+                      onError={onImageIconError}
+                    />
+                  ) : (
+                    <Icon
+                      name={link.icon}
+                      size={26}
+                      className="text-[var(--surface-text)]"
+                    />
+                  )}
                 </span>
               )}
-            </span>
-          </button>
-        </div>
+              <span className="mt-2 w-full min-w-0 px-1">
+                <span
+                  className="block truncate text-[13px] font-medium leading-5 text-[var(--tile-label-color)] [text-shadow:var(--tile-label-shadow)]"
+                  title={
+                    hasDescription
+                      ? `${link.title} — ${link.description}`
+                      : link.title
+                  }
+                >
+                  {link.title}
+                </span>
+              </span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

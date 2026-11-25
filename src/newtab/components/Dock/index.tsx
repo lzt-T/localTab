@@ -71,7 +71,7 @@ interface DockTrashProps {
 
 // Dock 中可点击操作的统一视觉样式
 const DOCK_ACTION_CLASS =
-  "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white/65 outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transform-none motion-reduce:transition-none";
+  "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-[var(--surface-text-secondary)] outline-none transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transform-none motion-reduce:transition-none";
 
 // Dock 添加菜单离开后的关闭缓冲时间
 const DOCK_CREATE_MENU_CLOSE_DELAY_MS = 150;
@@ -209,7 +209,7 @@ function DockLinkItem({
       className={cn(
         "group relative flex size-11 shrink-0 rounded-xl transition-[opacity,background-color,transform] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
         !isDockLinkInteractionSuppressed &&
-          "hover:bg-white/[0.07] focus-within:bg-white/[0.07]",
+          "hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface-hover)]",
         isDragging && "opacity-50"
       )}
     >
@@ -218,7 +218,7 @@ function DockLinkItem({
           <button
             ref={setActivatorNodeRef}
             type="button"
-            className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-white outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-blue-200/75"
+            className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-[var(--surface-text)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
             onClick={openDockLink}
             onKeyDown={handleDockLinkKeyDown}
             aria-label={t("dock.openLink", { title: link.title })}
@@ -241,8 +241,8 @@ function DockLinkItem({
         <TooltipContent
           side="top"
           sideOffset={8}
-          className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
-          arrowClassName="bg-[#202328] fill-[#202328]"
+          className="border border-[var(--tooltip-border)] bg-[var(--tooltip-bg)] text-[var(--surface-text)] shadow-lg motion-reduce:animate-none"
+          arrowClassName="bg-[var(--tooltip-bg)] fill-[var(--tooltip-bg)]"
         >
           {link.title}
         </TooltipContent>
@@ -259,7 +259,7 @@ function DockTrash({ isOver, isVisible, setNodeRef }: DockTrashProps) {
     <>
       <span
         className={cn(
-          "h-7 shrink-0 bg-white/10 transition-[width,opacity] duration-200 motion-reduce:transition-none",
+          "h-7 shrink-0 bg-[var(--surface-divider)] transition-[width,opacity] duration-200 motion-reduce:transition-none",
           isVisible ? "w-px opacity-100" : "w-0 opacity-0"
         )}
         aria-hidden="true"
@@ -274,10 +274,11 @@ function DockTrash({ isOver, isVisible, setNodeRef }: DockTrashProps) {
         <div
           ref={setNodeRef}
           className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-white/55 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-            isVisible && "border-white/15 bg-white/[0.07] text-white/80",
+            "flex size-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-[var(--surface-text-muted)] outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 motion-reduce:transform-none motion-reduce:transition-none",
+            isVisible &&
+              "border-[var(--surface-border)] bg-[var(--surface-hover)] text-[var(--surface-text-secondary)]",
             isOver &&
-              "scale-105 border-red-300/45 bg-red-400/15 text-red-200 shadow-[0_8px_22px_rgba(248,113,113,0.14)]"
+              "scale-105 border-red-400/50 bg-red-500/15 text-red-400 shadow-[0_8px_22px_rgba(248,113,113,0.16)]"
           )}
           role="img"
           title={isOver ? t("dock.releaseToRemove") : t("dock.trash")}
@@ -483,21 +484,21 @@ export default function Dock({
           side="top"
           align="start"
           sideOffset={10}
-          className="glass-style-overlay min-w-40 rounded-xl border-white/10 p-1.5 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] motion-reduce:animate-none"
+          className="glass-style-popover min-w-40 rounded-xl p-1.5 motion-reduce:animate-none"
           onMouseEnter={openCreateMenu}
           onMouseLeave={scheduleCreateMenuClose}
           onKeyDown={handleCreateMenuKeyDown}
           onCloseAutoFocus={handleCreateMenuCloseAutoFocus}
         >
           <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-[var(--surface-hover-strong)] focus:text-[var(--surface-text)]"
             onSelect={onAddLink}
           >
             <Link2 />
             {t("link.addAction")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-white/10 focus:text-white"
+            className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-[var(--surface-hover-strong)] focus:text-[var(--surface-text)]"
             onSelect={onCreateFolder}
           >
             <FolderPlus />
@@ -506,24 +507,24 @@ export default function Dock({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <span className="h-7 w-px shrink-0 bg-white/10" aria-hidden="true" />
+      <span className="h-7 w-px shrink-0 bg-[var(--surface-divider)]" aria-hidden="true" />
 
       <div
         ref={connectPinAreaRef}
         className={cn(
           "relative flex h-11 max-w-[560px] items-center overflow-x-auto overflow-y-hidden rounded-xl",
           dockLinks.length === 0 ? "min-w-[110px]" : "w-fit min-w-0",
-          "[scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin]",
-          "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-track]:bg-transparent",
+          "[scrollbar-color:rgba(128,128,128,0.32)_transparent] [scrollbar-width:thin]",
+          "[&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-current/20 [&::-webkit-scrollbar-track]:bg-transparent",
           "transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none",
           isPinOver &&
-            "bg-blue-100/10 shadow-[0_8px_24px_rgba(191,219,254,0.12)]"
+            "bg-[var(--surface-hover-strong)] ring-1 ring-[var(--surface-ring)]"
         )}
         aria-label={t("dock.pinnedLinks")}
       >
         {dockLinks.length === 0 ? (
           <div
-            className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-white/55"
+            className="pointer-events-none flex min-w-[110px] items-center justify-center gap-2 whitespace-nowrap px-3 text-[var(--surface-text-muted)]"
             title={t("dock.emptyHint")}
           >
             <Pin size={16} />

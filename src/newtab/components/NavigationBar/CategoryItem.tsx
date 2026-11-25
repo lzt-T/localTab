@@ -219,24 +219,16 @@ export default function CategoryItem({
       {...attributes}
       {...listeners}
       className={cn(
-        "group/item relative flex shrink-0 items-center rounded-xl transition-[opacity,background-color,border-color,box-shadow] duration-200 md:mx-3 md:w-[calc(100%-1.5rem)]",
+        "group/item relative flex shrink-0 items-center rounded-[10px] transition-[opacity,background-color] duration-200 md:w-full",
         isDragging ? "opacity-50" : "opacity-100",
-        isActive
-          ? "bg-white/10 md:glass-style-border md:shadow-lg md:shadow-black/10"
-          : "hover:bg-white/[0.07]",
-        isGridItemOver && "bg-white/15 ring-1 ring-blue-200/45"
+        isActive ? "bg-white/[0.13]" : "hover:bg-white/[0.06]",
+        isGridItemOver &&
+          "bg-[var(--surface-hover-strong)] ring-1 ring-[var(--surface-ring)]"
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute bottom-0 left-3 right-3 h-px rounded-full bg-blue-200 transition-opacity duration-200 md:bottom-2.5 md:left-1 md:right-auto md:top-2.5 md:h-auto md:w-0.5 md:bg-blue-300/90",
-          isActive || isGridItemOver ? "opacity-100" : "opacity-0"
-        )}
-      />
       <button
         type="button"
-        className="flex h-10 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:px-3 md:transition-[padding] md:duration-200 md:group-hover/item:pr-10"
+        className="flex h-9 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transition-none md:px-3 md:transition-[padding] md:duration-200 md:group-hover/item:pr-9"
         onClick={() => onChangeCurrentCategory(category.id)}
         aria-current={isActive ? "page" : undefined}
         aria-label={`${category.name}, ${t("workspace.websiteCount", {
@@ -247,20 +239,20 @@ export default function CategoryItem({
           className={cn(
             "flex size-5 shrink-0 items-center justify-center transition-colors duration-200",
             isActive
-              ? "text-blue-200"
-              : "text-white/55 group-hover/item:text-white/85",
-            isGridItemOver && "text-blue-200"
+              ? "text-white"
+              : "text-white/55 group-hover/item:text-white/90",
+            isGridItemOver && "text-white"
           )}
         >
-          <Icon name={category.icon} size={18} className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]" />
+          <Icon name={category.icon} size={17} />
         </span>
         <span className="min-w-0 flex-1">
           <span
             className={cn(
-              "block truncate text-sm font-medium transition-colors [text-shadow:0_1px_6px_rgba(0,0,0,0.55)]",
+              "block truncate text-[13px] transition-colors",
               isActive
-                ? "text-white"
-                : "text-white/65 group-hover/item:text-white"
+                ? "font-semibold text-white"
+                : "font-medium text-white/65 group-hover/item:text-white/92"
             )}
           >
             {category.name}
@@ -270,7 +262,7 @@ export default function CategoryItem({
 
       <button
         type="button"
-        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white/45 outline-none transition-[background-color,color,opacity] hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 motion-reduce:transition-none md:pointer-events-none md:absolute md:right-2 md:opacity-0 md:group-hover/item:pointer-events-auto md:group-hover/item:opacity-100 md:focus-visible:pointer-events-auto md:focus-visible:opacity-100"
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[var(--surface-text-muted)] outline-none transition-[background-color,color,opacity] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transition-none md:pointer-events-none md:absolute md:right-1.5 md:opacity-0 md:group-hover/item:pointer-events-auto md:group-hover/item:opacity-100 md:focus-visible:pointer-events-auto md:focus-visible:opacity-100"
         onClick={onEditCategoryClick}
         title={t("common.edit")}
         aria-label={t("common.edit")}

@@ -182,10 +182,10 @@ const PopupApp: React.FC = () => {
   }, [t]);
 
   return (
-    <div className="relative w-[360px] overflow-hidden bg-[#202226] text-white shadow-2xl ring-1 ring-inset ring-white/10">
+    <div className="relative w-[360px] overflow-hidden bg-[#141416] text-white shadow-2xl ring-1 ring-inset ring-white/10">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.16),transparent_44%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_44%)]"
       />
 
       <div className="relative flex flex-col p-4 backdrop-blur-xl">
@@ -286,7 +286,7 @@ const PopupApp: React.FC = () => {
                   <DropdownMenuContent
                     align="start"
                     sideOffset={4}
-                    className="z-[100] max-h-52 w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[10px] border-white/15 bg-[#303236] p-1 text-white shadow-xl"
+                    className="z-[100] max-h-52 w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[10px] border-white/12 bg-[#1e1e22] p-1 text-white shadow-xl"
                   >
                     <DropdownMenuRadioGroup
                       value={selectedCategoryId}

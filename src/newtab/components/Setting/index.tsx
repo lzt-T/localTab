@@ -109,8 +109,8 @@ const Setting: React.FC<SettingProps> = ({
         <TooltipContent
           side="right"
           sideOffset={8}
-          className="border border-white/10 bg-[#202328] text-white shadow-lg motion-reduce:animate-none"
-          arrowClassName="bg-[#202328] fill-[#202328]"
+          className="border border-[var(--tooltip-border)] bg-[var(--tooltip-bg)] text-[var(--surface-text)] shadow-lg motion-reduce:animate-none"
+          arrowClassName="bg-[var(--tooltip-bg)] fill-[var(--tooltip-bg)]"
         >
           {t("settings.trigger")}
         </TooltipContent>
@@ -137,7 +137,7 @@ const Setting: React.FC<SettingProps> = ({
                     className={cn(
                       "flex min-w-fit flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-left text-white/60 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-blue-300/70 sm:w-full sm:flex-none sm:justify-start",
                       activeSection === item.id &&
-                        "bg-blue-400/15 text-blue-100"
+                        "bg-white/12 text-white"
                     )}
                     onClick={() => onSectionChange(item.id)}
                   >

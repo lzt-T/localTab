@@ -38,7 +38,7 @@ export default function DockLinkIcon({ link }: DockLinkIconProps) {
     <Icon
       name={link.icon}
       size={22}
-      className="text-white/75"
+      className="text-[var(--surface-text-secondary)]"
     />
   );
 }

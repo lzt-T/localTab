@@ -179,40 +179,40 @@ export default function SearchInput({
       <div
         className={cn("relative w-full max-w-[680px]", className)}
       >
-        <div className="glass-style-border flex w-full items-center overflow-hidden rounded-xl bg-[rgba(26,28,32,0.58)] shadow-[0_16px_44px_rgba(0,0,0,0.22)] transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-white/25 focus-within:bg-[rgba(32,34,38,0.74)] focus-within:shadow-[0_20px_52px_rgba(0,0,0,0.28)]">
+        <div className="glass-style-floating flex w-full items-center overflow-hidden rounded-xl transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-[var(--surface-border-strong)] focus-within:bg-[var(--glass-floating-focus-bg)]">
           <Popover open={isSearchMenuOpen} onOpenChange={setIsSearchMenuOpen}>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 bg-transparent px-2 py-2 text-white/65 outline-none transition-colors duration-200 hover:bg-white/[0.07] hover:text-white focus-visible:ring-2 focus-visible:ring-white/60 sm:min-w-32 sm:justify-start"
+                className="flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 bg-transparent px-2 py-2 text-[var(--surface-text-secondary)] outline-none transition-colors duration-200 hover:bg-[var(--surface-hover)] hover:text-[var(--surface-text)] focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] sm:min-w-32 sm:justify-start"
                 title={selectedSearchEngineName}
                 aria-label={selectedSearchEngineName}
                 disabled={!isInitializedSearchEngine}
               >
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-blue-100/85">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[var(--surface-text-secondary)]">
                   <Search className="size-4" />
                 </span>
                 <span className="hidden min-w-0 flex-1 truncate text-left text-xs font-medium sm:block">
                   {selectedSearchEngineName}
                 </span>
-                <ChevronDown className="hidden size-3.5 shrink-0 text-white/50 sm:block" />
+                <ChevronDown className="hidden size-3.5 shrink-0 text-[var(--surface-text-muted)] sm:block" />
               </button>
             </PopoverTrigger>
             <PopoverContent
               side="bottom"
               align="start"
               sideOffset={8}
-              className="glass-style-overlay w-64 p-2 text-white shadow-xl shadow-black/30"
+              className="glass-style-popover w-64 p-2"
             >
               <div className="flex flex-col gap-1">
               {isDefaultSearchSupported ? (
                 <button
                   type="button"
                   className={cn(
-                    "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-white/15",
+                    "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--surface-hover-strong)]",
                     selectedSearchEngineId === DEFAULT_SEARCH_ENGINE_ID
-                      ? "bg-white/15 font-semibold text-white"
-                      : "text-white/80"
+                      ? "bg-[var(--surface-hover-strong)] font-semibold text-[var(--surface-text)]"
+                      : "text-[var(--surface-text-secondary)]"
                   )}
                   onClick={() =>
                     onSelectSearchEngine(DEFAULT_SEARCH_ENGINE_ID)
@@ -230,12 +230,12 @@ export default function SearchInput({
 
               {isDefaultSearchSupported &&
               customSearchEngines.length > 0 ? (
-                <div className="my-1 h-px bg-white/10" />
+                <div className="my-1 h-px bg-[var(--surface-divider)]" />
               ) : null}
 
               {!isDefaultSearchSupported &&
               customSearchEngines.length === 0 ? (
-                <p className="px-3 py-2 text-xs leading-relaxed text-white/55">
+                <p className="px-3 py-2 text-xs leading-relaxed text-[var(--surface-text-muted)]">
                   {t("search.defaultUnsupported")}
                 </p>
               ) : null}
@@ -244,15 +244,15 @@ export default function SearchInput({
                 <div
                   key={searchEngine.id}
                   className={cn(
-                    "group flex items-center rounded-lg transition-colors hover:bg-white/15",
+                    "group flex items-center rounded-lg transition-colors hover:bg-[var(--surface-hover-strong)]",
                     selectedSearchEngineId === searchEngine.id
-                      ? "bg-white/15"
+                      ? "bg-[var(--surface-hover-strong)]"
                       : ""
                   )}
                 >
                   <button
                     type="button"
-                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-white/80 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/50"
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-[var(--surface-text-secondary)] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--surface-ring)]"
                     onClick={() => onSelectSearchEngine(searchEngine.id)}
                   >
                     <Search className="size-4 shrink-0" />
@@ -260,12 +260,12 @@ export default function SearchInput({
                       {searchEngine.name}
                     </span>
                     {selectedSearchEngineId === searchEngine.id ? (
-                      <Check className="size-4 shrink-0 text-white" />
+                      <Check className="size-4 shrink-0 text-[var(--surface-text)]" />
                     ) : null}
                   </button>
                   <button
                     type="button"
-                    className="mr-1 cursor-pointer rounded-md p-1.5 text-white/40 opacity-0 outline-none transition-all hover:bg-white/10 hover:text-red-300 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/50 group-hover:opacity-100"
+                    className="mr-1 cursor-pointer rounded-md p-1.5 text-[var(--surface-text-subtle)] opacity-0 outline-none transition-all hover:bg-[var(--surface-hover)] hover:text-red-400 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] group-hover:opacity-100"
                     title={t("search.deleteEngine")}
                     aria-label={t("search.deleteEngine")}
                     onClick={(event) =>
@@ -277,10 +277,10 @@ export default function SearchInput({
                 </div>
               ))}
 
-              <div className="my-1 h-px bg-white/10" />
+              <div className="my-1 h-px bg-[var(--surface-divider)]" />
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-white/70 transition-colors hover:bg-white/15 hover:text-white"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--surface-text-secondary)] transition-colors hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)]"
                 onClick={onAddSearchEngineClick}
               >
                 <Plus className="size-4" />
@@ -290,13 +290,13 @@ export default function SearchInput({
             </PopoverContent>
           </Popover>
 
-          <div className="h-5 w-px bg-white/12" />
+          <div className="h-5 w-px bg-[var(--surface-divider)]" />
 
           <Input
             type="text"
             value={query}
             role="combobox"
-            className="h-11 min-w-0 flex-1 rounded-none border-none bg-transparent px-4 text-sm font-medium text-white shadow-none placeholder:text-white/45 outline-none focus:bg-transparent focus:ring-0 focus-visible:ring-0"
+            className="h-11 min-w-0 flex-1 rounded-none border-none bg-transparent px-4 text-sm font-medium text-[var(--surface-text)] shadow-none placeholder:text-[var(--surface-text-subtle)] outline-none focus:bg-transparent focus:ring-0 focus-visible:ring-0"
             placeholder={placeholder ?? t("search.placeholder")}
             aria-label={placeholder ?? t("search.placeholder")}
             aria-autocomplete="list"
@@ -313,7 +313,7 @@ export default function SearchInput({
             onBlur={() => setIsInputFocused(false)}
             autoFocus
           />
-          <kbd className="mr-3 hidden rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-semibold text-white/40 sm:block">
+          <kbd className="mr-3 hidden rounded-md border border-[var(--surface-border)] bg-[var(--kbd-bg)] px-2 py-1 text-xs font-semibold text-[var(--surface-text-subtle)] sm:block">
             {isQuickSearchOpen ? "↑↓ ENTER" : "ENTER"}
           </kbd>
         </div>

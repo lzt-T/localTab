@@ -325,20 +325,30 @@ export default function LinkFolderCard({
           {...attributes}
           {...listeners}
           className={cn(
-            "group/folder relative flex h-24 w-full flex-col items-center justify-center rounded-xl px-3 py-2.5 text-white outline-none transition-[transform,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-blue-200/75",
+            "group/folder relative flex h-[104px] w-full flex-col items-center justify-center rounded-2xl px-1.5 py-2 text-[var(--surface-text)] outline-none transition-[background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]",
             isDragging
-              ? "cursor-grabbing border border-dashed border-white/20 bg-white/[0.035] shadow-inner shadow-black/10 backdrop-blur-xl"
-              : "glass-style-border glass-style-card cursor-pointer shadow-md shadow-black/10 hover:-translate-y-0.5 hover:border-white/18 hover:bg-[rgba(38,40,46,0.62)] hover:shadow-lg hover:shadow-black/20",
+              ? "cursor-grabbing"
+              : "cursor-pointer hover:bg-[var(--tile-hover-bg)]",
             isLinkOver &&
               isJoinTarget &&
-              "border-blue-300/80 bg-blue-400/15 ring-2 ring-blue-300/80 shadow-[0_8px_24px_rgba(59,130,246,0.2)]",
+              "bg-blue-400/18 ring-2 ring-blue-400/80 shadow-[0_8px_24px_rgba(59,130,246,0.22)]",
             isLinkOver &&
               !isJoinTarget &&
               "border-blue-200/50 ring-1 ring-blue-200/60"
           )}
           aria-label={t("linkGroup.openFolder", { name: linkGroup.name })}
         >
-          {!isDragging && <LinkFolderCardContent linkGroup={linkGroup} />}
+          {isDragging ? (
+            <>
+              <span
+                className="size-[60px] shrink-0 rounded-[18px] border border-dashed border-[var(--surface-border-strong)] bg-[var(--surface-hover)] backdrop-blur-md"
+                aria-hidden="true"
+              />
+              <span className="mt-2 h-5 w-full" aria-hidden="true" />
+            </>
+          ) : (
+            <LinkFolderCardContent linkGroup={linkGroup} />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -351,7 +361,7 @@ export default function LinkFolderCard({
             event.preventDefault();
           }
         }}
-        className="glass-style-overlay z-[60] w-[min(420px,calc(100vw-2rem))] p-3 text-white shadow-2xl shadow-black/55 ring-1 ring-white/10"
+        className="glass-style-popover z-[60] w-[min(360px,calc(100vw-2rem))] p-3 shadow-2xl shadow-black/35"
       >
         <FolderPopoverDropZone
           linkGroup={linkGroup}
