@@ -51,7 +51,7 @@ const BOOKMARK_TITLE_ERROR_ID = "quick-bookmark-title-error";
 const PopupApp: React.FC = () => {
   // 国际化工具
   const { t } = useTranslation();
-  // 当前页面快速收藏状态和操作
+  // 收藏名称错误提示标识
   const {
     status,
     page,
@@ -60,6 +60,9 @@ const PopupApp: React.FC = () => {
     categories,
     selectedCategoryId,
     setSelectedCategoryId,
+    linkGroups,
+    selectedLinkGroupId,
+    setSelectedLinkGroupId,
     isCategoryFormOpen,
     newCategoryName,
     categoryNameError,
@@ -77,6 +80,10 @@ const PopupApp: React.FC = () => {
   const selectedCategoryName =
     categories.find((category) => category.id === selectedCategoryId)?.name ??
     t("popup.selectCategory");
+  // 当前所选文件夹的展示名称
+  const selectedLinkGroupName =
+    linkGroups.find((group) => group.id === selectedLinkGroupId)?.name ??
+    t("linkGroup.ungrouped");
   // 当前展示的应用版本号（优先读取扩展 manifest，回退为构建期注入版本）
   const appVersion =
     (typeof chrome !== "undefined"
@@ -319,6 +326,75 @@ const PopupApp: React.FC = () => {
                   {t("popup.noCategories")}
                 </p>
               )}
+
+              {linkGroups.length > 0 ? (
+                <div className="mt-2.5">
+                  <label className="block text-xs font-medium text-white/65">
+                    {t("popup.folderLabel")}
+                  </label>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={t("popup.folderLabel")}
+                        className="mt-1.5 flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-[10px] border border-white/10 bg-white/[0.06] px-3 text-sm text-white outline-none transition-[color,box-shadow] focus-visible:border-blue-300/60 focus-visible:ring-[3px] focus-visible:ring-blue-300/20 data-[state=open]:border-blue-300/60 data-[state=open]:ring-[3px] data-[state=open]:ring-blue-300/20"
+                      >
+                        <span className="truncate">{selectedLinkGroupName}</span>
+                        <ChevronDown
+                          className="size-4 shrink-0 text-white/50"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      sideOffset={4}
+                      className="z-[100] max-h-44 w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[10px] border-white/12 bg-[#1e1e22] p-1 text-white shadow-xl"
+                    >
+                      <DropdownMenuRadioGroup
+                        value={selectedLinkGroupId}
+                        onValueChange={setSelectedLinkGroupId}
+                      >
+                        <DropdownMenuRadioItem
+                          value=""
+                          className="h-8 cursor-pointer rounded-md px-2 data-[state=checked]:bg-white/[0.08] focus:bg-white/10 focus:text-white [&>span:first-child]:hidden"
+                        >
+                          <span className="min-w-0 flex-1 truncate">
+                            {t("linkGroup.ungrouped")}
+                          </span>
+                          <span className="ml-auto flex size-4 shrink-0 items-center justify-center">
+                            {selectedLinkGroupId === "" ? (
+                              <Check
+                                className="size-4 text-white/60"
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                          </span>
+                        </DropdownMenuRadioItem>
+                        {linkGroups.map((group) => (
+                          <DropdownMenuRadioItem
+                            key={group.id}
+                            value={group.id}
+                            className="h-8 cursor-pointer rounded-md px-2 data-[state=checked]:bg-white/[0.08] focus:bg-white/10 focus:text-white [&>span:first-child]:hidden"
+                          >
+                            <span className="min-w-0 flex-1 truncate">
+                              {group.name}
+                            </span>
+                            <span className="ml-auto flex size-4 shrink-0 items-center justify-center">
+                              {group.id === selectedLinkGroupId ? (
+                                <Check
+                                  className="size-4 text-white/60"
+                                  aria-hidden="true"
+                                />
+                              ) : null}
+                            </span>
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : null}
 
               {isCategoryFormOpen ? (
                 <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.035] p-2.5">

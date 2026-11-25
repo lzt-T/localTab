@@ -13,26 +13,19 @@ export function useWebActive() {
   };
 
   useEffect(() => {
-    // 监听窗口聚焦和失焦事件
-    const handleFocus = () => {
-      setIsWebActive(true);
-    };
-
-    /* 监听标签页不可见事件 */
-    const handleInvisible = () => {
-      if (!document.hidden) {
+    /** 标签页重新可见时标记页面为激活状态。 */
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
         return;
       }
       setIsWebActive(true);
     };
 
-    window.addEventListener("visibilitychange", handleInvisible);
-    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // 清理事件监听器
     return () => {
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("visibilitychange", handleInvisible);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

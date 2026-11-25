@@ -29,6 +29,9 @@ export default function DockLinkIcon({ link }: DockLinkIconProps) {
     <img
       src={link.icon}
       alt=""
+      loading="lazy"
+      decoding="async"
+      draggable={false}
       className="size-6 rounded-md object-contain"
       onError={handleImageIconError}
     />

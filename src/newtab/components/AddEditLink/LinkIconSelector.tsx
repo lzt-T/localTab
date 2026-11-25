@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
+import { Image as ImageIcon, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import IconPickerGrid from "@/newtab/components/IconPickerGrid";
 import FileDropZone from "@/newtab/components/Setting/FileDropZone";
 import {
@@ -25,9 +26,11 @@ interface LinkIconSelectorProps {
   iconType: LinkIconType;
   isLoadingFavicon: boolean;
   isProcessingCustomIcon: boolean;
+  canRetryFavicon: boolean;
   error?: string;
   onIconChange: (icon: string) => void;
   onIconTypeChange: (iconType: string) => void;
+  onRetryFavicon: () => void;
   onCustomIconSelect: (file: File) => void | Promise<void>;
   onRemoveCustomIcon: () => void;
 }
@@ -38,9 +41,11 @@ export default function LinkIconSelector({
   iconType,
   isLoadingFavicon,
   isProcessingCustomIcon,
+  canRetryFavicon,
   error,
   onIconChange,
   onIconTypeChange,
+  onRetryFavicon,
   onCustomIconSelect,
   onRemoveCustomIcon,
 }: LinkIconSelectorProps) {
@@ -80,31 +85,49 @@ export default function LinkIconSelector({
         </TabsList>
 
         <TabsContent value={LINK_ICON_TYPE.FAVICON} className="mt-3">
-          <div className="flex min-h-11 w-full items-center">
-            {icon && isFaviconImageIcon(icon) ? (
-              <div className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-xl">
-                <img
-                  src={icon}
-                  alt={t("link.favicon")}
-                  className="size-8 rounded object-contain"
-                  onError={() => onIconChange("")}
-                />
-              </div>
-            ) : (
-              isLoadingFavicon && (
-                <div
-                  className="flex items-center gap-2 text-sm text-white/60"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <Loader2
-                    className="size-5 animate-spin"
-                    aria-hidden="true"
+          <div className="flex min-h-11 w-full items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {icon && isFaviconImageIcon(icon) ? (
+                <div className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-xl">
+                  <img
+                    src={icon}
+                    alt={t("link.favicon")}
+                    className="size-8 rounded object-contain"
+                    onError={() => onIconChange("")}
                   />
-                  <span>{t("link.faviconLoading")}</span>
                 </div>
-              )
-            )}
+              ) : (
+                isLoadingFavicon && (
+                  <div
+                    className="flex items-center gap-2 text-sm text-white/60"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2
+                      className="size-5 animate-spin"
+                      aria-hidden="true"
+                    />
+                    <span>{t("link.faviconLoading")}</span>
+                  </div>
+                )
+              )}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canRetryFavicon || isLoadingFavicon}
+              onClick={onRetryFavicon}
+              className="h-9 shrink-0 cursor-pointer border-white/15 bg-white/[0.04] text-xs text-white/80 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                size={14}
+                className={cn(isLoadingFavicon && "animate-spin")}
+                aria-hidden="true"
+              />
+              {t("link.retryFavicon")}
+            </Button>
           </div>
         </TabsContent>
 

@@ -95,12 +95,14 @@ export class CategoryService {
     // 待删除分类的排序位置
     const delSort = deleteCategory!.sort;
 
+    // 收集需要重排的后续分类后单事务批量写入
+    const updates: Category[] = [];
     for (const category of allCategories) {
       if (category.sort > delSort) {
-        category.sort = category.sort - 1;
-        await this.updateCategory(category.id, category);
+        updates.push({ ...category, sort: category.sort - 1 });
       }
     }
+    await db.putMany(STORE_NAMES.CATEGORY, updates);
 
     /* 删除分类内的分组和全部网址 */
     await linkGroupService.deleteLinkGroupsByParentId(id);
@@ -131,17 +133,22 @@ export class CategoryService {
 
     // 被拖动的分类
     const draggedCategory = categories[dragIndex];
+    if (!draggedCategory) {
+      return;
+    }
     // 调整顺序后的分类列表
     const newCategories = [...categories];
     newCategories.splice(dragIndex, 1);
     newCategories.splice(hoverIndex, 0, draggedCategory);
 
-    // 更新所有分类的排序
+    // 仅收集 sort 实际发生变化的分类，单事务批量写入
+    const updates: Category[] = [];
     for (let i = 0; i < newCategories.length; i++) {
       if (newCategories[i].sort !== i) {
-        await this.updateCategory(newCategories[i].id, { sort: i });
+        updates.push({ ...newCategories[i], sort: i });
       }
     }
+    await db.putMany(STORE_NAMES.CATEGORY, updates);
   }
 }
 

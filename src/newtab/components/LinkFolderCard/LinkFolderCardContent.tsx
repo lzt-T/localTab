@@ -34,6 +34,9 @@ function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
         <img
           src={link.icon}
           alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
           className="size-3.5 rounded-[4px] object-contain"
           onError={() => setFailedImageIcon(link.icon)}
         />

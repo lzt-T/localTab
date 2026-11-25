@@ -3,15 +3,17 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { categoryService } from "@/services/categoryService";
 import { categoryItemService } from "@/services/categoryItemService";
-import type { Category } from "@/type/db";
+import { linkGroupService } from "@/services/linkGroupService";
+import type { Category, LinkGroup } from "@/type/db";
 import { getFaviconUrls } from "@/utils/webIcon";
+import { notifyWorkspaceDataChanged } from "@/utils/broadcastSync";
 
 // 快速创建分类使用的默认图标
 const DEFAULT_CATEGORY_ICON = "folder";
 // 快速收藏允许保存的网页协议
 const SUPPORTED_PROTOCOLS = new Set(["http:", "https:"]);
 // 收藏成功提示显示时长（毫秒）
-const POPUP_CLOSE_DELAY_MS = 1000;
+const POPUP_CLOSE_DELAY_MS = 500;
 
 // 浏览器活动标签页的必要字段
 type ActiveTab = {
@@ -85,6 +87,9 @@ export function useQuickBookmark() {
   const [categories, setCategories] = useState<Category[]>([]);
   // 当前选择的目标分类
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  // 所选分类下的文件夹列表及目标文件夹（空字符串表示直接保存到分类）
+  const [linkGroups, setLinkGroups] = useState<LinkGroup[]>([]);
+  const [selectedLinkGroupId, setSelectedLinkGroupId] = useState("");
   // 快速创建分类表单是否展开
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
   // 新分类名称
@@ -149,7 +154,9 @@ export function useQuickBookmark() {
         createdCategory,
       ]);
       setSelectedCategoryId(createdCategory.id);
+      setSelectedLinkGroupId("");
       closeCategoryForm();
+      notifyWorkspaceDataChanged("workspace");
       toast.success(t("popup.categoryCreated"));
     } catch {
       toast.error(t("popup.categoryCreateFailed"));
@@ -158,7 +165,7 @@ export function useQuickBookmark() {
     }
   }
 
-  /** 将当前页面保存到所选分类。 */
+  /** 将当前页面保存到所选分类或文件夹。 */
   async function bookmarkCurrentPage() {
     if (!page || !selectedCategoryId || isSubmitting) {
       return;
@@ -184,16 +191,29 @@ export function useQuickBookmark() {
         return;
       }
 
+      const targetParentId = selectedLinkGroupId || selectedCategoryId;
       await categoryItemService.createLink({
         title: trimmedTitle,
         description: "",
         url: page.url,
         icon: page.icon,
-        parentId: selectedCategoryId,
+        parentId: targetParentId,
       });
+      notifyWorkspaceDataChanged("workspace");
       toast.success(t("popup.bookmarkSuccess"));
       await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, POPUP_CLOSE_DELAY_MS);
+        const handleKeyDown = (event: KeyboardEvent) => {
+          if (event.key === "Escape") {
+            window.clearTimeout(timer);
+            window.removeEventListener("keydown", handleKeyDown);
+            resolve();
+          }
+        };
+        const timer = window.setTimeout(() => {
+          window.removeEventListener("keydown", handleKeyDown);
+          resolve();
+        }, POPUP_CLOSE_DELAY_MS);
+        window.addEventListener("keydown", handleKeyDown);
       });
       window.close();
     } catch {
@@ -202,6 +222,29 @@ export function useQuickBookmark() {
       setIsSubmitting(false);
     }
   }
+
+  // 当选中分类变化时加载该分类下的文件夹列表
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setLinkGroups([]);
+      setSelectedLinkGroupId("");
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedLinkGroupId("");
+    void linkGroupService
+      .getLinkGroupsByParentId(selectedCategoryId)
+      .then((groups) => {
+        if (!cancelled) {
+          setLinkGroups(groups);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategoryId]);
 
   useEffect(() => {
     /** 加载活动标签页和本地分类。 */
@@ -225,7 +268,7 @@ export function useQuickBookmark() {
       }
     }
 
-    loadQuickBookmark();
+    void loadQuickBookmark();
   }, []);
 
   return {
@@ -236,6 +279,9 @@ export function useQuickBookmark() {
     categories,
     selectedCategoryId,
     setSelectedCategoryId,
+    linkGroups,
+    selectedLinkGroupId,
+    setSelectedLinkGroupId,
     isCategoryFormOpen,
     newCategoryName,
     categoryNameError,

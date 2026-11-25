@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { systemService } from "@/services/systemService";
@@ -28,56 +28,87 @@ export function useDockLinks(categories: CategoryInfo[]) {
   const [dockLinkIds, setDockLinkIds] = useState<string[]>([]);
   // Dock 配置是否已经读取
   const [isDockInitialized, setIsDockInitialized] = useState(false);
-  // 页面当前可用的全部网址
-  const allLinks = getAllLinks(categories);
-  // 网址标识对应的网址数据
-  const linkById = new Map(allLinks.map((link) => [link.id, link]));
+  // 缓存网址索引，避免无关渲染重复全量展平
+  const linkById = useMemo(() => {
+    const allLinks = getAllLinks(categories);
+    return new Map(allLinks.map((link) => [link.id, link]));
+  }, [categories]);
+
+  // 派生过滤掉已不存在网址后的有效 Dock 标识，避免在 effect 中同步 setState 引发级联渲染
+  const effectiveDockLinkIds = useMemo(() => {
+    if (!isDockInitialized || categories.length === 0) {
+      return dockLinkIds;
+    }
+    return dockLinkIds.filter((linkId) => linkById.has(linkId));
+  }, [categories.length, dockLinkIds, isDockInitialized, linkById]);
+
+  const dockLinkIdsRef = useRef<string[]>(effectiveDockLinkIds);
+  useEffect(() => {
+    dockLinkIdsRef.current = effectiveDockLinkIds;
+  }, [effectiveDockLinkIds]);
+
   // 按固定顺序展示的 Dock 网址
-  const dockLinks = dockLinkIds.flatMap((linkId) => {
-    // 当前固定标识对应的网址
-    const link = linkById.get(linkId);
-    return link ? [link] : [];
-  });
+  const dockLinks = useMemo(
+    () =>
+      effectiveDockLinkIds.flatMap((linkId) => {
+        const link = linkById.get(linkId);
+        return link ? [link] : [];
+      }),
+    [effectiveDockLinkIds, linkById]
+  );
+
   /** 保存并更新 Dock 网址标识。 */
-  async function saveDockLinkIds(nextDockLinkIds: string[]) {
+  const saveDockLinkIds = useCallback(async (nextDockLinkIds: string[]) => {
     setDockLinkIds(nextDockLinkIds);
     await systemService.updateDockLinkIds(nextDockLinkIds);
-  }
+  }, []);
 
   /** 将网址固定到 Dock。 */
-  async function pinDockLink(linkId: string) {
-    if (dockLinkIds.includes(linkId)) {
-      toast.info(t("dock.alreadyPinned"));
-      return;
-    }
-    await saveDockLinkIds([...dockLinkIds, linkId]);
-    toast.success(t("dock.pinned"));
-  }
+  const pinDockLink = useCallback(
+    async (linkId: string) => {
+      const currentIds = dockLinkIdsRef.current;
+      if (currentIds.includes(linkId)) {
+        toast.info(t("dock.alreadyPinned"));
+        return;
+      }
+      await saveDockLinkIds([...currentIds, linkId]);
+      toast.success(t("dock.pinned"));
+    },
+    [saveDockLinkIds, t]
+  );
 
   /** 调整 Dock 网址顺序。 */
-  async function moveDockLink(linkId: string, targetIndex: number) {
-    // 当前网址在 Dock 中的位置
-    const sourceIndex = dockLinkIds.indexOf(linkId);
-    if (sourceIndex < 0 || sourceIndex === targetIndex) {
-      return;
-    }
+  const moveDockLink = useCallback(
+    async (linkId: string, targetIndex: number) => {
+      const currentIds = dockLinkIdsRef.current;
+      // 当前网址在 Dock 中的位置
+      const sourceIndex = currentIds.indexOf(linkId);
+      if (sourceIndex < 0 || sourceIndex === targetIndex) {
+        return;
+      }
 
-    // 移除拖动网址后的标识列表
-    const reorderedLinkIds = dockLinkIds.filter((id) => id !== linkId);
-    // 限制后的目标位置
-    const insertIndex = Math.max(
-      0,
-      Math.min(targetIndex, reorderedLinkIds.length)
-    );
-    reorderedLinkIds.splice(insertIndex, 0, linkId);
-    await saveDockLinkIds(reorderedLinkIds);
-  }
+      // 移除拖动网址后的标识列表
+      const reorderedLinkIds = currentIds.filter((id) => id !== linkId);
+      // 限制后的目标位置
+      const insertIndex = Math.max(
+        0,
+        Math.min(targetIndex, reorderedLinkIds.length)
+      );
+      reorderedLinkIds.splice(insertIndex, 0, linkId);
+      await saveDockLinkIds(reorderedLinkIds);
+    },
+    [saveDockLinkIds]
+  );
 
   /** 从 Dock 取消固定网址。 */
-  async function unpinDockLink(linkId: string) {
-    await saveDockLinkIds(dockLinkIds.filter((id) => id !== linkId));
-    toast.success(t("dock.unpinned"));
-  }
+  const unpinDockLink = useCallback(
+    async (linkId: string) => {
+      const currentIds = dockLinkIdsRef.current;
+      await saveDockLinkIds(currentIds.filter((id) => id !== linkId));
+      toast.success(t("dock.unpinned"));
+    },
+    [saveDockLinkIds, t]
+  );
 
   useEffect(() => {
     /** 读取已保存的 Dock 网址标识。 */
@@ -96,19 +127,19 @@ export function useDockLinks(categories: CategoryInfo[]) {
       return;
     }
 
-    // 页面当前仍然存在的网址标识
-    const availableLinkIds = new Set(
-      getAllLinks(categories).map((link) => link.id)
-    );
-    // 仍然存在于页面数据中的 Dock 网址标识
-    const validDockLinkIds = dockLinkIds.filter((linkId) =>
-      availableLinkIds.has(linkId)
-    );
-    if (!areLinkIdsEqual(dockLinkIds, validDockLinkIds)) {
-      setDockLinkIds(validDockLinkIds);
-      void systemService.updateDockLinkIds(validDockLinkIds);
+    if (!areLinkIdsEqual(dockLinkIds, effectiveDockLinkIds)) {
+      void systemService
+        .updateDockLinkIds(effectiveDockLinkIds)
+        .then(() => {
+          setDockLinkIds(effectiveDockLinkIds);
+        });
     }
-  }, [categories, dockLinkIds, isDockInitialized]);
+  }, [
+    categories.length,
+    dockLinkIds,
+    effectiveDockLinkIds,
+    isDockInitialized,
+  ]);
 
   return {
     dockLinks,

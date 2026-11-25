@@ -160,8 +160,8 @@ html[data-page-dragging="true"] .glass-style-card {
 /* 60x60 独立圆角毛玻璃图标块 */
 .glass-icon-tile {
   background: var(--tile-icon-bg);
-  backdrop-filter: blur(20px) saturate(165%);
-  -webkit-backdrop-filter: blur(20px) saturate(165%);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   border: 1px solid var(--tile-icon-border);
   box-shadow: var(--tile-icon-shadow);
   transition: transform 0.2s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
@@ -315,7 +315,7 @@ html[data-page-dragging="true"] .glass-icon-tile {
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   backdrop-filter: blur(8px);
 }
 

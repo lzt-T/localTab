@@ -44,8 +44,18 @@ const useSystemStore = create<SystemStore>((set) => ({
   // 更新背景图片初始化状态
   changeIsInitializedBackgroundImage: (isInitializedBackgroundImage: boolean) =>
     set({ isInitializedBackgroundImage }),
-  // 更新背景图片地址
-  changeBackgroundImage: (backgroundImage: string) => set({ backgroundImage }),
+  // 更新背景图片地址并在变更时释放旧的 Blob URL
+  changeBackgroundImage: (backgroundImage: string) =>
+    set((state) => {
+      if (
+        state.backgroundImage &&
+        state.backgroundImage !== backgroundImage &&
+        state.backgroundImage.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(state.backgroundImage);
+      }
+      return { backgroundImage };
+    }),
   // 更新背景图片标识
   changeBackgroundImageId: (backgroundImageId: string) =>
     set({ backgroundImageId }),

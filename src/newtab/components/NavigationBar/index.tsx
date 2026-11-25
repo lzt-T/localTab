@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { useCallback, useState, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useTranslation } from "react-i18next";
 import type { CategoryInfo } from "@/type/db";
@@ -37,7 +37,7 @@ const NAVIGATION_ACTION_CLASS =
   "flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--surface-hover)] text-[var(--surface-text-secondary)] outline-none transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--surface-border-strong)] hover:bg-[var(--surface-hover-strong)] hover:text-[var(--surface-text)] active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)] motion-reduce:transform-none motion-reduce:transition-none";
 
 /** 渲染支持分类排序和网格项目跨区投放的侧栏。 */
-export default function NavigationBar(props: NavigationBarProps) {
+function NavigationBar(props: NavigationBarProps) {
   // 侧栏界面的本地化文案
   const { t } = useTranslation();
   // 侧栏展示数据和交互回调
@@ -101,8 +101,10 @@ export default function NavigationBar(props: NavigationBarProps) {
   }, [categories]);
 
   // 当前分类对应的 dnd-kit 排序标识
-  const categoryIds = localCategories.map((category) =>
-    createDndId("category", category.id)
+  const categoryIds = useMemo(
+    () =>
+      localCategories.map((category) => createDndId("category", category.id)),
+    [localCategories]
   );
 
   return (
@@ -163,3 +165,5 @@ export default function NavigationBar(props: NavigationBarProps) {
     </nav>
   );
 }
+
+export default memo(NavigationBar);

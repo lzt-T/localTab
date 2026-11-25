@@ -5,6 +5,7 @@ import { categoryService } from "@/services/categoryService";
 import { linkService } from "@/services/linkService";
 import { systemService } from "@/services/systemService";
 import { db, STORE_NAMES } from "@/utils/db";
+import { notifyWorkspaceDataChanged } from "@/utils/broadcastSync";
 import {
   DEFAULT_SEARCH_ENGINE_ID,
   LEGACY_DEFAULT_SEARCH_ENGINE_ID,
@@ -226,13 +227,14 @@ export function useDataManagement() {
       }
 
       // 待原子写入的全部系统设置
-      const system = [
+      const system: Array<{ key: string; value: unknown }> = [
         { key: "customSearchEngines", value: customSearchEngines },
         { key: "selectedSearchEngineId", value: selectedSearchEngineId },
         { key: "dockLinkIds", value: dockLinkIds },
       ];
       if (backgroundImage) {
         system.push({ key: "backgroundImage", value: backgroundImage });
+        system.push({ key: "backgroundImageId", value: backgroundImage.id });
       }
 
       // 单个事务内替换全部数据，任意失败都会回滚
@@ -243,6 +245,7 @@ export function useDataManagement() {
         system,
       });
 
+      notifyWorkspaceDataChanged("all");
       toast.success(t("dataManagement.importSuccess"));
       return true;
     } catch (error) {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import {
   BookOpenText,
   Database,
@@ -19,10 +19,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import BackgroundImg from "@/newtab/components/Setting/BackgroundImg";
-import DataManagement from "@/newtab/components/Setting/DataManagement";
-import LanguageSettings from "@/newtab/components/Setting/LanguageSettings";
-import OperationGuide from "@/newtab/components/Setting/OperationGuide";
+
+// 按需懒加载设置面板子模块，减轻新标签页首屏解析开销
+const BackgroundImg = lazy(
+  () => import("@/newtab/components/Setting/BackgroundImg")
+);
+const DataManagement = lazy(
+  () => import("@/newtab/components/Setting/DataManagement")
+);
+const LanguageSettings = lazy(
+  () => import("@/newtab/components/Setting/LanguageSettings")
+);
+const OperationGuide = lazy(
+  () => import("@/newtab/components/Setting/OperationGuide")
+);
 
 export type SettingSection = "wallpaper" | "guide" | "data" | "language";
 
@@ -158,7 +168,15 @@ const Setting: React.FC<SettingProps> = ({
                     {t(activeItem.labelKey)}
                   </h2>
                 </div>
-                {contentBySection[activeSection]}
+                {open ? (
+                  <Suspense
+                    fallback={
+                      <div className="h-48 animate-pulse rounded-xl bg-white/[0.04]" />
+                    }
+                  >
+                    {contentBySection[activeSection]}
+                  </Suspense>
+                ) : null}
               </div>
             </div>
           </div>

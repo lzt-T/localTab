@@ -18,6 +18,10 @@ const LINK_ITEM_CLASS_BY_VARIANT: Record<LinkItemVariant, string> = {
   "drag-preview": "",
 };
 
+// 主图标块与名称的统一布局样式
+const LINK_TILE_CLASS_NAME =
+  "flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl px-1.5 py-2 text-center no-underline outline-none focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]";
+
 interface LinkItemProps {
   link: {
     id?: string;
@@ -27,7 +31,6 @@ interface LinkItemProps {
     description: string;
   };
   handleEditClick?: (linkId: string) => void;
-  handleSkipClick?: (url: string) => void;
   variant?: LinkItemVariant;
 }
 
@@ -44,7 +47,6 @@ function getLinkHostname(url: string): string {
 function Index({
   link,
   handleEditClick,
-  handleSkipClick,
   variant = "default",
 }: LinkItemProps) {
   // 卡片操作菜单的本地化文案
@@ -68,26 +70,68 @@ function Index({
   const linkHostname = getLinkHostname(link.url);
 
   /** 打开当前网址的编辑弹窗。 */
-  const onEditClick = useCallback(
-    () => {
-      if (link.id && handleEditClick) {
-        handleEditClick(link.id);
-      }
-    },
-    [link.id, handleEditClick]
-  );
-
-  /** 在新标签页打开当前网址。 */
-  const onSkipClick = useCallback(() => {
-    if (link.url && handleSkipClick) {
-      handleSkipClick(link.url);
+  const onEditClick = useCallback(() => {
+    if (link.id && handleEditClick) {
+      handleEditClick(link.id);
     }
-  }, [link.url, handleSkipClick]);
+  }, [link.id, handleEditClick]);
 
   /** 标记加载失败的图片图标并回退到默认图标。 */
   const onImageIconError = () => {
     setFailedImageIcon(link.icon);
   };
+
+  // 卡片内部图标与标题内容
+  const tileContent =
+    variant === "drag-placeholder" ? (
+      <>
+        <span
+          className="size-[60px] shrink-0 rounded-[18px] border border-dashed border-[var(--surface-border-strong)] bg-[var(--surface-hover)] backdrop-blur-md"
+          aria-hidden="true"
+        />
+        <span className="mt-2 h-5 w-full" aria-hidden="true" />
+      </>
+    ) : (
+      <>
+        {isMonogramIcon ? (
+          <span className="shrink-0 transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
+            <LinkMonogram title={link.title} url={link.url} size="lg" />
+          </span>
+        ) : (
+          <span className="glass-icon-tile flex size-[60px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
+            {shouldShowImageIcon ? (
+              <img
+                src={link.icon}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                className="size-8 rounded-lg object-contain"
+                onError={onImageIconError}
+              />
+            ) : (
+              <Icon
+                name={link.icon}
+                size={26}
+                className="text-[var(--surface-text)]"
+              />
+            )}
+          </span>
+        )}
+        <span className="mt-2 w-full min-w-0 px-1">
+          <span
+            className="block truncate text-[13px] font-medium leading-5 text-[var(--tile-label-color)] [text-shadow:var(--tile-label-shadow)]"
+            title={
+              hasDescription
+                ? `${link.title} — ${link.description}`
+                : link.title
+            }
+          >
+            {link.title}
+          </span>
+        </span>
+      </>
+    );
 
   return (
     <div className="group/item relative h-[104px] rounded-2xl">
@@ -108,59 +152,22 @@ function Index({
             <Edit size={14} />
           </button>
         )}
-        <button
-          type="button"
-          className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl px-1.5 py-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
-          onClick={onSkipClick}
-          aria-label={`${link.title}, ${linkHostname}`}
-        >
-          {variant === "drag-placeholder" ? (
-            <>
-              <span
-                className="size-[60px] shrink-0 rounded-[18px] border border-dashed border-[var(--surface-border-strong)] bg-[var(--surface-hover)] backdrop-blur-md"
-                aria-hidden="true"
-              />
-              <span className="mt-2 h-5 w-full" aria-hidden="true" />
-            </>
-          ) : (
-            <>
-              {isMonogramIcon ? (
-                <span className="shrink-0 transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
-                  <LinkMonogram title={link.title} url={link.url} size="lg" />
-                </span>
-              ) : (
-                <span className="glass-icon-tile flex size-[60px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
-                  {shouldShowImageIcon ? (
-                    <img
-                      src={link.icon}
-                      alt=""
-                      className="size-8 rounded-lg object-contain"
-                      onError={onImageIconError}
-                    />
-                  ) : (
-                    <Icon
-                      name={link.icon}
-                      size={26}
-                      className="text-[var(--surface-text)]"
-                    />
-                  )}
-                </span>
-              )}
-              <span className="mt-2 w-full min-w-0 px-1">
-                <span
-                  className="block truncate text-[13px] font-medium leading-5 text-[var(--tile-label-color)] [text-shadow:var(--tile-label-shadow)]"
-                  title={
-                    hasDescription
-                      ? `${link.title} — ${link.description}`
-                      : link.title
-                  }
-                >
-                  {link.title}
-                </span>
-              </span>
-            </>
-          )}
-        </button>
+        {variant === "default" && link.url ? (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            draggable={false}
+            className={LINK_TILE_CLASS_NAME}
+            aria-label={`${link.title}, ${linkHostname}`}
+          >
+            {tileContent}
+          </a>
+        ) : (
+          <div className={LINK_TILE_CLASS_NAME} aria-hidden="true">
+            {tileContent}
+          </div>
+        )}
       </div>
     </div>
   );

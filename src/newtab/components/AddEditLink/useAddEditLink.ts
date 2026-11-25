@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryInfo } from "@/type/db";
-import { fetchFavicon } from "@/utils/webIcon";
+import { fetchFavicon, isFetchableWebsiteUrl } from "@/utils/webIcon";
 import { toast } from "sonner";
 import {
   createCustomIconDataUrl,
@@ -37,7 +37,7 @@ interface UseAddEditLinkProps {
     url: string;
     icon: string;
     parentId: string;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 // 未选择网址分组时使用的表单值
@@ -49,6 +49,10 @@ interface Errors {
   url?: string;
   icon?: string;
   parentId?: string;
+}
+
+interface FetchFaviconOptions {
+  silent?: boolean;
 }
 
 /** 管理网址添加和编辑抽屉的表单状态。 */
@@ -84,12 +88,17 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   const [isLoadingFavicon, setIsLoadingFavicon] = useState(false);
   // 自定义图标是否正在处理
   const [isProcessingCustomIcon, setIsProcessingCustomIcon] = useState(false);
+  // 表单提交中状态，防止重复提交
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // 当前图标来源类型
   const [iconType, setIconType] = useState<LinkIconType>(
     LINK_ICON_TYPE.FAVICON
   );
   // 网址变更触发 favicon 请求的防抖定时器
   const faviconTimerRef = useRef<number | null>(null);
+  // 递增请求版本号与中止控制器，避免旧异步响应覆盖新输入
+  const faviconRequestIdRef = useRef(0);
+  const faviconAbortControllerRef = useRef<AbortController | null>(null);
 
   // 当前模式对应的抽屉标题
   const sheetTitle = t(mode === "add" ? "link.addTitle" : "link.editTitle");
@@ -109,35 +118,77 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     }
   }, []);
 
-  /** 获取并设置指定网址的 favicon。 */
+  /** 中止进行中的 favicon 探测并使未返回请求失效。 */
+  const abortActiveFaviconFetch = useCallback(() => {
+    faviconRequestIdRef.current += 1;
+    if (faviconAbortControllerRef.current) {
+      faviconAbortControllerRef.current.abort();
+      faviconAbortControllerRef.current = null;
+    }
+    setIsLoadingFavicon(false);
+  }, []);
+
+  /** 获取并设置指定网址的 favicon，自动忽略过期请求。 */
   const onFetchFavicon = useCallback(
-    async (targetUrl: string = url) => {
-      // 当前需要获取图标的网址
+    async (
+      targetUrl: string = url,
+      options: FetchFaviconOptions = {}
+    ) => {
+      const { silent = false } = options;
       const trimmedTargetUrl = targetUrl.trim();
-      if (!trimmedTargetUrl) {
+      if (!trimmedTargetUrl || !isFetchableWebsiteUrl(trimmedTargetUrl)) {
+        if (!silent) {
+          toast.warning(t("link.invalidUrl"));
+        }
         return;
       }
 
+      abortActiveFaviconFetch();
+      const requestId = faviconRequestIdRef.current;
+      const controller = new AbortController();
+      faviconAbortControllerRef.current = controller;
       setIsLoadingFavicon(true);
 
       try {
-        // 根据网址获取的网站图标地址
-        const faviconUrl = await fetchFavicon(trimmedTargetUrl);
+        // 根据网址并发探测可用的网站图标地址
+        const faviconUrl = await fetchFavicon(
+          trimmedTargetUrl,
+          controller.signal
+        );
+        if (requestId !== faviconRequestIdRef.current) {
+          return;
+        }
         if (faviconUrl) {
           setIcon(faviconUrl);
         } else {
           setIcon("");
-          toast.warning(t("link.faviconFailed"));
+          if (!silent) {
+            toast.warning(t("link.faviconFailed"));
+          }
         }
       } catch {
+        if (requestId !== faviconRequestIdRef.current) {
+          return;
+        }
         setIcon("");
-        toast.warning(t("link.faviconFailed"));
+        if (!silent) {
+          toast.warning(t("link.faviconFailed"));
+        }
       } finally {
-        setIsLoadingFavicon(false);
+        if (requestId === faviconRequestIdRef.current) {
+          faviconAbortControllerRef.current = null;
+          setIsLoadingFavicon(false);
+        }
       }
     },
-    [url, t]
+    [abortActiveFaviconFetch, t, url]
   );
+
+  /** 手动重新触发当前输入网址的图标探测（失败时给出提示）。 */
+  const onRetryFavicon = useCallback(() => {
+    clearPendingFaviconFetch();
+    void onFetchFavicon(url, { silent: false });
+  }, [clearPendingFaviconFetch, onFetchFavicon, url]);
 
   /** 实时更新标题并清除标题校验错误。 */
   const onTitleChange = useCallback(
@@ -159,7 +210,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     []
   );
 
-  /** 实时更新网址，并按防抖周期获取 favicon。 */
+  /** 实时更新网址，并按防抖周期静默获取 favicon。 */
   const onUrlChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       // 最新输入的网址
@@ -168,14 +219,21 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
       setErrors((prev) => (prev.url ? { ...prev, url: undefined } : prev));
 
       clearPendingFaviconFetch();
-      if (iconType === LINK_ICON_TYPE.FAVICON && nextUrl.trim()) {
+      if (iconType === LINK_ICON_TYPE.FAVICON && isFetchableWebsiteUrl(nextUrl)) {
         faviconTimerRef.current = window.setTimeout(() => {
           faviconTimerRef.current = null;
-          void onFetchFavicon(nextUrl);
+          void onFetchFavicon(nextUrl, { silent: true });
         }, FAVICON_FETCH_DEBOUNCE_MS);
+      } else {
+        abortActiveFaviconFetch();
       }
     },
-    [clearPendingFaviconFetch, iconType, onFetchFavicon]
+    [
+      abortActiveFaviconFetch,
+      clearPendingFaviconFetch,
+      iconType,
+      onFetchFavicon,
+    ]
   );
 
   /* 验证表单 */
@@ -205,9 +263,9 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     return Object.keys(newErrors).length === 0;
   }, [title, url, categoryId, t]);
 
-  /** 校验并提交网址表单。 */
-  const onOk = useCallback(() => {
-    if (isProcessingCustomIcon) {
+  /** 校验并异步提交网址表单，成功后再关闭抽屉。 */
+  const onOk = useCallback(async () => {
+    if (isProcessingCustomIcon || isSubmitting) {
       return;
     }
 
@@ -219,20 +277,27 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
       // 网址最终保存的父级标识
       const parentId =
         linkGroupId === NO_LINK_GROUP_VALUE ? categoryId : linkGroupId;
-      handleSubmit({ title, description, url: finalUrl, icon, parentId });
-      handleClose();
+
+      setIsSubmitting(true);
+      try {
+        await handleSubmit({ title, description, url: finalUrl, icon, parentId });
+        handleClose();
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   }, [
+    isProcessingCustomIcon,
+    isSubmitting,
+    onValidate,
+    url,
+    linkGroupId,
+    categoryId,
+    handleSubmit,
     title,
     description,
-    url,
     icon,
-    categoryId,
-    linkGroupId,
-    handleSubmit,
-    onValidate,
     handleClose,
-    isProcessingCustomIcon,
   ]);
 
   /** 切换所属分类并重置分组选择。 */
@@ -271,13 +336,19 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         nextIconType === LINK_ICON_TYPE.FAVICON &&
         !isFaviconImageIcon(icon)
       ) {
-        void onFetchFavicon();
+        if (isFetchableWebsiteUrl(url)) {
+          void onFetchFavicon(url, { silent: true });
+        } else {
+          setIcon("");
+        }
       }
 
       if (
         nextIconType === LINK_ICON_TYPE.LUCIDE &&
         (getLinkIconType(icon) !== LINK_ICON_TYPE.LUCIDE || !icon)
       ) {
+        clearPendingFaviconFetch();
+        abortActiveFaviconFetch();
         setIcon("link");
       }
 
@@ -285,10 +356,18 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
         nextIconType === LINK_ICON_TYPE.CUSTOM &&
         !isCustomImageIcon(icon)
       ) {
+        clearPendingFaviconFetch();
+        abortActiveFaviconFetch();
         setIcon("");
       }
     },
-    [icon, onFetchFavicon]
+    [
+      abortActiveFaviconFetch,
+      clearPendingFaviconFetch,
+      icon,
+      onFetchFavicon,
+      url,
+    ]
   );
 
   /** 校验、压缩并设置用户上传的自定义图标。 */
@@ -327,6 +406,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
   useEffect(() => {
     if (!open) {
       clearPendingFaviconFetch();
+      abortActiveFaviconFetch();
       return;
     }
     if (mode === "edit" && initialData) {
@@ -352,13 +432,14 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     }
     setErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, clearPendingFaviconFetch]);
+  }, [open, clearPendingFaviconFetch, abortActiveFaviconFetch]);
 
   useEffect(() => {
     return () => {
       clearPendingFaviconFetch();
+      abortActiveFaviconFetch();
     };
-  }, [clearPendingFaviconFetch]);
+  }, [abortActiveFaviconFetch, clearPendingFaviconFetch]);
 
   return {
     // State
@@ -371,6 +452,8 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     errors,
     isLoadingFavicon,
     isProcessingCustomIcon,
+    isSubmitting,
+    canRetryFavicon: isFetchableWebsiteUrl(url),
     iconType,
     sheetTitle,
     sheetDescription,
@@ -387,6 +470,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
     onCancel,
     onOpenChange,
     onIconTypeChange,
+    onRetryFavicon,
     onCustomIconSelect,
     onRemoveCustomIcon,
     onCategoryChange,

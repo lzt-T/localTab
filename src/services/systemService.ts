@@ -13,6 +13,8 @@ import {
 
 // 背景图片键
 const BACKGROUND_IMAGE_KEY = "backgroundImage";
+// 背景图片轻量标识键（避免比对版本时读取大体积 Blob）
+const BACKGROUND_IMAGE_ID_KEY = "backgroundImageId";
 // 旧版搜索引擎键
 const LEGACY_SEARCH_ENGINE_KEY = "searchEngines";
 // 当前搜索引擎标识键
@@ -122,7 +124,7 @@ export class SystemService {
   }
 
   /**
-   * 保存背景图片
+   * 保存背景图片并同步更新轻量标识键
    */
   async saveBackgroundImage(file: File | Blob): Promise<string> {
     // 背景图片唯一标识
@@ -132,12 +134,36 @@ export class SystemService {
       throw new Error("只支持图片文件");
     }
 
-    await db.putWithKey(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_KEY, {
-      blob: file,
-      id: id,
-    });
+    await Promise.all([
+      db.putWithKey(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_KEY, {
+        blob: file,
+        id: id,
+      }),
+      db.putWithKey(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_ID_KEY, id),
+    ]);
 
     return id;
+  }
+
+  /**
+   * 仅读取当前背景图片的轻量标识；若旧数据缺少标识键则从图片记录回填
+   */
+  async getBackgroundImageId(): Promise<string> {
+    const storedId = await db.get<string>(
+      STORE_NAMES.SYSTEM,
+      BACKGROUND_IMAGE_ID_KEY
+    );
+    if (storedId !== undefined) {
+      return storedId;
+    }
+
+    const result = await db.get<{ id: string; blob: Blob }>(
+      STORE_NAMES.SYSTEM,
+      BACKGROUND_IMAGE_KEY
+    );
+    const resolvedId = result?.id ?? "";
+    await db.putWithKey(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_ID_KEY, resolvedId);
+    return resolvedId;
   }
 
   /**
@@ -160,22 +186,20 @@ export class SystemService {
   }
 
   /**
-   * 删除背景图片
+   * 删除背景图片并清理轻量标识键
    */
   async deleteBackgroundImage(): Promise<void> {
-    await db.delete(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_KEY);
+    await Promise.all([
+      db.delete(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_KEY),
+      db.delete(STORE_NAMES.SYSTEM, BACKGROUND_IMAGE_ID_KEY),
+    ]);
   }
 
   /**
    * 检查是否有背景图片
    */
   async hasBackgroundImage(): Promise<boolean> {
-    // 已保存的背景图片数据
-    const result = await db.get<{ id: string; blob: Blob }>(
-      STORE_NAMES.SYSTEM,
-      BACKGROUND_IMAGE_KEY
-    );
-    return !!result;
+    return Boolean(await this.getBackgroundImageId());
   }
 }
 

@@ -12,6 +12,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -229,8 +230,14 @@ export default function PageDndProvider({ children }: PageDndProviderProps) {
     };
   }, [collisionRuntime]);
 
+  // 稳定 Context 值，避免非拖拽状态变更触发消费方重复渲染
+  const contextValue = useMemo<PageDndContextValue>(
+    () => ({ activeItem }),
+    [activeItem]
+  );
+
   return (
-    <PageDndContext.Provider value={{ activeItem }}>
+    <PageDndContext.Provider value={contextValue}>
       <DndContext
         sensors={sensors}
         autoScroll={PAGE_AUTO_SCROLL_OPTIONS}

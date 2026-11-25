@@ -15,18 +15,18 @@ interface QuickSearchResultsProps {
   query: string;
   searchEngineName: string;
   onActiveOptionChange: (index: number) => void;
-  onOpenLink: (url: string) => void;
+  onSelectLocalLink: () => void;
   onSearchWeb: () => void;
 }
 
-/** 渲染本地网址建议和网页搜索操作。 */
+/** 渲染支持原生链接语义的本地网址建议和网页搜索操作。 */
 export default function QuickSearchResults({
   results,
   activeOptionIndex,
   query,
   searchEngineName,
   onActiveOptionChange,
-  onOpenLink,
+  onSelectLocalLink,
   onSearchWeb,
 }: QuickSearchResultsProps) {
   // 国际化工具
@@ -50,10 +50,12 @@ export default function QuickSearchResults({
         const isActive = activeOptionIndex === index;
 
         return (
-          <button
+          <a
             id={getQuickSearchOptionId(result)}
             key={result.link.id}
-            type="button"
+            href={result.link.url}
+            target="_blank"
+            rel="noopener noreferrer"
             role="option"
             tabIndex={-1}
             aria-selected={isActive}
@@ -63,14 +65,14 @@ export default function QuickSearchResults({
               location,
             })}
             className={cn(
-              "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left outline-none transition-colors duration-150",
+              "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left no-underline outline-none transition-colors duration-150",
               isActive
                 ? "bg-[var(--surface-hover-strong)] text-[var(--surface-text)]"
                 : "text-[var(--surface-text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--surface-text)]"
             )}
             onMouseDown={(event) => event.preventDefault()}
             onMouseEnter={() => onActiveOptionChange(index)}
-            onClick={() => onOpenLink(result.link.url)}
+            onClick={onSelectLocalLink}
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-hover)] text-[var(--surface-text-secondary)]">
               <ArrowUpRight className="size-4" />
@@ -85,7 +87,7 @@ export default function QuickSearchResults({
                 <span className="truncate">{location}</span>
               </span>
             </span>
-          </button>
+          </a>
         );
       })}
 

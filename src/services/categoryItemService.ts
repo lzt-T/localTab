@@ -73,18 +73,24 @@ export class CategoryItemService {
 
   /** 检查分类直属网址及文件夹内网址是否包含完整地址。 */
   async hasCategoryLinkUrl(categoryId: string, url: string): Promise<boolean> {
-    // 分类内的网址分组和全部网址
-    const [linkGroups, links] = await Promise.all([
+    // 按索引并发读取当前分类的文件夹及直属网址，再按索引读取文件夹内网址
+    const [linkGroups, directLinks] = await Promise.all([
       linkGroupService.getLinkGroupsByParentId(categoryId),
-      linkService.getAllLinks(),
+      linkService.getLinkCountByParentId(categoryId),
     ]);
-    // 当前分类范围内允许的网址父级标识
-    const parentIds = new Set([
-      categoryId,
-      ...linkGroups.map((linkGroup) => linkGroup.id),
-    ]);
-    return links.some(
-      (link) => parentIds.has(link.parentId) && link.url === url
+    if (directLinks.some((link) => link.url === url)) {
+      return true;
+    }
+    if (linkGroups.length === 0) {
+      return false;
+    }
+    const groupedLinkLists = await Promise.all(
+      linkGroups.map((linkGroup) =>
+        linkService.getLinkCountByParentId(linkGroup.id)
+      )
+    );
+    return groupedLinkLists.some((links) =>
+      links.some((link) => link.url === url)
     );
   }
 
@@ -206,25 +212,15 @@ export class CategoryItemService {
     if (!linkGroup) {
       return;
     }
-    // 文件夹内部网址
-    const groupedLinks = await linkService.getLinkCountByParentId(id);
-    // 分类当前的混排项目
-    const categoryItems = await this.getCategoryItems(linkGroup.parentId);
-    // 分类当前直属网址数量
-    const categoryLinks = await linkService.getLinkCountByParentId(
-      linkGroup.parentId
-    );
+    // 并发读取文件夹内部网址和当前分类混排项目
+    const [groupedLinks, categoryItems] = await Promise.all([
+      linkService.getLinkCountByParentId(id),
+      this.getCategoryItems(linkGroup.parentId),
+    ]);
 
-    for (let index = 0; index < groupedLinks.length; index++) {
-      await linkService.moveLink(
-        groupedLinks[index].id,
-        linkGroup.parentId,
-        categoryLinks.length + index
-      );
-    }
     await db.delete(STORE_NAMES.LINK_GROUP, id);
 
-    // 用组内网址替换文件夹所在位置
+    // 用组内网址替换文件夹所在位置后一次性批量写入
     const expandedItems = categoryItems.flatMap((item) => {
       if (item.id !== id) {
         return [item];
@@ -356,36 +352,43 @@ export class CategoryItemService {
     await this.dissolveSingleLinkFolder(sourceLinkGroup);
   }
 
-  /** 按数组顺序保存分类直属网址和文件夹。 */
+  /** 按数组顺序单事务批量保存分类直属网址和文件夹中发生变化的项。 */
   private async saveCategoryItemOrder(
     categoryItems: CategoryItem[],
     categoryId: string
   ): Promise<CategoryItem[]> {
     // 保存后包含最新父级和序号的分类项目
     const savedItems: CategoryItem[] = [];
+    // 需要实际写入的变更网址与文件夹
+    const changedLinks: Link[] = [];
+    const changedLinkGroups: LinkGroup[] = [];
+
     for (let index = 0; index < categoryItems.length; index++) {
       // 当前网格位置对应的分类项目
       const item = categoryItems[index];
+      const hasChanged = item.parentId !== categoryId || item.sort !== index;
       if (item.type === LinkType.LINK_GROUP) {
         // 待保存的文件夹数据
-        const savedLinkGroup: LinkGroup = {
-          ...item,
-          parentId: categoryId,
-          sort: index,
-        };
-        await db.put(STORE_NAMES.LINK_GROUP, savedLinkGroup);
+        const savedLinkGroup: LinkGroup = hasChanged
+          ? { ...item, parentId: categoryId, sort: index }
+          : item;
+        if (hasChanged) {
+          changedLinkGroups.push(savedLinkGroup);
+        }
         savedItems.push(savedLinkGroup);
       } else {
         // 待保存的分类直属网址
-        const savedLink: Link = {
-          ...item,
-          parentId: categoryId,
-          sort: index,
-        };
-        await db.put(STORE_NAMES.LINK, savedLink);
+        const savedLink: Link = hasChanged
+          ? { ...item, parentId: categoryId, sort: index }
+          : item;
+        if (hasChanged) {
+          changedLinks.push(savedLink);
+        }
         savedItems.push(savedLink);
       }
     }
+
+    await db.putCategoryItems(changedLinks, changedLinkGroups);
     return savedItems;
   }
 }

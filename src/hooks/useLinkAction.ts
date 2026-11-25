@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { linkService } from "@/services/linkService";
 import { linkGroupService } from "@/services/linkGroupService";
 import { categoryItemService } from "@/services/categoryItemService";
+import type { CategoryInfo } from "@/type/db";
 
 interface LinkActionState {
   mode: "add" | "edit";
@@ -17,14 +18,50 @@ interface LinkActionState {
   defaultParentId?: string;
 }
 
+/** 从内存中快速定位网址及其所属分类/文件夹，避免编辑抽屉等待数据库。 */
+function findLinkDraftInMemory(categories: CategoryInfo[], linkId: string) {
+  for (const category of categories) {
+    const directLink = category.links.find((item) => item.id === linkId);
+    if (directLink) {
+      return {
+        title: directLink.title,
+        description: directLink.description,
+        url: directLink.url,
+        icon: directLink.icon,
+        categoryId: category.id,
+        linkGroupId: "",
+      };
+    }
+
+    for (const linkGroup of category.linkGroups) {
+      const groupedLink = linkGroup.links.find((item) => item.id === linkId);
+      if (groupedLink) {
+        return {
+          title: groupedLink.title,
+          description: groupedLink.description,
+          url: groupedLink.url,
+          icon: groupedLink.icon,
+          categoryId: category.id,
+          linkGroupId: linkGroup.id,
+        };
+      }
+    }
+  }
+  return null;
+}
+
 /** 管理网址添加、编辑和删除操作。 */
-export function useLinkAction() {
+export function useLinkAction(categories: CategoryInfo[] = []) {
   // 网址编辑抽屉是否打开
   const [isOpen, setIsOpen] = useState(false);
   // 当前网址操作状态
   const [actionState, setActionState] = useState<LinkActionState>({
     mode: "add",
   });
+  const categoriesRef = useRef(categories);
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
 
   /* 打开新增模式 */
   const onOpenAdd = useCallback((defaultParentId: string) => {
@@ -35,8 +72,19 @@ export function useLinkAction() {
     setIsOpen(true);
   }, []);
 
-  /* 打开编辑模式 */
+  /* 打开编辑模式：优先从内存同步读取以实现 0ms 瞬开，未命中再回退查库 */
   const onOpenEdit = useCallback(async (linkId: string) => {
+    const cachedDraft = findLinkDraftInMemory(categoriesRef.current, linkId);
+    if (cachedDraft) {
+      setActionState({
+        mode: "edit",
+        linkId,
+        initialData: cachedDraft,
+      });
+      setIsOpen(true);
+      return;
+    }
+
     // 待编辑的网址
     const link = await linkService.getLink(linkId);
     if (!link) {
@@ -46,7 +94,7 @@ export function useLinkAction() {
     const linkGroup = await linkGroupService.getLinkGroup(link.parentId);
     setActionState({
       mode: "edit",
-      linkId: linkId,
+      linkId,
       initialData: {
         title: link.title,
         description: link.description,

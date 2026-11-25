@@ -1,5 +1,6 @@
 import {
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -29,11 +30,11 @@ interface LinkListProps {
   categoryLinks: Link[];
   parentId: string;
   categoryId: string;
+  isDndEnabled?: boolean;
   allowMerge?: boolean;
   showAddLinkCard?: boolean;
   reserveDropPreviewSpace?: boolean;
   handleEditClick: (linkId: string) => void;
-  handleSkipClick: (url: string) => void;
   onMoveLink: (
     linkId: string,
     targetParentId: string,
@@ -50,15 +51,15 @@ interface LinkListProps {
 }
 
 /** 渲染支持拖拽排序的网址列表和末尾添加入口。 */
-export default function LinkList({
+function LinkList({
   categoryLinks,
   parentId,
   categoryId,
+  isDndEnabled = true,
   allowMerge = false,
   showAddLinkCard = false,
   reserveDropPreviewSpace = false,
   handleEditClick,
-  handleSkipClick,
   onMoveLink,
   onMergeLinks,
   onCancelDrag,
@@ -103,14 +104,6 @@ export default function LinkList({
       handleEditClick(linkId);
     },
     [handleEditClick]
-  );
-
-  /* 跳转链接 */
-  const onSkipClick = useCallback(
-    (url: string) => {
-      handleSkipClick(url);
-    },
-    [handleSkipClick]
   );
 
   /* 拖拽悬停时插入或移动预览卡片。 */
@@ -185,32 +178,38 @@ export default function LinkList({
   );
 
   // 文件夹网格整体携带的投放目标数据
-  const listTargetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.LINK_LIST,
-    accepts: [DRAG_ITEM_TYPE.LINK],
-    scopeId: parentId,
-    priority: 85,
-    /** 将网格空白区域作为列表末尾投放位置。 */
-    onDragMove(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      item.dropIntent = LINK_DROP_INTENT.MOVE;
-      item.mergeTargetLinkId = undefined;
-      item.targetLinkGroupId = undefined;
-      onHover(item, localLinks.length);
-    },
-    /** 保存直接投放到网格空白区域的网址。 */
-    onDrop(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      onDrop(item, item.index);
-    },
-  };
+  const listTargetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.LINK_LIST,
+      accepts: [DRAG_ITEM_TYPE.LINK],
+      scopeId: parentId,
+      priority: 85,
+      /** 将网格空白区域作为列表末尾投放位置。 */
+      onDragMove(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        item.dropIntent = LINK_DROP_INTENT.MOVE;
+        item.mergeTargetLinkId = undefined;
+        item.targetLinkGroupId = undefined;
+        onHover(item, localLinks.length);
+      },
+      /** 保存直接投放到网格空白区域的网址。 */
+      onDrop(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        onDrop(item, item.index);
+      },
+    }),
+    [localLinks.length, onDrop, onHover, parentId]
+  );
+
   // 文件夹网格整体的投放状态与连接器
   const { setNodeRef: setListNodeRef } = useDroppable({
     id: createDndId("link-list", parentId),
     data: listTargetData,
+    disabled: !isDndEnabled,
   });
+
   /** 同时连接文件夹网格的投放节点与预览布局节点。 */
   const connectListNodeRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -230,36 +229,44 @@ export default function LinkList({
   }, [reserveDropPreviewSpace, reservedPreviewMinHeight]);
 
   // 列表末尾携带的投放目标数据
-  const endTargetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.LINK_LIST_END,
-    accepts: [DRAG_ITEM_TYPE.LINK],
-    scopeId: parentId,
-    priority: 90,
-    /** 在列表末尾显示网址移动预览。 */
-    onDragMove(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      item.dropIntent = LINK_DROP_INTENT.MOVE;
-      item.mergeTargetLinkId = undefined;
-      item.targetLinkGroupId = undefined;
-      onHover(item, localLinks.length);
-    },
-    /** 将网址保存到列表末尾。 */
-    onDrop(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      onDrop(item, item.index);
-    },
-  };
+  const endTargetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.LINK_LIST_END,
+      accepts: [DRAG_ITEM_TYPE.LINK],
+      scopeId: parentId,
+      priority: 90,
+      /** 在列表末尾显示网址移动预览。 */
+      onDragMove(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        item.dropIntent = LINK_DROP_INTENT.MOVE;
+        item.mergeTargetLinkId = undefined;
+        item.targetLinkGroupId = undefined;
+        onHover(item, localLinks.length);
+      },
+      /** 将网址保存到列表末尾。 */
+      onDrop(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        onDrop(item, item.index);
+      },
+    }),
+    [localLinks.length, onDrop, onHover, parentId]
+  );
+
   // 列表末尾的投放状态和连接器
   const { isOver: isOverEnd, setNodeRef: setEndNodeRef } = useDroppable({
     id: createDndId("link-list-end", parentId),
     data: endTargetData,
+    disabled: !isDndEnabled,
   });
 
   useDndMonitor({
     /** 离开当前文件夹范围时清除跨父级网址预览。 */
     onDragMove(event) {
+      if (!isDndEnabled && linkDropPreview === null) {
+        return;
+      }
       // 当前拖拽源携带的数据
       const sourceData = event.active.data.current;
       if (!isDndSourceData(sourceData) || sourceData.itemType !== DRAG_ITEM_TYPE.LINK) {
@@ -304,8 +311,8 @@ export default function LinkList({
             <LinkItemWrapper
               link={link}
               index={index}
+              isDndEnabled={isDndEnabled}
               onEditClick={onEditClick}
-              onSkipClick={onSkipClick}
               onHover={onHover}
               onDrop={onDrop}
               onMergeLinks={onMergeLinks}
@@ -365,3 +372,5 @@ export default function LinkList({
     </div>
   );
 }
+
+export default memo(LinkList);

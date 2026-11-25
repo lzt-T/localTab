@@ -17,14 +17,16 @@ export class LinkService {
     await db.put(STORE_NAMES.LINK, link);
   }
 
-  /* 获取parentId下的链接 */
+  /** 按父级标识通过索引读取并排序网址列表。 */
   async getLinkCountByParentId(parentId: string): Promise<Link[]> {
-    // 数据库中的全部网址
-    const links = await this.getAllLinks();
-    // 指定父级下的网址
-    const filteredLinks = links.filter((link) => link.parentId === parentId);
+    // 通过 parentId 索引直接读取指定父级下的网址
+    const links = await db.getAllByIndex<Link>(
+      STORE_NAMES.LINK,
+      "parentId",
+      parentId
+    );
     // 按 sort 字段排序
-    return filteredLinks.sort((a, b) => a.sort - b.sort);
+    return links.sort((a, b) => a.sort - b.sort);
   }
 
   /**
@@ -41,10 +43,12 @@ export class LinkService {
       existingLink = await this.getLink(link.id);
     }
 
-    // 目标父级下的现有网址
-    const links = await this.getLinkCountByParentId(link.parentId || "");
-    // 新网址默认使用的排序位置
-    const length = links.length;
+    // 仅在新增且未传入 sort 时查询父级已有网址数量
+    let defaultSort = 0;
+    if (link.sort === undefined && !existingLink) {
+      const links = await this.getLinkCountByParentId(link.parentId || "");
+      defaultSort = links.length;
+    }
 
     // 合并现有字段后的网址数据
     const result: Link = {
@@ -52,7 +56,7 @@ export class LinkService {
       title: link.title || existingLink?.title || "",
       url: link.url || existingLink?.url || "",
       icon: link.icon || existingLink?.icon || "",
-      description: link.description || "",
+      description: link.description ?? existingLink?.description ?? "",
       parentId: link.parentId || existingLink?.parentId || "",
       type: link.type || existingLink?.type || LinkType.LINK,
       sort:
@@ -60,7 +64,7 @@ export class LinkService {
           ? link.sort
           : existingLink
           ? existingLink.sort
-          : length,
+          : defaultSort,
     };
 
     await db.put(STORE_NAMES.LINK, result);
@@ -100,20 +104,19 @@ export class LinkService {
     // 网址所属父级
     const parentId = link.parentId;
 
-    // 更新其他链接的排序
-    const links = await this.getLinkCountByParentId(parentId);
-
-    // 父级列表中的待删除网址
-    const deleteLink = links.find((link) => link.id === id);
-    // 待删除网址的排序位置
-    const delSort = deleteLink!.sort;
-
     if (isResetSort) {
-      for (const link of links) {
-        if (link.sort > delSort) {
-          link.sort = link.sort - 1;
-          await this.updateLink(link);
+      // 更新其他链接的排序
+      const links = await this.getLinkCountByParentId(parentId);
+      // 父级列表中的待删除网址
+      const deleteTarget = links.find((item) => item.id === id);
+      if (deleteTarget) {
+        const updates: Link[] = [];
+        for (const item of links) {
+          if (item.sort > deleteTarget.sort) {
+            updates.push({ ...item, sort: item.sort - 1 });
+          }
         }
+        await db.putMany(STORE_NAMES.LINK, updates);
       }
     }
 
@@ -131,25 +134,27 @@ export class LinkService {
     }
   }
 
-  /* 删除parentId等于parentId的链接 */
+  /** 批量删除指定父级下的全部网址。 */
   async deleteLinkByParentId(parentId: string): Promise<void> {
-    //查询所有链接
+    // 查询所有链接
     const links = await this.getLinkCountByParentId(parentId);
-    //删除所有链接
-    for (const link of links) {
-      await this.deleteLink(link.id, false);
-    }
+    await db.deleteMany(
+      STORE_NAMES.LINK,
+      links.map((link) => link.id)
+    );
   }
 
-  /** 按数组顺序保存分类内的链接位置。 */
+  /** 按数组顺序单事务批量保存父级内变更的链接位置。 */
   private async saveLinkOrder(links: Link[], parentId: string): Promise<void> {
+    const updates: Link[] = [];
     for (let index = 0; index < links.length; index++) {
       // 当前排序位置对应的网址
       const link = links[index];
       if (link.parentId !== parentId || link.sort !== index) {
-        await db.put(STORE_NAMES.LINK, { ...link, parentId, sort: index });
+        updates.push({ ...link, parentId, sort: index });
       }
     }
+    await db.putMany(STORE_NAMES.LINK, updates);
   }
 
   /** 将链接移动到目标父级的指定位置。 */

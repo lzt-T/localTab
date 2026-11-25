@@ -1,11 +1,11 @@
 /**
  * IndexedDB 通用数据库封装
- * 纯粹的数据访问层，只提供基础的 CRUD 操作
+ * 纯粹的数据访问层，只提供基础的 CRUD 与批量事务操作
  */
 
 const DB_NAME = 'LocalTabDB'
 // 数据库版本 用于升级数据库,当数据库版本号发生变化时,会触发 onupgradeneeded 事件
-const DB_VERSION = 3
+const DB_VERSION = 4
 // v2 及更早版本使用的系统设置表
 const LEGACY_SETTINGS_STORE_NAME = 'settings'
 
@@ -79,14 +79,20 @@ class LocalTabDB {
           db.createObjectStore(STORE_NAMES.CATEGORY, { keyPath: 'id' })
         }
 
-        // 创建 link 表（使用 id 作为主键）
-        if (!db.objectStoreNames.contains(STORE_NAMES.LINK)) {
-          db.createObjectStore(STORE_NAMES.LINK, { keyPath: 'id' })
+        // 获取或创建 link 表并建立 parentId 索引
+        const linkStore = db.objectStoreNames.contains(STORE_NAMES.LINK)
+          ? transaction!.objectStore(STORE_NAMES.LINK)
+          : db.createObjectStore(STORE_NAMES.LINK, { keyPath: 'id' })
+        if (!linkStore.indexNames.contains('parentId')) {
+          linkStore.createIndex('parentId', 'parentId', { unique: false })
         }
 
-        // 创建 linkGroup 表（使用 id 作为主键）
-        if (!db.objectStoreNames.contains(STORE_NAMES.LINK_GROUP)) {
-          db.createObjectStore(STORE_NAMES.LINK_GROUP, { keyPath: 'id' })
+        // 获取或创建 linkGroup 表并建立 parentId 索引
+        const linkGroupStore = db.objectStoreNames.contains(STORE_NAMES.LINK_GROUP)
+          ? transaction!.objectStore(STORE_NAMES.LINK_GROUP)
+          : db.createObjectStore(STORE_NAMES.LINK_GROUP, { keyPath: 'id' })
+        if (!linkGroupStore.indexNames.contains('parentId')) {
+          linkGroupStore.createIndex('parentId', 'parentId', { unique: false })
         }
 
         // 仅在首次创建 system 表时迁移旧 settings 数据，避免覆盖新版设置
@@ -164,6 +170,235 @@ class LocalTabDB {
 
       request.onsuccess = () => resolve(request.result)
       request.onerror = () => reject(new Error(`读取数据失败: ${storeName}[${key}]`))
+    })
+  }
+
+  /**
+   * 按索引查询所有匹配数据
+   * @param storeName 表名
+   * @param indexName 索引名
+   * @param query 索引键值
+   */
+  async getAllByIndex<T = unknown>(
+    storeName: StoreName,
+    indexName: string,
+    query: IDBValidKey
+  ): Promise<T[]> {
+    const db = await this.init()
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readonly')
+      const store = transaction.objectStore(storeName)
+      const index = store.index(indexName)
+      const request = index.getAll(query)
+
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () =>
+        reject(new Error(`按索引读取数据失败: ${storeName}.${indexName}`))
+    })
+  }
+
+  /**
+   * 单事务批量保存数据
+   * @param storeName 表名
+   * @param items 待保存的数据列表
+   */
+  async putMany<T>(storeName: StoreName, items: T[]): Promise<void> {
+    if (items.length === 0) {
+      return
+    }
+    const db = await this.init()
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readwrite')
+      let isSettled = false
+
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error(`批量保存数据失败: ${storeName}`))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve()
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error(`批量保存数据失败: ${storeName}`))
+      }
+
+      try {
+        const store = transaction.objectStore(storeName)
+        for (const item of items) {
+          store.put(item)
+        }
+      } catch (error) {
+        try {
+          transaction.abort()
+        } catch {
+          // 事务可能已自动终止
+        }
+        rejectOnce(error)
+      }
+    })
+  }
+
+  /**
+   * 单事务批量删除数据
+   * @param storeName 表名
+   * @param keys 主键数组
+   */
+  async deleteMany(storeName: StoreName, keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return
+    }
+    const db = await this.init()
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readwrite')
+      let isSettled = false
+
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error(`批量删除数据失败: ${storeName}`))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve()
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error(`批量删除数据失败: ${storeName}`))
+      }
+
+      try {
+        const store = transaction.objectStore(storeName)
+        for (const key of keys) {
+          store.delete(key)
+        }
+      } catch (error) {
+        try {
+          transaction.abort()
+        } catch {
+          // 事务可能已自动终止
+        }
+        rejectOnce(error)
+      }
+    })
+  }
+
+  /**
+   * 在单个事务中批量保存分类混排的网址和文件夹
+   * @param links 待保存的网址列表
+   * @param linkGroups 待保存的文件夹列表
+   */
+  async putCategoryItems(links: unknown[], linkGroups: unknown[]): Promise<void> {
+    if (links.length === 0 && linkGroups.length === 0) {
+      return
+    }
+    const db = await this.init()
+    const storeNames = [STORE_NAMES.LINK, STORE_NAMES.LINK_GROUP] as const
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeNames, 'readwrite')
+      let isSettled = false
+
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error('批量保存分类项目失败'))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve()
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error('批量保存分类项目失败'))
+      }
+
+      try {
+        const linkStore = transaction.objectStore(STORE_NAMES.LINK)
+        const linkGroupStore = transaction.objectStore(STORE_NAMES.LINK_GROUP)
+        for (const link of links) {
+          linkStore.put(link)
+        }
+        for (const linkGroup of linkGroups) {
+          linkGroupStore.put(linkGroup)
+        }
+      } catch (error) {
+        try {
+          transaction.abort()
+        } catch {
+          // 事务可能已自动终止
+        }
+        rejectOnce(error)
+      }
+    })
+  }
+
+  /**
+   * 在单个只读事务中读取全部分类、网址与文件夹数据
+   */
+  async getAllWorkspaceData<C = unknown, L = unknown, G = unknown>(): Promise<{
+    categories: C[]
+    links: L[]
+    linkGroups: G[]
+  }> {
+    const db = await this.init()
+    const storeNames = [
+      STORE_NAMES.CATEGORY,
+      STORE_NAMES.LINK,
+      STORE_NAMES.LINK_GROUP,
+    ] as const
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeNames, 'readonly')
+      let categories: C[] = []
+      let links: L[] = []
+      let linkGroups: G[] = []
+      let isSettled = false
+
+      const rejectOnce = (error: unknown) => {
+        if (isSettled) return
+        isSettled = true
+        reject(error instanceof Error ? error : new Error('读取工作区数据失败'))
+      }
+
+      transaction.oncomplete = () => {
+        if (isSettled) return
+        isSettled = true
+        resolve({ categories, links, linkGroups })
+      }
+      transaction.onabort = () => {
+        rejectOnce(transaction.error ?? new Error('读取工作区数据失败'))
+      }
+
+      try {
+        const categoryRequest = transaction
+          .objectStore(STORE_NAMES.CATEGORY)
+          .getAll()
+        const linkRequest = transaction.objectStore(STORE_NAMES.LINK).getAll()
+        const linkGroupRequest = transaction
+          .objectStore(STORE_NAMES.LINK_GROUP)
+          .getAll()
+
+        categoryRequest.onsuccess = () => {
+          categories = categoryRequest.result as C[]
+        }
+        linkRequest.onsuccess = () => {
+          links = linkRequest.result as L[]
+        }
+        linkGroupRequest.onsuccess = () => {
+          linkGroups = linkGroupRequest.result as G[]
+        }
+      } catch (error) {
+        rejectOnce(error)
+      }
     })
   }
 
@@ -408,4 +643,3 @@ class LocalTabDB {
 
 // 导出单例
 export const db = new LocalTabDB()
-

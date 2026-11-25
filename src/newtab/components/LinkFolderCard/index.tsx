@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -14,6 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useCardContextMenu } from "@/newtab/components/CardContextMenu";
+import { usePageDnd } from "@/newtab/components/PageDndProvider";
 import LinkList from "@/newtab/components/LinkList";
 import FolderPopoverHeader, {
   type FolderPopoverHeaderHandle,
@@ -38,6 +41,7 @@ interface LinkFolderCardProps {
   linkGroup: LinkGroupInfo;
   categoryId: string;
   index: number;
+  isDndEnabled?: boolean;
   onHoverLink: (item: LinkDragItem, targetIndex: number) => void;
   onDropLink: (item: LinkDragItem, targetIndex: number) => void;
   onClearLinkDropPreview: () => void;
@@ -49,7 +53,6 @@ interface LinkFolderCardProps {
   onCancelPendingAutoOpen: (folderId: string) => void;
   onOpenAddLink: (parentId: string) => void;
   onOpenEditLink: (linkId: string) => void;
-  onSkipLink: (url: string) => void;
   onMoveLink: (
     linkId: string,
     targetParentId: string,
@@ -67,6 +70,7 @@ interface LinkFolderCardProps {
 
 interface FolderPopoverDropZoneProps {
   linkGroup: LinkGroupInfo;
+  isDndEnabled: boolean;
   children: ReactNode;
   onClearLinkDropPreview: () => void;
   onMoveLink: (
@@ -79,37 +83,43 @@ interface FolderPopoverDropZoneProps {
 /** 保持网址进入文件夹浮层期间的连续投放目标。 */
 function FolderPopoverDropZone({
   linkGroup,
+  isDndEnabled,
   children,
   onClearLinkDropPreview,
   onMoveLink,
 }: FolderPopoverDropZoneProps) {
   // 文件夹浮层标题与内边距使用的末尾投放策略
-  const targetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.FOLDER_CONTENT,
-    accepts: [DRAG_ITEM_TYPE.LINK],
-    scopeId: linkGroup.id,
-    /** 将浮层过渡区域保持为当前文件夹的末尾位置。 */
-    onDragMove(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      item.dropIntent = LINK_DROP_INTENT.MOVE;
-      item.mergeTargetLinkId = undefined;
-      item.targetLinkGroupId = linkGroup.id;
-      item.currentParentId = linkGroup.id;
-      item.index = linkGroup.links.length;
-      onClearLinkDropPreview();
-    },
-    /** 将浮层过渡区域内松开的网址追加到文件夹末尾。 */
-    onDrop(dragItem) {
-      // 当前网址拖拽数据
-      const item = dragItem as LinkDragItem;
-      void onMoveLink(item.link.id, linkGroup.id, linkGroup.links.length);
-    },
-  };
+  const targetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.FOLDER_CONTENT,
+      accepts: [DRAG_ITEM_TYPE.LINK],
+      scopeId: linkGroup.id,
+      /** 将浮层过渡区域保持为当前文件夹的末尾位置。 */
+      onDragMove(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        item.dropIntent = LINK_DROP_INTENT.MOVE;
+        item.mergeTargetLinkId = undefined;
+        item.targetLinkGroupId = linkGroup.id;
+        item.currentParentId = linkGroup.id;
+        item.index = linkGroup.links.length;
+        onClearLinkDropPreview();
+      },
+      /** 将浮层过渡区域内松开的网址追加到文件夹末尾。 */
+      onDrop(dragItem) {
+        // 当前网址拖拽数据
+        const item = dragItem as LinkDragItem;
+        void onMoveLink(item.link.id, linkGroup.id, linkGroup.links.length);
+      },
+    }),
+    [linkGroup.id, linkGroup.links.length, onClearLinkDropPreview, onMoveLink]
+  );
+
   // 动态挂载的文件夹浮层投放连接器
   const { setNodeRef } = useDroppable({
     id: createDndId("folder-content", linkGroup.id),
     data: targetData,
+    disabled: !isDndEnabled,
   });
 
   return (
@@ -119,11 +129,12 @@ function FolderPopoverDropZone({
   );
 }
 
-/** 渲染可拖拽、可展开的网址文件夹卡片。 */
-export default function LinkFolderCard({
+/** 渲染可拖拽、可展开且支持右键菜单的网址文件夹卡片。 */
+function LinkFolderCard({
   linkGroup,
   categoryId,
   index,
+  isDndEnabled = true,
   onHoverLink,
   onDropLink,
   onClearLinkDropPreview,
@@ -135,7 +146,6 @@ export default function LinkFolderCard({
   onCancelPendingAutoOpen,
   onOpenAddLink,
   onOpenEditLink,
-  onSkipLink,
   onMoveLink,
   onMergeLinks,
   onCancelLinkDrag,
@@ -144,6 +154,13 @@ export default function LinkFolderCard({
 }: LinkFolderCardProps) {
   // 文件夹界面的本地化文案
   const { t } = useTranslation();
+  // 全局右键菜单控制器
+  const { openFolderMenu } = useCardContextMenu();
+  // 当前拖拽会话，确保跨分类切换时正在拖拽的源节点不被中途禁用
+  const { activeItem } = usePageDnd();
+  const isSelfDragging =
+    activeItem?.type === DRAG_ITEM_TYPE.LINK_GROUP &&
+    activeItem.id === linkGroup.id;
   // 文件夹卡片元素引用
   const cardRef = useRef<HTMLButtonElement>(null);
   // 文件夹浮层头部按键处理引用
@@ -186,6 +203,7 @@ export default function LinkFolderCard({
     }),
     [index, linkGroup, onCancelLinkDrag, onManualOpenChange]
   );
+
   // 文件夹拖动状态与连接器
   const {
     attributes,
@@ -195,7 +213,9 @@ export default function LinkFolderCard({
   } = useDraggable({
     id: createDndId("page-folder", linkGroup.id),
     data: sourceData,
+    disabled: !isDndEnabled && !isSelfDragging,
   });
+
   // 文件夹卡片携带的投放目标数据
   const targetData = useMemo<DndTargetData>(
     () => ({
@@ -275,10 +295,12 @@ export default function LinkFolderCard({
       onRequestAutoOpen,
     ]
   );
+
   // 网址投放状态与连接器
   const { isOver: isLinkOver, setNodeRef: setDropNodeRef } = useDroppable({
     id: createDndId("folder-card", categoryId, linkGroup.id),
     data: targetData,
+    disabled: !isDndEnabled,
     resizeObserverConfig: STATIC_DROPPABLE_RESIZE_OBSERVER_CONFIG,
   });
 
@@ -324,6 +346,17 @@ export default function LinkFolderCard({
           ref={connectCardRef}
           {...attributes}
           {...listeners}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openFolderMenu(
+              event.clientX,
+              event.clientY,
+              linkGroup,
+              categoryId,
+              () => onManualOpenChange(linkGroup.id, true)
+            );
+          }}
           className={cn(
             "group/folder relative flex h-[104px] w-full flex-col items-center justify-center rounded-2xl px-1.5 py-2 text-[var(--surface-text)] outline-none transition-[background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]",
             isDragging
@@ -365,6 +398,7 @@ export default function LinkFolderCard({
       >
         <FolderPopoverDropZone
           linkGroup={linkGroup}
+          isDndEnabled={isDndEnabled}
           onClearLinkDropPreview={onClearLinkDropPreview}
           onMoveLink={onMoveLink}
         >
@@ -384,8 +418,8 @@ export default function LinkFolderCard({
               categoryLinks={linkGroup.links}
               parentId={linkGroup.id}
               categoryId={categoryId}
+              isDndEnabled={isDndEnabled}
               handleEditClick={onOpenEditLink}
-              handleSkipClick={onSkipLink}
               onMoveLink={onMoveLink}
               onMergeLinks={onMergeLinks}
               onCancelDrag={onCancelLinkDrag}
@@ -399,3 +433,5 @@ export default function LinkFolderCard({
     </Popover>
   );
 }
+
+export default memo(LinkFolderCard);

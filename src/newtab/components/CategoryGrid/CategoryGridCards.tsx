@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Bookmark, Link2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,7 @@ interface CategoryGridItemSlotProps {
   index: number;
   scopeId: string;
   slotId: string;
+  isDndEnabled?: boolean;
   isHidden?: boolean;
   linkDropFolder?: LinkGroupInfo;
   children: ReactNode;
@@ -95,10 +96,11 @@ export function EmptyCategoryPlaceholder({
 }
 
 /** 为每个网格位置提供文件夹排序投放能力。 */
-export function CategoryGridItemSlot({
+export const CategoryGridItemSlot = memo(function CategoryGridItemSlot({
   index,
   scopeId,
   slotId,
+  isDndEnabled = true,
   isHidden = false,
   linkDropFolder,
   children,
@@ -109,70 +111,84 @@ export function CategoryGridItemSlot({
   onDropFolder,
 }: CategoryGridItemSlotProps) {
   // 网格位置携带的投放目标数据
-  const targetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.GRID_SLOT,
-    accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
-    scopeId,
-    /** 标识网格槽位当前对应的左右侧或文件夹投放区域。 */
-    getDragMoveKey(item, context) {
-      if (item.type === DRAG_ITEM_TYPE.LINK && linkDropFolder) {
-        return createDndId("folder", linkDropFolder.id);
-      }
-      return getHorizontalDropRegion(context);
-    },
-    /** 根据卡片左右区域计算项目插入位置。 */
-    onDragMove(item, context) {
-      if (item.type === DRAG_ITEM_TYPE.LINK && linkDropFolder) {
-        // 自动展开文件夹过渡区内的当前网址拖拽数据
-        const linkItem = item as LinkDragItem;
-        linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
-        linkItem.mergeTargetLinkId = undefined;
-        linkItem.targetLinkGroupId = linkDropFolder.id;
-        linkItem.currentParentId = linkDropFolder.id;
-        linkItem.index = linkDropFolder.links.length;
-        onClearLinkDropPreview();
-        return;
-      }
-      // 卡片左侧插入前方，右侧插入后方
-      const targetIndex =
-        getHorizontalDropRegion(context) === CARD_DROP_REGION.BEFORE
-          ? index
-          : index + 1;
-      // 不同拖拽项目的网格间隙悬停策略
-      const hoverStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () => {
-          // 当前网址拖拽数据
+  const targetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.GRID_SLOT,
+      accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
+      scopeId,
+      /** 标识网格槽位当前对应的左右侧或文件夹投放区域。 */
+      getDragMoveKey(item, context) {
+        if (item.type === DRAG_ITEM_TYPE.LINK && linkDropFolder) {
+          return createDndId("folder", linkDropFolder.id);
+        }
+        return getHorizontalDropRegion(context);
+      },
+      /** 根据卡片左右区域计算项目插入位置。 */
+      onDragMove(item, context) {
+        if (item.type === DRAG_ITEM_TYPE.LINK && linkDropFolder) {
+          // 自动展开文件夹过渡区内的当前网址拖拽数据
           const linkItem = item as LinkDragItem;
           linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
           linkItem.mergeTargetLinkId = undefined;
-          linkItem.targetLinkGroupId = undefined;
-          onHoverLink(linkItem, targetIndex);
-        },
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onHoverFolder(item as LinkGroupDragItem, targetIndex),
-        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
-      };
-      hoverStrategies[item.type]();
-    },
-    /** 保存从网格间隙投放的项目位置。 */
-    onDrop(item) {
-      // 不同拖拽项目的网格间隙投放策略
-      const dropStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () =>
-          onDropLink(item as LinkDragItem, (item as LinkDragItem).index),
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onDropFolder(item as LinkGroupDragItem),
-        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
-      };
-      dropStrategies[item.type]();
-    },
-  };
+          linkItem.targetLinkGroupId = linkDropFolder.id;
+          linkItem.currentParentId = linkDropFolder.id;
+          linkItem.index = linkDropFolder.links.length;
+          onClearLinkDropPreview();
+          return;
+        }
+        // 卡片左侧插入前方，右侧插入后方
+        const targetIndex =
+          getHorizontalDropRegion(context) === CARD_DROP_REGION.BEFORE
+            ? index
+            : index + 1;
+        // 不同拖拽项目的网格间隙悬停策略
+        const hoverStrategies = {
+          [DRAG_ITEM_TYPE.LINK]: () => {
+            // 当前网址拖拽数据
+            const linkItem = item as LinkDragItem;
+            linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
+            linkItem.mergeTargetLinkId = undefined;
+            linkItem.targetLinkGroupId = undefined;
+            onHoverLink(linkItem, targetIndex);
+          },
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+            onHoverFolder(item as LinkGroupDragItem, targetIndex),
+          [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        hoverStrategies[item.type]();
+      },
+      /** 保存从网格间隙投放的项目位置。 */
+      onDrop(item) {
+        // 不同拖拽项目的网格间隙投放策略
+        const dropStrategies = {
+          [DRAG_ITEM_TYPE.LINK]: () =>
+            onDropLink(item as LinkDragItem, (item as LinkDragItem).index),
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+            onDropFolder(item as LinkGroupDragItem),
+          [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        dropStrategies[item.type]();
+      },
+    }),
+    [
+      index,
+      linkDropFolder,
+      onClearLinkDropPreview,
+      onDropFolder,
+      onDropLink,
+      onHoverFolder,
+      onHoverLink,
+      scopeId,
+    ]
+  );
+
   // 网格间隙悬停状态与投放连接器
   const { isOver: isItemOver, setNodeRef } = useDroppable({
     id: createDndId("grid-slot", scopeId, slotId),
     data: targetData,
+    disabled: !isDndEnabled,
     resizeObserverConfig: STATIC_DROPPABLE_RESIZE_OBSERVER_CONFIG,
   });
 
@@ -193,4 +209,4 @@ export function CategoryGridItemSlot({
       {children}
     </div>
   );
-}
+});

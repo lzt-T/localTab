@@ -1,7 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import LinkItem from "@/newtab/components/LinkItem";
+import { useCardContextMenu } from "@/newtab/components/CardContextMenu";
+import { usePageDnd } from "@/newtab/components/PageDndProvider";
 import { cn } from "@/lib/utils";
 import type { Link } from "@/type/db";
 import {
@@ -21,8 +23,8 @@ import {
 interface LinkItemWrapperProps {
   link: Link;
   index: number;
+  isDndEnabled?: boolean;
   onEditClick: (linkId: string) => void;
-  onSkipClick: (url: string) => void;
   onHover: (item: LinkDragItem, hoverIndex: number) => void;
   onDrop: (item: LinkDragItem, targetIndex: number) => void;
   onMergeLinks: (
@@ -37,12 +39,12 @@ interface LinkItemWrapperProps {
   parentId: string;
 }
 
-/** 渲染支持排序和文件夹投放的网址卡片。 */
-export default function LinkItemWrapper({
+/** 渲染支持拖拽排序、原生链接跳转、文件夹合并与右键菜单的网址卡片。 */
+function LinkItemWrapper({
   link,
   index,
+  isDndEnabled = true,
   onEditClick,
-  onSkipClick,
   onHover,
   onDrop,
   onMergeLinks,
@@ -54,16 +56,26 @@ export default function LinkItemWrapper({
 }: LinkItemWrapperProps) {
   // 拖拽提示的本地化文案
   const { t } = useTranslation();
+  // 卡片全局右键菜单
+  const { openLinkMenu } = useCardContextMenu();
+  // 当前拖拽会话，确保跨分类切换时正在拖拽的源节点不被中途禁用
+  const { activeItem } = usePageDnd();
+  const isSelfDragging =
+    activeItem?.type === DRAG_ITEM_TYPE.LINK && activeItem.link.id === link.id;
   // 卡片容器引用
   const elementRef = useRef<HTMLDivElement>(null);
+  // 标记是否刚刚发生真实拖拽，用于屏蔽松手瞬间触发的原生 a 跳转
+  const didDragRef = useRef(false);
   // 当前卡片是否作为合并目标
   const [isMergeTarget, setIsMergeTarget] = useState(false);
+
   // 网址卡片携带的拖拽源数据
   const sourceData = useMemo<DndSourceData>(
     () => ({
       itemType: DRAG_ITEM_TYPE.LINK,
       /** 创建网址拖拽开始时的稳定会话数据。 */
       createDragItem() {
+        didDragRef.current = true;
         // 自定义拖拽预览尺寸
         const { width, height } = elementRef.current!.getBoundingClientRect();
         return {
@@ -85,6 +97,7 @@ export default function LinkItemWrapper({
     }),
     [index, link, onCancelDrag]
   );
+
   // 网址卡片拖动状态与连接器
   const {
     attributes,
@@ -94,7 +107,9 @@ export default function LinkItemWrapper({
   } = useDraggable({
     id: createDndId("page-link", link.id),
     data: sourceData,
+    disabled: !isDndEnabled && !isSelfDragging,
   });
+
   // 网址卡片携带的投放目标数据
   const targetData = useMemo<DndTargetData>(
     () => ({
@@ -186,14 +201,28 @@ export default function LinkItemWrapper({
       parentId,
     ]
   );
+
   // 卡片投放状态与连接器
   const { isOver, setNodeRef: setDropNodeRef } = useDroppable({
     id: createDndId("link-card", parentId, link.id),
     data: targetData,
+    disabled: !isDndEnabled,
     resizeObserverConfig: STATIC_DROPPABLE_RESIZE_OBSERVER_CONFIG,
   });
+
   // 当前卡片是否展示为有效合并目标
   const shouldShowMergeTarget = isOver && isMergeTarget;
+
+  // 拖拽结束后在下一事件循环解除点击拦截
+  useEffect(() => {
+    if (isDragging) {
+      return;
+    }
+    const releaseTimer = window.setTimeout(() => {
+      didDragRef.current = false;
+    }, 0);
+    return () => window.clearTimeout(releaseTimer);
+  }, [isDragging]);
 
   // 同时连接网址卡片的拖动与投放能力
   const ref = useCallback(
@@ -210,6 +239,17 @@ export default function LinkItemWrapper({
       ref={ref}
       {...attributes}
       {...listeners}
+      onClickCapture={(event) => {
+        if (didDragRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openLinkMenu(event.clientX, event.clientY, link, categoryId);
+      }}
       className={cn(
         "relative rounded-2xl transition-shadow",
         shouldShowMergeTarget &&
@@ -223,7 +263,6 @@ export default function LinkItemWrapper({
       <LinkItem
         link={link}
         handleEditClick={onEditClick}
-        handleSkipClick={onSkipClick}
         variant={isDragging ? "drag-placeholder" : "default"}
       />
       {shouldShowMergeTarget && (
@@ -236,3 +275,5 @@ export default function LinkItemWrapper({
     </div>
   );
 }
+
+export default memo(LinkItemWrapper);

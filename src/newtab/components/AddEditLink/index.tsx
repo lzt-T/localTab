@@ -63,7 +63,7 @@ interface AddEditLinkProps {
     url: string;
     icon: string;
     parentId: string;
-  }) => void;
+  }) => void | Promise<void>;
   onDelete?: () => void;
 }
 
@@ -82,6 +82,8 @@ export default function AddEditLink(props: AddEditLinkProps) {
     errors,
     isLoadingFavicon,
     isProcessingCustomIcon,
+    isSubmitting,
+    canRetryFavicon,
     iconType,
     sheetTitle,
     sheetDescription,
@@ -96,6 +98,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
     onCancel,
     onOpenChange,
     onIconTypeChange,
+    onRetryFavicon,
     onCustomIconSelect,
     onRemoveCustomIcon,
     onCategoryChange,
@@ -120,7 +123,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
           className="flex min-h-0 flex-1 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
-            onOk();
+            void onOk();
           }}
         >
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
@@ -316,9 +319,11 @@ export default function AddEditLink(props: AddEditLinkProps) {
                 iconType={iconType}
                 isLoadingFavicon={isLoadingFavicon}
                 isProcessingCustomIcon={isProcessingCustomIcon}
+                canRetryFavicon={canRetryFavicon}
                 error={errors.icon}
                 onIconChange={setIcon}
                 onIconTypeChange={onIconTypeChange}
+                onRetryFavicon={onRetryFavicon}
                 onCustomIconSelect={onCustomIconSelect}
                 onRemoveCustomIcon={onRemoveCustomIcon}
               />
@@ -329,6 +334,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
               <Button
                 type="button"
                 variant="outline"
+                disabled={isSubmitting}
                 onClick={props.onDelete}
                 className="h-11 cursor-pointer border-red-400/25 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-white"
               >
@@ -340,6 +346,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
               <Button
                 type="button"
                 variant="outline"
+                disabled={isSubmitting}
                 className="h-11 flex-1 cursor-pointer border-white/15 bg-white/[0.04] text-white/80 hover:bg-white/10 hover:text-white sm:flex-none sm:w-24"
                 onClick={onCancel}
               >
@@ -347,7 +354,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={isProcessingCustomIcon}
+                disabled={isProcessingCustomIcon || isSubmitting}
                 className="h-11 flex-[1.4] cursor-pointer bg-blue-500/85 text-white hover:bg-blue-400 focus-visible:ring-blue-300/40 sm:flex-none sm:w-28"
               >
                 {t("common.confirm")}

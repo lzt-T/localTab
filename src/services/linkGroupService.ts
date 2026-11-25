@@ -12,11 +12,15 @@ export class LinkGroupService {
 
   /** 获取分类下按顺序排列的网址分组。 */
   async getLinkGroupsByParentId(parentId: string): Promise<LinkGroup[]> {
-    // 数据库中的全部网址分组
-    const linkGroups = await db.getAll<LinkGroup>(STORE_NAMES.LINK_GROUP);
-    return linkGroups
-      .filter((linkGroup) => linkGroup.parentId === parentId)
-      .sort((firstGroup, secondGroup) => firstGroup.sort - secondGroup.sort);
+    // 通过 parentId 索引直接读取当前分类下的网址分组
+    const linkGroups = await db.getAllByIndex<LinkGroup>(
+      STORE_NAMES.LINK_GROUP,
+      "parentId",
+      parentId
+    );
+    return linkGroups.sort(
+      (firstGroup, secondGroup) => firstGroup.sort - secondGroup.sort
+    );
   }
 
   /** 创建分类内的网址分组。 */
@@ -50,10 +54,18 @@ export class LinkGroupService {
   async deleteLinkGroupsByParentId(parentId: string): Promise<void> {
     // 分类下的全部网址分组
     const linkGroups = await this.getLinkGroupsByParentId(parentId);
-    for (const linkGroup of linkGroups) {
-      await linkService.deleteLinkByParentId(linkGroup.id);
-      await db.delete(STORE_NAMES.LINK_GROUP, linkGroup.id);
+    if (linkGroups.length === 0) {
+      return;
     }
+    await Promise.all(
+      linkGroups.map((linkGroup) =>
+        linkService.deleteLinkByParentId(linkGroup.id)
+      )
+    );
+    await db.deleteMany(
+      STORE_NAMES.LINK_GROUP,
+      linkGroups.map((linkGroup) => linkGroup.id)
+    );
   }
 
 }

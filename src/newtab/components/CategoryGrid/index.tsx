@@ -1,7 +1,9 @@
 import {
   Fragment,
+  memo,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { useDndMonitor, useDroppable } from "@dnd-kit/core";
@@ -34,8 +36,8 @@ import {
 
 interface CategoryGridProps {
   categoryInfo: CategoryInfo;
+  isDndEnabled?: boolean;
   onOpenEditLink: (linkId: string) => void;
-  onSkipLink: (url: string) => void;
   onMoveLink: (
     linkId: string,
     targetParentId: string,
@@ -59,10 +61,10 @@ interface CategoryGridProps {
 }
 
 /** 渲染分类内网址与文件夹混排的统一网格。 */
-export default function CategoryGrid({
+function CategoryGrid({
   categoryInfo,
+  isDndEnabled = true,
   onOpenEditLink,
-  onSkipLink,
   onMoveLink,
   onMergeLinks,
   onMoveCategoryItem,
@@ -94,6 +96,7 @@ export default function CategoryGrid({
     cancelPendingAutoOpen,
     closeAutoOpenFolder,
   } = useAutoOpenFolder();
+
   /** 清除跨父级网址在主网格中的原卡片预览。 */
   const onClearLinkDropPreview = useCallback(() => {
     setLinkDropPreview(null);
@@ -150,8 +153,11 @@ export default function CategoryGrid({
   }, [categoryInfo.items]);
 
   useDndMonitor({
-    /** 网址离开当前分类范围时清除跨父级预览。 */
+    /** 网址离开当前分类范围时清除跨父级预览；非活跃分类无预览时直接跳过。 */
     onDragMove(event) {
+      if (!isDndEnabled && linkDropPreview === null) {
+        return;
+      }
       // 当前拖拽源携带的数据
       const sourceData = event.active.data.current;
       if (!isDndSourceData(sourceData) || sourceData.itemType !== DRAG_ITEM_TYPE.LINK) {
@@ -305,52 +311,69 @@ export default function CategoryGrid({
     },
     [categoryInfo.id, onMoveCategoryItem]
   );
+
   // 分类网格空白区域携带的末尾投放策略
-  const gridTargetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.CATEGORY_GRID,
-    accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
-    scopeId: categoryInfo.id,
-    /** 将空白区域内的拖拽项目预览到分类末尾。 */
-    onDragMove(item) {
-      // 不同拖拽项目对应的末尾悬停策略
-      const hoverStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () => {
-          // 当前网址拖拽数据
-          const linkItem = item as LinkDragItem;
-          linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
-          linkItem.mergeTargetLinkId = undefined;
-          linkItem.targetLinkGroupId = undefined;
-          onHoverLink(linkItem, localItems.length);
-        },
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onHoverFolder(item as LinkGroupDragItem, localItems.length),
-        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
-      };
-      hoverStrategies[item.type]();
-    },
-    /** 保存投放到分类网格空白区域的项目。 */
-    onDrop(item) {
-      // 不同拖拽项目对应的末尾投放策略
-      const dropStrategies = {
-        [DRAG_ITEM_TYPE.LINK]: () => {
-          // 当前网址拖拽数据
-          const linkItem = item as LinkDragItem;
-          onDropLink(linkItem, linkItem.index);
-        },
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          onDropFolder(item as LinkGroupDragItem),
-        [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
-      };
-      dropStrategies[item.type]();
-    },
-  };
+  const gridTargetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.CATEGORY_GRID,
+      accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.LINK_GROUP],
+      scopeId: categoryInfo.id,
+      /** 将空白区域内的拖拽项目预览到分类末尾。 */
+      onDragMove(item) {
+        // 不同拖拽项目对应的末尾悬停策略
+        const hoverStrategies = {
+          [DRAG_ITEM_TYPE.LINK]: () => {
+            // 当前网址拖拽数据
+            const linkItem = item as LinkDragItem;
+            linkItem.dropIntent = LINK_DROP_INTENT.MOVE;
+            linkItem.mergeTargetLinkId = undefined;
+            linkItem.targetLinkGroupId = undefined;
+            onHoverLink(linkItem, localItems.length);
+          },
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+            onHoverFolder(item as LinkGroupDragItem, localItems.length),
+          [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        hoverStrategies[item.type]();
+      },
+      /** 保存投放到分类网格空白区域的项目。 */
+      onDrop(item) {
+        // 不同拖拽项目对应的末尾投放策略
+        const dropStrategies = {
+          [DRAG_ITEM_TYPE.LINK]: () => {
+            // 当前网址拖拽数据
+            const linkItem = item as LinkDragItem;
+            onDropLink(linkItem, linkItem.index);
+          },
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+            onDropFolder(item as LinkGroupDragItem),
+          [DRAG_ITEM_TYPE.CATEGORY]: () => undefined,
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () => undefined,
+        };
+        dropStrategies[item.type]();
+      },
+    }),
+    [
+      categoryInfo.id,
+      localItems.length,
+      onDropFolder,
+      onDropLink,
+      onHoverFolder,
+      onHoverLink,
+    ]
+  );
+
   // 分类网格空白区域的投放状态与连接器
   const { isOver: isItemOver, setNodeRef } = useDroppable({
     id: createDndId("category-grid", categoryInfo.id),
     data: gridTargetData,
+    disabled: !isDndEnabled,
   });
+
+  const handleEmptyAddLink = useCallback(() => {
+    onOpenAddLink(categoryInfo.id);
+  }, [categoryInfo.id, onOpenAddLink]);
 
   return (
     <div ref={setNodeRef} className="min-h-full">
@@ -358,7 +381,7 @@ export default function CategoryGrid({
         {localItems.length === 0 && linkDropPreview === null && (
           <EmptyCategoryPlaceholder
             isItemOver={isItemOver}
-            onOpenAddLink={() => onOpenAddLink(categoryInfo.id)}
+            onOpenAddLink={handleEmptyAddLink}
             onOpenBookmarkImport={onOpenBookmarkImport}
           />
         )}
@@ -378,6 +401,7 @@ export default function CategoryGrid({
               index={index}
               scopeId={categoryInfo.id}
               slotId={item.id}
+              isDndEnabled={isDndEnabled}
               isHidden={
                 item.type === LinkType.LINK && item.id === hiddenSourceLinkId
               }
@@ -397,8 +421,8 @@ export default function CategoryGrid({
                 <LinkItemWrapper
                   link={item}
                   index={index}
+                  isDndEnabled={isDndEnabled}
                   onEditClick={onOpenEditLink}
-                  onSkipClick={onSkipLink}
                   onHover={onHoverLink}
                   onDrop={onDropLink}
                   onMergeLinks={onMergeLinks}
@@ -413,6 +437,7 @@ export default function CategoryGrid({
                   linkGroup={item}
                   categoryId={categoryInfo.id}
                   index={index}
+                  isDndEnabled={isDndEnabled}
                   onHoverLink={onHoverLink}
                   onDropLink={onDropLink}
                   onClearLinkDropPreview={onClearLinkDropPreview}
@@ -424,7 +449,6 @@ export default function CategoryGrid({
                   onCancelPendingAutoOpen={cancelPendingAutoOpen}
                   onOpenAddLink={onOpenAddLink}
                   onOpenEditLink={onOpenEditLink}
-                  onSkipLink={onSkipLink}
                   onMoveLink={onMoveLink}
                   onMergeLinks={onMergeLinks}
                   onCancelLinkDrag={onCancelGridLinkDrag}
@@ -449,3 +473,5 @@ export default function CategoryGrid({
     </div>
   );
 }
+
+export default memo(CategoryGrid);

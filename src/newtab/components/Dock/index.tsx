@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -29,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useCardContextMenu } from "@/newtab/components/CardContextMenu";
 import DockLinkIcon from "@/newtab/components/Dock/DockLinkIcon";
 import { usePageDnd } from "@/newtab/components/PageDndProvider";
 import {
@@ -48,7 +50,6 @@ interface DockProps {
   dockLinks: Link[];
   onAddLink: () => void;
   onCreateFolder: () => void;
-  onOpenLink: (url: string) => void;
   onPinLink: (item: LinkDragItem) => Promise<void>;
   onMoveDockLink: (linkId: string, targetIndex: number) => Promise<void>;
   onUnpinDockLink: (linkId: string) => Promise<void>;
@@ -58,7 +59,6 @@ interface DockProps {
 interface DockLinkItemProps {
   link: Link;
   index: number;
-  onOpen: (url: string) => void;
   onMove: (linkId: string, targetIndex: number) => Promise<void>;
   onUnpin: (linkId: string) => Promise<void>;
 }
@@ -76,29 +76,34 @@ const DOCK_ACTION_CLASS =
 // Dock 添加菜单离开后的关闭缓冲时间
 const DOCK_CREATE_MENU_CLOSE_DELAY_MS = 150;
 
-/** 渲染可打开并支持拖拽排序的 Dock 网址。 */
-function DockLinkItem({
+/** 渲染支持原生链接操作、拖拽排序与右键菜单的 Dock 网址。 */
+const DockLinkItem = memo(function DockLinkItem({
   link,
   index,
-  onOpen,
   onMove,
   onUnpin,
 }: DockLinkItemProps) {
   // Dock 网址文案的本地化工具
   const { t } = useTranslation();
+  // 全局右键菜单控制器
+  const { openDockLinkMenu } = useCardContextMenu();
   // Dock 网址提示框是否打开
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   // Dock 网址交互反馈是否处于抑制状态
   const [isDockLinkInteractionSuppressed, setIsDockLinkInteractionSuppressed] =
     useState(false);
-  // 触发当前交互反馈抑制的 Dock 按钮
-  const suppressedDockLinkButtonRef = useRef<HTMLButtonElement | null>(null);
+  // 触发当前交互反馈抑制的 Dock 链接元素
+  const suppressedDockLinkButtonRef = useRef<HTMLAnchorElement | null>(null);
+  // 标记是否刚完成拖拽，阻止松手瞬间误打开原生链接
+  const didDragRef = useRef(false);
+
   // Dock 网址同时携带的拖拽源和投放目标数据
   const dndData = useMemo<DndSourceData & DndTargetData>(
     () => ({
       itemType: DRAG_ITEM_TYPE.DOCK_LINK,
       /** 创建 Dock 网址拖拽开始时的稳定会话数据。 */
       createDragItem() {
+        didDragRef.current = true;
         return {
           type: DRAG_ITEM_TYPE.DOCK_LINK,
           link,
@@ -124,6 +129,7 @@ function DockLinkItem({
     }),
     [index, link, onMove]
   );
+
   // Dock 网址的排序状态与连接器
   const {
     attributes,
@@ -137,17 +143,22 @@ function DockLinkItem({
     data: dndData,
     transition: null,
   });
+
   // Dock 网址排序期间的位移样式
   const sortableStyle = {
     transform: CSS.Transform.toString(transform),
   };
 
-  /** 打开当前 Dock 网址。 */
-  function openDockLink(event: MouseEvent<HTMLButtonElement>) {
+  /** 点击后失焦，拖拽刚结束时拦截原生链接跳转。 */
+  function handleDockLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (didDragRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     if (event.detail > 0) {
       event.currentTarget.blur();
     }
-    onOpen(link.url);
   }
 
   /** 同步 Dock 网址提示框的受控状态。 */
@@ -159,20 +170,31 @@ function DockLinkItem({
   }
 
   /** 指针激活 Dock 网址时关闭并暂停提示框。 */
-  function suppressDockLinkTooltip(event: PointerEvent<HTMLButtonElement>) {
+  function suppressDockLinkTooltip(event: PointerEvent<HTMLAnchorElement>) {
     suppressedDockLinkButtonRef.current = event.currentTarget;
     setIsDockLinkInteractionSuppressed(true);
     setIsTooltipOpen(false);
   }
 
   /** 通过键盘从 Dock 取消固定当前网址。 */
-  function handleDockLinkKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+  function handleDockLinkKeyDown(event: KeyboardEvent<HTMLAnchorElement>) {
     if (event.key !== "Delete" && event.key !== "Backspace") {
       return;
     }
     event.preventDefault();
     void onUnpin(link.id);
   }
+
+  // 拖拽结束后在下一事件循环解除点击抑制
+  useEffect(() => {
+    if (isDragging) {
+      return;
+    }
+    const releaseTimer = window.setTimeout(() => {
+      didDragRef.current = false;
+    }, 0);
+    return () => window.clearTimeout(releaseTimer);
+  }, [isDragging]);
 
   /** 抑制期间在指针真正移动到按钮外时恢复 Dock 网址反馈。 */
   useEffect(() => {
@@ -183,11 +205,11 @@ function DockLinkItem({
     /** 处理页面内的真实指针移动。 */
     function handleDocumentPointerMove(event: globalThis.PointerEvent) {
       // 触发当前抑制状态的 Dock 按钮
-      const button = suppressedDockLinkButtonRef.current;
+      const anchor = suppressedDockLinkButtonRef.current;
       if (
         document.hidden ||
-        button === null ||
-        button.contains(event.target as Node)
+        anchor === null ||
+        anchor.contains(event.target as Node)
       ) {
         return;
       }
@@ -215,12 +237,21 @@ function DockLinkItem({
     >
       <Tooltip open={isTooltipOpen} onOpenChange={handleTooltipOpenChange}>
         <TooltipTrigger asChild>
-          <button
+          <a
             ref={setActivatorNodeRef}
-            type="button"
-            className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-[var(--surface-text)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
-            onClick={openDockLink}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            draggable={false}
+            className="flex h-full w-full touch-none cursor-pointer items-center justify-center rounded-xl text-[var(--surface-text)] no-underline outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-[var(--surface-ring)]"
+            onClick={handleDockLinkClick}
             onKeyDown={handleDockLinkKeyDown}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setIsTooltipOpen(false);
+              openDockLinkMenu(event.clientX, event.clientY, link);
+            }}
             aria-label={t("dock.openLink", { title: link.title })}
             aria-keyshortcuts="Delete Backspace"
             {...attributes}
@@ -236,7 +267,7 @@ function DockLinkItem({
             >
               <DockLinkIcon link={link} />
             </span>
-          </button>
+          </a>
         </TooltipTrigger>
         <TooltipContent
           side="top"
@@ -249,7 +280,7 @@ function DockLinkItem({
       </Tooltip>
     </div>
   );
-}
+});
 
 /** 渲染由 dnd-kit 驱动的 Dock 垃圾桶。 */
 function DockTrash({ isOver, isVisible, setNodeRef }: DockTrashProps) {
@@ -293,11 +324,10 @@ function DockTrash({ isOver, isVisible, setNodeRef }: DockTrashProps) {
 }
 
 /** 渲染页面底部的玻璃功能岛与拖拽垃圾桶。 */
-export default function Dock({
+function Dock({
   dockLinks,
   onAddLink,
   onCreateFolder,
-  onOpenLink,
   onPinLink,
   onMoveDockLink,
   onUnpinDockLink,
@@ -310,8 +340,9 @@ export default function Dock({
   // 当前页面拖拽会话
   const { activeItem } = usePageDnd();
   // Dock 当前的可排序网址标识
-  const dockLinkIds = dockLinks.map((link) =>
-    createDndId("dock-link", link.id)
+  const dockLinkIds = useMemo(
+    () => dockLinks.map((link) => createDndId("dock-link", link.id)),
+    [dockLinks]
   );
   // Dock 添加菜单待执行的关闭计时器
   const createMenuCloseTimerRef = useRef<number | null>(null);
@@ -321,51 +352,61 @@ export default function Dock({
   const pinAreaRef = useRef<HTMLDivElement>(null);
   // 上一次渲染时的固定网址数量
   const previousDockLinkCountRef = useRef(dockLinks.length);
+
   // Dock 固定区域携带的投放目标数据
-  const pinAreaTargetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.DOCK_AREA,
-    accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.DOCK_LINK],
-    scopeId: "dock",
-    /** 将页面网址固定到 Dock。 */
-    onDrop(item) {
-      // 不同拖拽项目对应的 Dock 区域投放策略
-      const dropStrategies: Partial<Record<DragItem["type"], () => void>> = {
-        [DRAG_ITEM_TYPE.LINK]: () => void onPinLink(item as LinkDragItem),
-      };
-      dropStrategies[item.type]?.();
-    },
-  };
+  const pinAreaTargetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.DOCK_AREA,
+      accepts: [DRAG_ITEM_TYPE.LINK, DRAG_ITEM_TYPE.DOCK_LINK],
+      scopeId: "dock",
+      /** 将页面网址固定到 Dock。 */
+      onDrop(item) {
+        // 不同拖拽项目对应的 Dock 区域投放策略
+        const dropStrategies: Partial<Record<DragItem["type"], () => void>> = {
+          [DRAG_ITEM_TYPE.LINK]: () => void onPinLink(item as LinkDragItem),
+        };
+        dropStrategies[item.type]?.();
+      },
+    }),
+    [onPinLink]
+  );
+
   // 固定网址区域的拖拽状态与投放连接器
   const { isOver: isPinOver, setNodeRef: setPinAreaNodeRef } = useDroppable({
     id: createDndId("dock-area"),
     data: pinAreaTargetData,
   });
+
   // Dock 垃圾桶携带的投放目标数据
-  const trashTargetData: DndTargetData = {
-    type: DROP_TARGET_TYPE.TRASH,
-    accepts: [
-      DRAG_ITEM_TYPE.CATEGORY,
-      DRAG_ITEM_TYPE.LINK,
-      DRAG_ITEM_TYPE.LINK_GROUP,
-      DRAG_ITEM_TYPE.DOCK_LINK,
-    ],
-    scopeId: "trash",
-    /** 按拖拽项目类型执行页面删除或 Dock 取消固定。 */
-    onDrop(item) {
-      // 不同拖拽项目对应的垃圾桶投放策略
-      const dropStrategies: Record<DragItem["type"], () => void> = {
-        [DRAG_ITEM_TYPE.CATEGORY]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.LINK]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
-          void onDropToTrash(item as PageDragItem),
-        [DRAG_ITEM_TYPE.DOCK_LINK]: () =>
-          void onUnpinDockLink((item as DockLinkDragItem).link.id),
-      };
-      dropStrategies[item.type]();
-    },
-  };
+  const trashTargetData = useMemo<DndTargetData>(
+    () => ({
+      type: DROP_TARGET_TYPE.TRASH,
+      accepts: [
+        DRAG_ITEM_TYPE.CATEGORY,
+        DRAG_ITEM_TYPE.LINK,
+        DRAG_ITEM_TYPE.LINK_GROUP,
+        DRAG_ITEM_TYPE.DOCK_LINK,
+      ],
+      scopeId: "trash",
+      /** 按拖拽项目类型执行页面删除或 Dock 取消固定。 */
+      onDrop(item) {
+        // 不同拖拽项目对应的垃圾桶投放策略
+        const dropStrategies: Record<DragItem["type"], () => void> = {
+          [DRAG_ITEM_TYPE.CATEGORY]: () =>
+            void onDropToTrash(item as PageDragItem),
+          [DRAG_ITEM_TYPE.LINK]: () =>
+            void onDropToTrash(item as PageDragItem),
+          [DRAG_ITEM_TYPE.LINK_GROUP]: () =>
+            void onDropToTrash(item as PageDragItem),
+          [DRAG_ITEM_TYPE.DOCK_LINK]: () =>
+            void onUnpinDockLink((item as DockLinkDragItem).link.id),
+        };
+        dropStrategies[item.type]();
+      },
+    }),
+    [onDropToTrash, onUnpinDockLink]
+  );
+
   // 垃圾桶的命中状态与投放连接器
   const { isOver: isTrashOver, setNodeRef: setTrashNodeRef } = useDroppable({
     id: createDndId("dock-trash"),
@@ -541,7 +582,6 @@ export default function Dock({
                   key={link.id}
                   link={link}
                   index={index}
-                  onOpen={onOpenLink}
                   onMove={onMoveDockLink}
                   onUnpin={onUnpinDockLink}
                 />
@@ -567,3 +607,5 @@ export default function Dock({
     </nav>
   );
 }
+
+export default memo(Dock);

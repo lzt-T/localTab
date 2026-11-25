@@ -9,6 +9,7 @@ import {
   type CustomSearchEngine,
 } from "@/type/db";
 import { getUniqueId } from "@/utils/base";
+import { notifyWorkspaceDataChanged } from "@/utils/broadcastSync";
 
 // 完整 URL 前缀
 const URL_PATTERN = /^(https?:\/\/|www\.)/i;
@@ -58,7 +59,9 @@ export function useSearchEngine() {
   const onChangeSearchEngine = useCallback(
     (searchEngineId: string) => {
       changeSelectedSearchEngineId(searchEngineId);
-      void systemService.updateSelectedSearchEngineId(searchEngineId);
+      void systemService
+        .updateSelectedSearchEngineId(searchEngineId)
+        .then(() => notifyWorkspaceDataChanged("search"));
     },
     [changeSelectedSearchEngineId]
   );
@@ -86,6 +89,7 @@ export function useSearchEngine() {
         systemService.updateCustomSearchEngines(nextCustomSearchEngines),
         systemService.updateSelectedSearchEngineId(customSearchEngine.id),
       ]);
+      notifyWorkspaceDataChanged("search");
     },
     [
       customSearchEngines,
@@ -126,6 +130,7 @@ export function useSearchEngine() {
         );
       }
       await Promise.all(persistenceTasks);
+      notifyWorkspaceDataChanged("search");
     },
     [
       customSearchEngines,

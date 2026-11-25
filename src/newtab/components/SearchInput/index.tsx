@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Plus, Search, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,10 @@ import { useSearchEngine } from "@/hooks/useSearchEngine";
 import AddSearchEngineDialog from "@/newtab/components/SearchInput/AddSearchEngineDialog";
 import QuickSearchResults from "@/newtab/components/SearchInput/QuickSearchResults";
 import {
+  buildQuickSearchIndex,
   getQuickSearchOptionId,
   QUICK_SEARCH_LIST_ID,
-  searchLocalLinks,
+  searchLocalLinksFromIndex,
   WEB_SEARCH_OPTION_ID,
 } from "@/newtab/components/SearchInput/quick-search";
 
@@ -26,10 +27,24 @@ export interface SearchInputProps {
   onOpenLink: (url: string) => void;
 }
 
+/** 判断事件目标当前是否处于可输入控件内，避免单键快捷键误触发。 */
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  const tagName = target.tagName;
+  return (
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT" ||
+    target.isContentEditable
+  );
+}
+
 /**
  * 新标签页搜索输入框。
  */
-export default function SearchInput({
+function SearchInput({
   className,
   placeholder,
   categories,
@@ -37,6 +52,8 @@ export default function SearchInput({
 }: SearchInputProps) {
   // 国际化工具
   const { t } = useTranslation();
+  // 搜索框元素引用，供全局快捷键聚焦
+  const inputRef = useRef<HTMLInputElement>(null);
   // 当前搜索内容
   const [query, setQuery] = useState("");
   // 当前高亮的快速搜索选项索引
@@ -58,6 +75,7 @@ export default function SearchInput({
     onDeleteSearchEngine,
     onSearch,
   } = useSearchEngine();
+
   // 当前选中的自定义搜索引擎
   const selectedCustomSearchEngine = customSearchEngines.find(
     (searchEngine) => searchEngine.id === selectedSearchEngineId
@@ -74,8 +92,19 @@ export default function SearchInput({
   const hasQuery = query.trim().length > 0;
   // 快速搜索结果面板是否可见
   const isQuickSearchOpen = hasQuery && isInputFocused;
+
+  // 缓存扁平小写搜索索引，避免切换高亮或弹窗时重复构建
+  const searchIndex = useMemo(
+    () => buildQuickSearchIndex(categories),
+    [categories]
+  );
+
   // 与当前输入匹配的本地网址
-  const quickSearchResults = searchLocalLinks(categories, query);
+  const quickSearchResults = useMemo(
+    () => searchLocalLinksFromIndex(searchIndex, query),
+    [searchIndex, query]
+  );
+
   // 本地结果与网页搜索操作的总数量
   const optionCount = quickSearchResults.length + 1;
   // 防止分类更新后高亮索引超出结果范围
@@ -89,27 +118,74 @@ export default function SearchInput({
       ? getQuickSearchOptionId(quickSearchResults[validActiveOptionIndex])
       : WEB_SEARCH_OPTION_ID;
 
+  // 支持按 `/` 或 `Ctrl/Cmd + K` 快速重新聚焦搜索框
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) {
+        return;
+      }
+
+      const isCmdOrCtrlK =
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === "k";
+      const isSlashShortcut =
+        event.key === "/" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !isEditableTarget(event.target);
+
+      if (!isCmdOrCtrlK && !isSlashShortcut) {
+        return;
+      }
+
+      // 存在打开的模态弹窗时不抢占焦点
+      if (document.querySelector('[role="dialog"]')) {
+        return;
+      }
+
+      event.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, []);
+
   /**
    * 更新搜索内容。
    */
-  const onQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
-    setActiveOptionIndex(0);
-  };
+  const onQueryChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setQuery(event.target.value);
+      setActiveOptionIndex(0);
+    },
+    []
+  );
 
-  /** 打开本地网址并重置快速搜索。 */
-  const openLocalLink = (url: string) => {
-    onOpenLink(url);
+  /** 清空快速搜索输入并复位高亮项。 */
+  const resetQuickSearch = useCallback(() => {
     setQuery("");
     setActiveOptionIndex(0);
-  };
+  }, []);
+
+  /** 回车打开本地网址并重置快速搜索。 */
+  const openLocalLink = useCallback(
+    (url: string) => {
+      onOpenLink(url);
+      resetQuickSearch();
+    },
+    [onOpenLink, resetQuickSearch]
+  );
 
   /** 执行网页搜索并重置快速搜索。 */
-  const searchWeb = () => {
+  const searchWeb = useCallback(() => {
     onSearch(query);
-    setQuery("");
-    setActiveOptionIndex(0);
-  };
+    resetQuickSearch();
+  }, [onSearch, query, resetQuickSearch]);
 
   /** 处理快速搜索的键盘导航和执行操作。 */
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -119,8 +195,7 @@ export default function SearchInput({
 
     if (event.key === "Escape" && hasQuery) {
       event.preventDefault();
-      setQuery("");
-      setActiveOptionIndex(0);
+      resetQuickSearch();
       return;
     }
 
@@ -293,6 +368,7 @@ export default function SearchInput({
           <div className="h-5 w-px bg-[var(--surface-divider)]" />
 
           <Input
+            ref={inputRef}
             type="text"
             value={query}
             role="combobox"
@@ -314,7 +390,11 @@ export default function SearchInput({
             autoFocus
           />
           <kbd className="mr-3 hidden rounded-md border border-[var(--surface-border)] bg-[var(--kbd-bg)] px-2 py-1 text-xs font-semibold text-[var(--surface-text-subtle)] sm:block">
-            {isQuickSearchOpen ? "↑↓ ENTER" : "ENTER"}
+            {isQuickSearchOpen
+              ? "↑↓ ENTER"
+              : isInputFocused || hasQuery
+              ? "ENTER"
+              : "/"}
           </kbd>
         </div>
 
@@ -325,7 +405,7 @@ export default function SearchInput({
             query={query}
             searchEngineName={selectedSearchEngineName}
             onActiveOptionChange={setActiveOptionIndex}
-            onOpenLink={openLocalLink}
+            onSelectLocalLink={resetQuickSearch}
             onSearchWeb={searchWeb}
           />
         ) : null}
@@ -339,3 +419,5 @@ export default function SearchInput({
     </>
   );
 }
+
+export default memo(SearchInput);
