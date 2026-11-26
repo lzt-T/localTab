@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import IconPickerGrid from "@/newtab/components/IconPickerGrid";
 import FileDropZone from "@/newtab/components/Setting/FileDropZone";
+import { useLinkImageIcon } from "@/hooks/useLinkImageIcon";
 import {
   CUSTOM_ICON_ACCEPT,
   isCustomImageIcon,
@@ -23,6 +24,7 @@ const ICON_ERROR_ID = "link-icon-error";
 
 interface LinkIconSelectorProps {
   icon: string;
+  url?: string;
   iconType: LinkIconType;
   isLoadingFavicon: boolean;
   isProcessingCustomIcon: boolean;
@@ -38,6 +40,7 @@ interface LinkIconSelectorProps {
 /** 渲染网站图标、Lucide 图标和自定义图标选择器。 */
 export default function LinkIconSelector({
   icon,
+  url,
   iconType,
   isLoadingFavicon,
   isProcessingCustomIcon,
@@ -53,6 +56,13 @@ export default function LinkIconSelector({
   const { t } = useTranslation();
   // 当前是否已有可预览的自定义图标
   const hasCustomIcon = isCustomImageIcon(icon);
+  // 网站图标预览的候选地址与默认空白占位图自动降级状态
+  const {
+    iconSrc: previewFaviconSrc,
+    shouldShowImage: shouldShowFaviconPreview,
+    onImageLoad: handleFaviconLoad,
+    onImageError: handleFaviconError,
+  } = useLinkImageIcon(isFaviconImageIcon(icon) ? icon : "", url);
 
   return (
     <fieldset className="min-w-0 border-0 p-0">
@@ -87,13 +97,14 @@ export default function LinkIconSelector({
         <TabsContent value={LINK_ICON_TYPE.FAVICON} className="mt-3">
           <div className="flex min-h-11 w-full items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              {icon && isFaviconImageIcon(icon) ? (
+              {shouldShowFaviconPreview ? (
                 <div className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-xl">
                   <img
-                    src={icon}
+                    src={previewFaviconSrc}
                     alt={t("link.favicon")}
                     className="size-8 rounded object-contain"
-                    onError={() => onIconChange("")}
+                    onLoad={handleFaviconLoad}
+                    onError={handleFaviconError}
                   />
                 </div>
               ) : (

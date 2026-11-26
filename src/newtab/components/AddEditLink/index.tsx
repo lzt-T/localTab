@@ -316,6 +316,7 @@ export default function AddEditLink(props: AddEditLinkProps) {
 
               <LinkIconSelector
                 icon={icon}
+                url={url}
                 iconType={iconType}
                 isLoadingFavicon={isLoadingFavicon}
                 isProcessingCustomIcon={isProcessingCustomIcon}

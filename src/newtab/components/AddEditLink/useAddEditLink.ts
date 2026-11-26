@@ -11,6 +11,7 @@ import {
   isSupportedCustomIconFile,
   LINK_ICON_TYPE,
   MAX_CUSTOM_ICON_FILE_SIZE,
+  resolveLinkIcon,
   type LinkIconType,
 } from "@/utils/icon";
 
@@ -413,7 +414,7 @@ export function useAddEditLink(props: UseAddEditLinkProps) {
       setTitle(initialData.title);
       setDescription(initialData.description);
       setUrl(initialData.url);
-      setIcon(initialData.icon);
+      setIcon(resolveLinkIcon(initialData.icon));
       setCategoryId(initialData.categoryId);
       setLinkGroupId(initialData.linkGroupId || NO_LINK_GROUP_VALUE);
       setIconType(getLinkIconType(initialData.icon));

@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { Folder } from "lucide-react";
 import Icon from "@/newtab/components/Icon";
-import LinkMonogram, {
-  shouldUseLinkMonogram,
-} from "@/newtab/components/LinkMonogram";
+import LinkMonogram from "@/newtab/components/LinkMonogram";
 import type { Link, LinkGroupInfo } from "@/type/db";
-import { isImageIcon } from "@/utils/icon";
+import { useLinkImageIcon } from "@/hooks/useLinkImageIcon";
 
 interface FolderPreviewIconProps {
   link?: Link;
@@ -17,30 +14,33 @@ interface LinkFolderCardContentProps {
 
 /** 渲染文件夹卡片中的单个网址预览图标。 */
 function FolderPreviewIcon({ link }: FolderPreviewIconProps) {
-  // 加载失败的图片图标值
-  const [failedImageIcon, setFailedImageIcon] = useState("");
+  // 解析链接图片候选及默认空白占位图自动降级状态
+  const {
+    iconSrc,
+    shouldShowImage,
+    shouldShowMonogram,
+    onImageLoad,
+    onImageError,
+  } = useLinkImageIcon(link?.icon ?? "", link?.url);
+
   if (!link) {
     return <span className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-hover)]" />;
   }
 
-  // 当前网址是否使用可展示的图片图标
-  const hasImageIcon = isImageIcon(link.icon);
-  // 当前图片图标是否可以展示
-  const shouldShowImage =
-    hasImageIcon && failedImageIcon !== link.icon;
   return (
     <span className="flex items-center justify-center overflow-hidden rounded-md bg-[var(--surface-hover)]">
       {shouldShowImage ? (
         <img
-          src={link.icon}
+          src={iconSrc}
           alt=""
           loading="lazy"
           decoding="async"
           draggable={false}
           className="size-3.5 rounded-[4px] object-contain"
-          onError={() => setFailedImageIcon(link.icon)}
+          onLoad={onImageLoad}
+          onError={onImageError}
         />
-      ) : shouldUseLinkMonogram(link.icon, failedImageIcon) ? (
+      ) : shouldShowMonogram ? (
         <LinkMonogram title={link.title} url={link.url} size="sm" />
       ) : (
         <Icon

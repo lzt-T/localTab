@@ -55,7 +55,7 @@ export class LinkService {
       id: link.id || existingLink?.id || getUniqueId(),
       title: link.title || existingLink?.title || "",
       url: link.url || existingLink?.url || "",
-      icon: link.icon || existingLink?.icon || "",
+      icon: link.icon ?? existingLink?.icon ?? "",
       description: link.description ?? existingLink?.description ?? "",
       parentId: link.parentId || existingLink?.parentId || "",
       type: link.type || existingLink?.type || LinkType.LINK,

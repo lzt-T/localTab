@@ -34,6 +34,7 @@ import {
   Video,
   Wrench,
 } from "lucide-react";
+import { getBrowserFaviconUrl, getDirectFaviconUrls } from "@/utils/webIcon";
 
 // 链接图标来源类型
 export const LINK_ICON_TYPE = {
@@ -118,6 +119,62 @@ export function isBrowserFaviconIcon(icon: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** 解析链接图标，将旧扩展 ID 的浏览器 favicon 重写为当前扩展地址。 */
+export function resolveLinkIcon(icon: string): string {
+  if (!isBrowserFaviconIcon(icon)) {
+    return icon;
+  }
+
+  try {
+    // 待重写的旧浏览器 favicon 地址
+    const parsedUrl = new URL(icon);
+    // 原始目标页面地址
+    const pageUrl = parsedUrl.searchParams.get("pageUrl")?.trim();
+    if (!pageUrl) {
+      return "";
+    }
+    // 原始请求的图标尺寸
+    const rawSize = Number(parsedUrl.searchParams.get("size"));
+    const size = Number.isFinite(rawSize) && rawSize > 0 ? rawSize : undefined;
+    return getBrowserFaviconUrl(pageUrl, size);
+  } catch {
+    return "";
+  }
+}
+
+/** 提取浏览器 favicon 地址中的原始页面地址。 */
+function getBrowserFaviconPageUrl(icon: string): string {
+  try {
+    return new URL(icon).searchParams.get("pageUrl")?.trim() ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * 获取链接图片图标的有序候选地址列表。
+ * 对浏览器 `_favicon` 地址自动追加站点直连 favicon 候选作为未缓存降级。
+ */
+export function getLinkImageIconCandidates(
+  icon: string,
+  url?: string
+): string[] {
+  if (isBrowserFaviconIcon(icon)) {
+    const resolvedIcon = resolveLinkIcon(icon);
+    const fallbackPageUrl = url?.trim() || getBrowserFaviconPageUrl(icon);
+    const directUrls = fallbackPageUrl
+      ? getDirectFaviconUrls(fallbackPageUrl)
+      : [];
+    return Array.from(new Set([resolvedIcon, ...directUrls].filter(Boolean)));
+  }
+
+  if (isImageIcon(icon)) {
+    return [icon];
+  }
+
+  return [];
 }
 
 /** 判断图标是否为网站图片地址。 */

@@ -27,6 +27,7 @@ import {
   useQuickBookmark,
   type QuickBookmarkStatus,
 } from "@/popup/useQuickBookmark";
+import { isBrowserDefaultFaviconImage } from "@/utils/webIcon";
 
 // Chromium 扩展 API 最小类型声明
 declare const chrome: {
@@ -149,6 +150,18 @@ const PopupApp: React.FC = () => {
               src={page.icon}
               alt=""
               className="absolute inset-0 size-full object-contain p-1"
+              onLoad={(event) => {
+                const imageElement = event.currentTarget;
+                const currentIcon = page.icon;
+                void isBrowserDefaultFaviconImage(
+                  imageElement,
+                  currentIcon
+                ).then((isDefaultPlaceholder) => {
+                  if (isDefaultPlaceholder) {
+                    imageElement.hidden = true;
+                  }
+                });
+              }}
               onError={(event) => {
                 event.currentTarget.hidden = true;
               }}

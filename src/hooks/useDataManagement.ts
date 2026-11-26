@@ -6,6 +6,7 @@ import { linkService } from "@/services/linkService";
 import { systemService } from "@/services/systemService";
 import { db, STORE_NAMES } from "@/utils/db";
 import { notifyWorkspaceDataChanged } from "@/utils/broadcastSync";
+import { isBrowserFaviconIcon, resolveLinkIcon } from "@/utils/icon";
 import {
   DEFAULT_SEARCH_ENGINE_ID,
   LEGACY_DEFAULT_SEARCH_ENGINE_ID,
@@ -237,10 +238,19 @@ export function useDataManagement() {
         system.push({ key: "backgroundImageId", value: backgroundImage.id });
       }
 
+      // 跨浏览器导入备份时，将旧扩展 ID 的浏览器 favicon 重写为当前扩展地址
+      const normalizedLinks = importData.links.map((link) => {
+        if (!isBrowserFaviconIcon(link.icon)) {
+          return link;
+        }
+        const resolvedIcon = resolveLinkIcon(link.icon);
+        return resolvedIcon ? { ...link, icon: resolvedIcon } : link;
+      });
+
       // 单个事务内替换全部数据，任意失败都会回滚
       await db.replaceAll({
         categories: importData.categories,
-        links: importData.links,
+        links: normalizedLinks,
         linkGroups: importData.linkGroups ?? [],
         system,
       });

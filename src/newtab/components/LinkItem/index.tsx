@@ -1,12 +1,10 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Icon from "@/newtab/components/Icon";
-import LinkMonogram, {
-  shouldUseLinkMonogram,
-} from "@/newtab/components/LinkMonogram";
-import { isImageIcon } from "@/utils/icon";
+import LinkMonogram from "@/newtab/components/LinkMonogram";
+import { useLinkImageIcon } from "@/hooks/useLinkImageIcon";
 
 type LinkItemVariant = "default" | "drag-placeholder" | "drag-preview";
 
@@ -52,18 +50,15 @@ function Index({
   // 卡片操作菜单的本地化文案
   const { t } = useTranslation();
 
-  // 图片图标加载失败时记录对应值
-  const [failedImageIcon, setFailedImageIcon] = useState("");
+  // 解析链接图片候选及默认空白占位图自动降级状态
+  const {
+    iconSrc,
+    shouldShowImage: shouldShowImageIcon,
+    shouldShowMonogram: isMonogramIcon,
+    onImageLoad: onImageIconLoad,
+    onImageError: onImageIconError,
+  } = useLinkImageIcon(link.icon, link.url);
 
-  // 当前链接是否使用图片图标
-  const hasImageIcon = isImageIcon(link.icon);
-
-  // 图片图标可用时优先展示原始图标
-  const shouldShowImageIcon =
-    hasImageIcon && failedImageIcon !== link.icon;
-  // 当前图标是否回退为首字徽标
-  const isMonogramIcon =
-    !shouldShowImageIcon && shouldUseLinkMonogram(link.icon, failedImageIcon);
   // 当前网址是否包含可展示的详情
   const hasDescription = link.description.trim().length > 0;
   // 卡片无障碍名称使用的站点域名
@@ -75,11 +70,6 @@ function Index({
       handleEditClick(link.id);
     }
   }, [link.id, handleEditClick]);
-
-  /** 标记加载失败的图片图标并回退到默认图标。 */
-  const onImageIconError = () => {
-    setFailedImageIcon(link.icon);
-  };
 
   // 卡片内部图标与标题内容
   const tileContent =
@@ -101,12 +91,13 @@ function Index({
           <span className="glass-icon-tile flex size-[60px] shrink-0 items-center justify-center rounded-[18px] transition-transform duration-200 group-hover/item:-translate-y-1 group-hover/item:scale-[1.04] motion-reduce:transform-none">
             {shouldShowImageIcon ? (
               <img
-                src={link.icon}
+                src={iconSrc}
                 alt=""
                 loading="lazy"
                 decoding="async"
                 draggable={false}
                 className="size-8 rounded-lg object-contain"
+                onLoad={onImageIconLoad}
                 onError={onImageIconError}
               />
             ) : (

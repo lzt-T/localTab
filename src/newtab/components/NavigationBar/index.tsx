@@ -109,7 +109,7 @@ function NavigationBar(props: NavigationBarProps) {
 
   return (
     <nav
-      className="glass-style-floating flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl p-1.5 md:flex-col md:items-stretch md:gap-0 md:rounded-[22px] md:p-0"
+      className="glass-style-sidebar flex h-full w-full flex-row items-center gap-2 overflow-hidden rounded-2xl p-1.5 md:flex-col md:items-stretch md:gap-0 md:rounded-[22px] md:p-0"
       aria-label={t("workspace.navigation")}
     >
       <div className="flex shrink-0 items-center px-1 md:border-b md:border-[var(--surface-divider)] md:px-4 md:py-3.5">
